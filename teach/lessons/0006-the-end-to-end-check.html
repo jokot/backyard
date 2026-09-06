@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 6 — The End-to-End Check</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 6 of the Peashooter build</p>
+<h1>Same brain, different door</h1>
+<p class="lede">Every piece is in place. This lesson doesn't add
+anything — it proves the pieces actually work together, from your
+phone.</p>
+
+<h2>What's actually being proven here</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  A Telegram message to Peashooter's bot reaches the exact same profile
+  as a terminal <code>peashooter</code> session — same
+  <span class="term" title="A per-profile system prompt: who the agent is, what it owns, what it's out of scope for, and its tone.">SOUL.md</span>,
+  same
+  <span class="term" title="A per-profile file where Hermes records durable facts, conventions, and decisions across sessions.">MEMORY.md</span>,
+  same model. The
+  <span class="term" title="Hermes's messaging bridge subsystem: connects a profile to chat platforms.">gateway</span>
+  is just a different door into the identical agent — not a separate,
+  lesser copy of it. This lesson is the proof, not a new mechanism.
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Open Telegram on your phone</strong> and find Peashooter's
+  bot (the username you gave it with BotFather in Lesson 5).</p>
+
+  <p><strong>2. Ask it the same recall question from Lesson 4</strong> —
+  whatever fact you taught it in a terminal session, ask for it again
+  here, without restating it. This proves memory isn't
+  terminal-session-specific; it belongs to the profile, reachable from
+  either door.</p>
+
+  <p><strong>3. Ask one clearly off-topic question too</strong> (same
+  kind as Lesson 3's test) — confirming the scope boundary holds on
+  Telegram exactly as it did in the terminal, not just in one channel.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why should Peashooter's Telegram reply and terminal reply be consistent?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Both reach the same profile</label>
+      <div class="reveal"><p class="feedback correct">Right — the gateway routes into the identical profile (SOUL.md, memory, model), so behavior shouldn't differ by channel.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Telegram syncs with the terminal</label>
+      <div class="reveal"><p class="feedback incorrect">There's no separate syncing step — it's one profile, reached two ways, not two copies kept in sync.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Gateway retrains the model daily</label>
+      <div class="reveal"><p class="feedback incorrect">Not a thing here — no retraining happens anywhere in this setup.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint — Stage 1's success criteria</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Peashooter responded on Telegram</label>
+  <label><input type="checkbox"> The reply reflected the fact from Lesson 4, unprompted</label>
+  <label><input type="checkbox"> The off-topic question got declined/redirected, same as the terminal test</label>
+  <label><input type="checkbox"> Peashooter runs from a project folder other than <code>plants</code> (already true — it's a global profile)</label>
+</div>
+
+<p>If all four boxes are checked, Stage 1 is done. Tell me the results
+and I'll confirm it and move to designing Stage 2 — a second specialist
+and the routing between them — through the same brainstorming process
+Stage 1 went through.</p>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a></p>
+
+<p class="ask-agent">Tell me what Peashooter said on Telegram, for both
+questions.</p>
+
+<div class="nav">
+  <span><a href="0005-connecting-telegram.html">← Lesson 5</a></span>
+  <span>Lesson 6 of Stage 1 — last lesson of Stage 1</span>
+</div>
+
+</body>
+</html>
