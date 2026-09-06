@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 5 — Connecting Telegram</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 5 of the Peashooter build</p>
+<h1>Reachable somewhere other than a terminal</h1>
+<p class="lede">Peashooter has a domain, a voice, and memory. Now it needs
+a door in from outside your terminal — the same door Zain's specialists
+use.</p>
+
+<h2>What the gateway is</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <span class="term" title="Hermes's messaging bridge subsystem: connects a profile to chat platforms (Telegram, Discord, WhatsApp, Slack, Signal). Messages sent there reach the profile's agent loop; replies go back the same way.">Gateway</span>
+  is Hermes's messaging bridge. Once set up for a profile, messages sent
+  to that platform reach the profile's agent loop directly — same
+  <code>SOUL.md</code>, same memory, same model, just a different door
+  in. Telegram is one of several platforms it supports (Discord, WhatsApp,
+  Slack, Signal too); Stage 1 only wires up Telegram.
+</div>
+
+<h2>Two ways to get a bot token</h2>
+
+<p>Checking <code>hermes gateway setup</code>'s actual code (not just
+<code>--help</code>, per the practice this build settled into after
+Lesson 2) turned up two paths it offers for Telegram:</p>
+
+<ul>
+  <li><strong>Automatic</strong> — scan a QR code, confirm in your
+  Telegram app, done. Under the hood this uses Telegram's own
+  bot-creation mechanism, brokered one-time through a Nous-hosted
+  service, just to skip manually copy-pasting a token. You end up with
+  the same kind of token either way — a real, user-owned bot, saved
+  locally.</li>
+  <li><strong>Manual</strong> — message <code>@BotFather</code> in
+  Telegram yourself, get a token, paste it in. No third-party broker
+  call at all, a couple more manual steps.</li>
+</ul>
+
+<p style="font-size:0.85em; color:var(--ink-soft);">This build is using
+<strong>Automatic</strong> — worth knowing Manual exists as a fallback if
+you ever want zero third-party involvement in setup.</p>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Make Peashooter the active profile, then run setup:</strong></p>
+  <pre><code>hermes profile use peashooter
+hermes gateway setup</code></pre>
+  <p>Pick Telegram, then choice <code>[1]</code> for Automatic. It shows
+  a QR code — scan it with your phone's Telegram app and confirm. The
+  token gets saved to Peashooter's config automatically; you shouldn't
+  need to touch it.</p>
+
+  <p><strong>2. Install it as a standing background service</strong>
+  (so it survives after you close this terminal, and restarts on
+  login):</p>
+  <pre><code>hermes gateway install</code></pre>
+
+  <p><strong>3. Confirm it's actually running:</strong></p>
+  <pre><code>hermes gateway status</code></pre>
+  <p>Should show Peashooter's gateway as running, not stopped or
+  errored.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does the Automatic path still count as "you own the bot," not "Nous owns it"?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Nous only brokers one-time creation</label>
+      <div class="reveal"><p class="feedback correct">Right — the broker call happens only during setup, to create the bot and hand you its token. Ongoing traffic runs directly between Telegram and your machine, same as the manual path.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Nous tokens expire automatically</label>
+      <div class="reveal"><p class="feedback incorrect">Not the mechanism — nothing about the token's lifetime is different between the two paths.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">You still message BotFather first</label>
+      <div class="reveal"><p class="feedback incorrect">The whole point of Automatic is skipping BotFather entirely — that's the Manual path.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Scanned the QR code and confirmed in Telegram</label>
+  <label><input type="checkbox"> <code>hermes gateway install</code> succeeded</label>
+  <label><input type="checkbox"> <code>hermes gateway status</code> shows it running</label>
+</div>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a></p>
+
+<p class="ask-agent">Tell me what <code>hermes gateway status</code>
+showed. Next: the actual end-to-end check — messaging Peashooter for
+real on Telegram.</p>
+
+<div class="nav">
+  <span><a href="0004-memory-that-survives-the-session.html">← Lesson 4</a></span>
+  <span>Lesson 5 of Stage 1</span>
+</div>
+
+</body>
+</html>
