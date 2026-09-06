@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 3 — SOUL.md and the Scope Boundary</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 3 of the Peashooter build</p>
+<h1>SOUL.md: a domain, a voice, and a wall</h1>
+<p class="lede">Giving Peashooter a personality is the easy part. The part
+that actually prevents context contamination is writing down what it must
+refuse.</p>
+
+<h2>What Zain's agents actually specify</h2>
+
+<p>Back in <a href="https://www.zainfathoni.com/blog/project-transformers-building-personal-ai-army">Project
+Transformers</a>, each specialist ("Wheeljack" for engineering, "Prowl"
+for life admin, and so on) has a narrow domain <em>and</em> a distinct
+personality — not decoration, but a forcing function. A generic assistant
+prompt drifts back toward "helpful about everything" the moment a user
+pushes on it. A named specialist with an explicit personality and an
+explicit boundary has somewhere to say no from.</p>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <span class="term" title="A per-profile system prompt: who the agent is, what it owns, what it's out of scope for, and its tone.">SOUL.md</span>
+  is Hermes's place for exactly this. It should say three things: what
+  Peashooter owns, what it explicitly does <strong>not</strong> own (redirect
+  instead of attempting), and how it talks. The middle one is the one people
+  skip — and it's the one that actually stops "one assistant that does
+  everything" from creeping back in through the side door.
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p>Open <code>~/.hermes/profiles/peashooter/SOUL.md</code> in your editor
+  and replace its contents. Here's a starting draft — read it, then make it
+  actually yours (your stack, your tone preference) before saving:</p>
+
+  <pre><code>You are Peashooter, the engineering and coding specialist in Jokot's
+personal agent team.
+
+Domain: software engineering only — code review, debugging,
+architecture, tooling, build/dependency issues, technical writing
+about code.
+
+Out of scope — redirect, don't attempt: personal finance, tax,
+family/scheduling, health, or any non-engineering topic. Say plainly
+that it's outside your scope; don't take a guess at it anyway.
+
+Personality: direct and economical, no filler. Admit uncertainty
+plainly rather than guessing confidently.
+
+You have persistent memory (MEMORY.md, USER.md) — use it. Record
+conventions, decisions, and recurring facts about Jokot's stack so
+they don't have to be re-explained each session.</code></pre>
+
+  <p>Save the file, then talk to Peashooter for real:</p>
+  <pre><code>peashooter</code></pre>
+  <p>Ask it one real coding question. Then, in the same or a new session,
+  ask it something clearly outside its domain — a tax or family-planning
+  question works well. You're checking for a clean decline/redirect, not
+  an attempt at an answer.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does SOUL.md list what Peashooter must NOT do, not just what it does?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Prevents silent scope creep</label>
+      <div class="reveal"><p class="feedback correct">Right — without an explicit boundary, a helpful model drifts back toward answering everything, which is the exact failure this whole project exists to avoid.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Makes the prompt longer</label>
+      <div class="reveal"><p class="feedback incorrect">Length isn't the goal — a short, explicit boundary beats a long vague one.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Required by Hermes schema</label>
+      <div class="reveal"><p class="feedback incorrect">Not a technical requirement — SOUL.md is free text; Hermes enforces nothing about its content.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> SOUL.md rewritten and saved, in your own words</label>
+  <label><input type="checkbox"> Peashooter answered an on-topic coding question well</label>
+  <label><input type="checkbox"> Peashooter declined or redirected a clearly off-topic question, instead of answering it</label>
+</div>
+
+<p>That third box is Stage 1's actual success criterion for this part —
+tell me what it said when you pushed it off-topic. If it just answered
+anyway, that's worth debugging together, not a lesson to skip past.</p>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a></p>
+
+<p class="ask-agent">Next: proving Peashooter's memory survives across
+separate sessions — the other half of Stage 1's success criteria.</p>
+
+<div class="nav">
+  <span><a href="0002-assigning-a-model-per-specialist.html">← Lesson 2</a></span>
+  <span>Lesson 3 of Stage 1</span>
+</div>
+
+</body>
+</html>
