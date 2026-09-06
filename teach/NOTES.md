@@ -34,3 +34,10 @@
   setting. Expect to need similar explicit pins for other implicit
   conventions when using cheap models — see
   `learning-records/0003-cheap-model-language-drift.md`.
+- **Commit practice (established 2026-09-06):** commit at every natural
+  checkpoint, not just when asked — lesson files, exercise artifacts
+  landing in the repo (e.g. `snake.html`), and profile config. Since
+  the real `SOUL.md`/`config.yaml` live outside this repo at
+  `~/.hermes/profiles/peashooter/`, mirror them into
+  `hermes-config/peashooter/` after each hands-on edit and commit that
+  copy — never copy `.env` or `auth.json` (they hold live secrets).
