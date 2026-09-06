@@ -48,6 +48,19 @@ Lesson 2) turned up two paths it offers for Telegram:</p>
 <strong>Automatic</strong> — worth knowing Manual exists as a fallback if
 you ever want zero third-party involvement in setup.</p>
 
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — Automatic failed in Telegram Web</span>
+  <p>On the real attempt, Automatic's "Create a bot" button errored with
+  no response, visible in the browser's dev console against the
+  <code>newbot?manager=NousHostedHermesBot&#8230;</code> call — a
+  Telegram-side failure (that in-app bot-creation feature not working in
+  the Telegram Web client), not a Hermes bug. Switched to Manual
+  BotFather instead: message <code>@BotFather</code>, run
+  <code>/newbot</code>, pick a name and a globally-unique
+  <code>&#8230;bot</code>-suffixed username, paste the returned token
+  into <code>hermes gateway setup</code>'s manual prompt. Worked cleanly.</p>
+</div>
+
 <h2>Do this now</h2>
 
 <div class="box skill">
