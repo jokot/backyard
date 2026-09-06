@@ -55,6 +55,20 @@ possible definition.</p>
   specialist agents: one profile per specialist.
   <span class="from">Introduced in: <a href="../lessons/0001-context-contamination-and-your-first-profile.html">Lesson 1</a></span></dd>
 
+  <dt>Pooled credential</dt>
+  <dd>A stored login (API key or OAuth token) Hermes can hand to any
+  profile that needs it, managed via <code>hermes auth</code>. Kept
+  separate from profile config so the same credential can back several
+  profiles' model choices.
+  <span class="from">Introduced in: <a href="../lessons/0002-assigning-a-model-per-specialist.html">Lesson 2</a></span></dd>
+
+  <dt>Model tiering</dt>
+  <dd>Assigning cheaper or more capable models per agent based on what its
+  role actually demands — a cross-domain coordinator gets the strongest
+  model, a narrow specialist often doesn't need to. Zain Fathoni reported
+  this cut his costs to roughly 15% of baseline.
+  <span class="from">Introduced in: <a href="../lessons/0002-assigning-a-model-per-specialist.html">Lesson 2</a></span></dd>
+
 </dl>
 
 <p style="margin-top:3rem; font-family:-apple-system,sans-serif; font-size:0.85rem; color:var(--ink-soft);">

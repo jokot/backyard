@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 2 — Assigning a Model Per Specialist</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 2 of the Peashooter build</p>
+<h1>One agent, one model choice</h1>
+<p class="lede">Why Zain runs different agents on different models, and
+giving Peashooter its own before we give it a personality.</p>
+
+<p style="font-size:0.85em; color:var(--ink-soft);">(Small reorder from
+what Lesson 1 promised: we're assigning a model before writing
+<code>SOUL.md</code>, not after — you need a working model to actually talk
+to Peashooter and hear its personality, so that comes first.)</p>
+
+<h2>Why per-agent model choice matters</h2>
+
+<p>From the same <a href="https://www.zainfathoni.com/blog/project-transformers-building-personal-ai-army">Project
+Transformers</a> post: Zain's coordinator ("Optimus") runs on his most
+capable model, because it has to reason well across every domain. His
+narrower specialists run on cheaper models where the task doesn't need
+top-tier reasoning, plus free-tier models from other tools where available.
+Result: he reported cutting costs to roughly <strong>15% of baseline</strong>
+after the first week — not by using a worse assistant, but by matching
+model cost to what each agent's job actually demands.</p>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  This works because a <span class="term" title="Hermes Agent's unit of a separate agent identity: its own config, model/provider, skills, and memory.">Hermes
+  profile</span> carries its own model/provider setting, independent of
+  every other profile. Peashooter can run Claude while a future specialist
+  runs something cheaper for lower-stakes work — same isolation mechanism
+  from Lesson 1, applied to cost instead of just memory.
+</div>
+
+<h2>Do this now</h2>
+
+<p>These steps touch a secret API key, so run them yourself in your
+terminal rather than pasting the key anywhere in chat.</p>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Get a key</strong> (skip if you already have one): create
+  one at <a href="https://console.anthropic.com/settings/keys">console.anthropic.com</a>.
+  This is a plain API key, billed per use — not your Claude.ai subscription
+  login, on purpose (see Lesson 0's spec notes on why we're keeping this
+  simple for Stage 1).</p>
+
+  <p><strong>2. Add it as a pooled credential</strong> — leave off
+  <code>--api-key</code> so Hermes prompts you for it securely instead of
+  it sitting in your shell history:</p>
+  <pre><code>hermes auth add anthropic --type api-key</code></pre>
+
+  <p><strong>3. Make Peashooter the active profile</strong>, then pick its
+  model:</p>
+  <pre><code>hermes profile use peashooter
+hermes model</code></pre>
+  <p>This opens an interactive picker. Choose the Anthropic provider, then
+  a Claude model — Sonnet is a reasonable default for a coding specialist
+  (capable enough to be useful, cheaper than Opus).</p>
+
+  <p><strong>4. Confirm it stuck:</strong></p>
+  <pre><code>hermes profile show peashooter</code></pre>
+  <p>The <code>Model</code> line should now show what you picked instead
+  of a blank.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why doesn't Peashooter's coding work need Optimus's "most capable" model tier?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Narrow tasks need less</label>
+      <div class="reveal"><p class="feedback correct">Right — a scoped specialist's task doesn't demand the reasoning breadth a cross-domain coordinator needs, so a cheaper model is usually enough.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Coding is always easy</label>
+      <div class="reveal"><p class="feedback incorrect">Not the claim — coding tasks vary a lot in difficulty; this is about matching cost to role, not assuming coding is trivial.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Cheap models code better</label>
+      <div class="reveal"><p class="feedback incorrect">Not what Zain found — he used cheaper models where the task allowed it, not because they outperform.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> <code>hermes auth add anthropic</code> succeeded</label>
+  <label><input type="checkbox"> <code>hermes profile show peashooter</code> shows a real Model, not a blank</label>
+  <label><input type="checkbox"> You can say why Peashooter's model doesn't have to match your daily-driver model</label>
+</div>
+
+<p>One thing already done for you, no lesson needed: <code>hermes profile
+show peashooter</code> lists an <code>Alias</code> — Hermes created the
+<code>peashooter</code> shell command automatically when we ran
+<code>profile create</code> in Lesson 1. Step 7 from the build spec is
+already finished.</p>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a></p>
+
+<p class="ask-agent">Tell me what model you picked, and whether
+<code>profile show</code> confirms it. Next: writing Peashooter's
+<code>SOUL.md</code> and having a real conversation with it.</p>
+
+<div class="nav">
+  <span><a href="0001-context-contamination-and-your-first-profile.html">← Lesson 1</a></span>
+  <span>Lesson 2 of Stage 1</span>
+</div>
+
+</body>
+</html>
