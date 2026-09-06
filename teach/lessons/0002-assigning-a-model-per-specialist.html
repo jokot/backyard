@@ -33,10 +33,32 @@ model cost to what each agent's job actually demands.</p>
   <span class="box-label">Knowledge</span>
   This works because a <span class="term" title="Hermes Agent's unit of a separate agent identity: its own config, model/provider, skills, and memory.">Hermes
   profile</span> carries its own model/provider setting, independent of
-  every other profile. Peashooter can run Claude while a future specialist
-  runs something cheaper for lower-stakes work — same isolation mechanism
-  from Lesson 1, applied to cost instead of just memory.
+  every other profile. Peashooter can run one model while a future
+  specialist runs something cheaper for lower-stakes work — same
+  isolation mechanism from Lesson 1, applied to cost instead of just
+  memory.
 </div>
+
+<p style="font-size:0.85em; color:var(--ink-soft);">(Updated after Lesson
+2 shipped: we asked about reusing a personal Claude/Cursor subscription
+here. Short version — Hermes can technically do OAuth reuse of a personal
+Claude subscription, but that's a greyer usage-terms area than paying for
+API access directly, and Cursor's subscription isn't reachable by any
+third-party tool at all. We switched to an aggregator instead — see
+below — which also directly answers "I want to pick the model per bot,
+including cheap Chinese-lab options.")</p>
+
+<h2>The aggregator: OpenRouter</h2>
+
+<p><span class="term" title="A service that sits in front of many model providers behind one API key and one bill, letting you switch providers/models per request without separate accounts.">OpenRouter</span>
+is one API key that reaches dozens of providers — Anthropic, OpenAI,
+DeepSeek, Qwen, Zhipu (GLM), Moonshot (Kimi), MiniMax, and more — billed
+per use, at each provider's own rate. It's already a first-class Hermes
+provider (it shows up in <code>hermes auth add --help</code>'s own
+examples, and <code>hermes doctor</code> checks it directly). That's what
+gives you "pick the model per bot" with real freedom: Peashooter can run a
+frontier model for hard problems today, and something far cheaper for
+routine tasks tomorrow, without opening a new account each time.</p>
 
 <h2>Do this now</h2>
 
@@ -46,24 +68,26 @@ terminal rather than pasting the key anywhere in chat.</p>
 <div class="box skill">
   <span class="box-label">Skill — hands on</span>
 
-  <p><strong>1. Get a key</strong> (skip if you already have one): create
-  one at <a href="https://console.anthropic.com/settings/keys">console.anthropic.com</a>.
-  This is a plain API key, billed per use — not your Claude.ai subscription
-  login, on purpose (see Lesson 0's spec notes on why we're keeping this
-  simple for Stage 1).</p>
+  <p><strong>1. Get a key</strong>: create one at
+  <a href="https://openrouter.ai/keys">openrouter.ai/keys</a>. Add a small
+  amount of credit — this is pay-per-use, not a subscription.</p>
 
   <p><strong>2. Add it as a pooled credential</strong> — leave off
   <code>--api-key</code> so Hermes prompts you for it securely instead of
   it sitting in your shell history:</p>
-  <pre><code>hermes auth add anthropic --type api-key</code></pre>
+  <pre><code>hermes auth add openrouter --type api-key</code></pre>
 
   <p><strong>3. Make Peashooter the active profile</strong>, then pick its
   model:</p>
   <pre><code>hermes profile use peashooter
 hermes model</code></pre>
-  <p>This opens an interactive picker. Choose the Anthropic provider, then
-  a Claude model — Sonnet is a reasonable default for a coding specialist
-  (capable enough to be useful, cheaper than Opus).</p>
+  <p>This opens an interactive picker. Choose OpenRouter as the provider,
+  then browse its model list. For a coding specialist, a solid default is
+  a mid-tier general model to start (you can change this any time with the
+  same command) — worth also noting where DeepSeek, GLM, Kimi, and MiniMax
+  show up in the list, since those are the cheap options you asked about;
+  check OpenRouter's own pricing page for current rates before picking one
+  for real work, since they shift over time.</p>
 
   <p><strong>4. Confirm it stuck:</strong></p>
   <pre><code>hermes profile show peashooter</code></pre>

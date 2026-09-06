@@ -68,11 +68,17 @@ spec once Stage 1 is working.
   this machine, not only from the `plants` folder. The `plants` folder is
   where its configuration and this project's history live, versioned in
   git.
-- **Model/provider:** a plain Anthropic API key, added as a pooled
-  credential (`hermes auth add anthropic --type api-key`). Hermes does
-  support OAuth reuse of a personal Claude subscription
-  (`--type oauth`), but that is a separate, well-scoped change to make
-  later if wanted — Stage 1 uses the simplest, least ambiguous path.
+- **Model/provider:** an OpenRouter API key, added as a pooled credential
+  (`hermes auth add openrouter --type api-key`). OpenRouter is a
+  confirmed first-class provider in Hermes (listed in `hermes auth add
+  --help` and checked by `hermes doctor`). It aggregates many providers —
+  Anthropic, OpenAI, DeepSeek, Qwen, Zhipu/GLM, Moonshot/Kimi, MiniMax,
+  and more — behind one key and one bill, pay-per-use, so each profile
+  can be pointed at a different model (including cheap Chinese-lab
+  models) without a separate account per provider. Superseded from an
+  earlier draft of this decision (plain Anthropic API key); rejected
+  entirely: OAuth reuse of a personal Claude/Cursor subscription (see
+  below and Lesson 2's chat history for why).
 - **Provider scope excluded:** Cursor and Antigravity are not usable as
   model providers for any bot in this project. Hermes has no provider
   hook for either, and Cursor does not expose its subscription through
