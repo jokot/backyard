@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1 — Context Contamination</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 1 of the Peashooter build</p>
+<h1>Context contamination, and your first specialist</h1>
+<p class="lede">Why a "personal AI army" is more than a gimmick, and the
+first real piece of yours: a Hermes profile named Peashooter.</p>
+
+<h2>The problem, in Zain Fathoni's words</h2>
+
+<p>The project you're modeling this on is Zain Fathoni's
+<a href="https://www.zainfathoni.com/blog/project-transformers-building-personal-ai-army">"Project
+Transformers: Building a Personal AI Army"</a> — read it in full when you
+have 10 minutes; it's the primary source for everything in this lesson.
+Here's the problem he ran into using one general-purpose AI assistant for
+everything:</p>
+
+<blockquote>
+  tax questions contaminated code reviews
+</blockquote>
+
+<p>That's <span class="term" title="One AI assistant's unrelated context (a different task, domain, or conversation) leaking into and degrading the current one.">context contamination</span>:
+one assistant, many unrelated domains, and the context from one bleeds into
+another. Ask it about your taxes, then ask it to review a pull request, and
+it's a worse reviewer than it would have been fresh — because it's still
+carrying tax-shaped context it doesn't need and you didn't want mixed in.</p>
+
+<p>His fix mirrors how organizations already solve this: <em>"We specialize.
+We have teams. Each person owns a domain."</em> Instead of one assistant, he
+built several — each with a narrow domain, its own memory, and no visibility
+into the others' conversations.</p>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  The general term for "several AI agents coordinating on work instead of
+  one doing everything" is a <span class="term" title="Several autonomous AI agents that coordinate to get work done, instead of one general-purpose agent doing everything.">multi-agent
+  system</span>. Zain's version has a <span class="term" title="A router agent that decides which specialist should handle a request, and holds cross-agent context the specialists don't need.">coordinator
+  agent</span> ("Optimus") that routes requests to <span class="term" title="An agent scoped to one narrow domain, with its own memory and personality, isolated from every other agent's context.">specialist
+  agents</span> ("Wheeljack" for code, "Prowl" for life admin, and so on).
+  We are <strong>not</strong> building the coordinator yet — that's Stage 2.
+  Today we build one specialist, standing alone, and prove it stays in its
+  lane.
+</div>
+
+<h2>Our mechanism: a Hermes profile</h2>
+
+<p>Zain's framework (OpenClaw) gives each agent its own process and memory.
+Hermes Agent — what we're building on — gives you the same isolation
+through something called a <span class="term" title="Hermes Agent's unit of 'a separate agent identity': its own config file, default model/provider, skills, and memory, isolated from every other profile.">profile</span>.
+One profile = one agent identity. Different profiles don't see each other's
+memory or conversation history. That's the whole mechanism behind avoiding
+context contamination: <strong>separate profile, separate context, by
+construction</strong> — not by asking the model nicely to forget.</p>
+
+<p>Today's specialist is <strong>Peashooter</strong> — named for the first,
+simplest plant you ever place in Plants vs. Zombies, matching its role as
+the first specialist in this project. Its domain: coding and engineering,
+nothing else.</p>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>In your terminal, run:</p>
+  <pre><code>hermes profile create peashooter --clone-from default --description "Coding and engineering specialist"</code></pre>
+  <p><code>--clone-from default</code> copies your existing model config,
+  skills, and tools into the new profile, so Peashooter isn't starting from
+  nothing. The <code>--description</code> isn't read by anything yet — but
+  it will be, the moment Stage 2 adds a router that needs to decide which
+  profile handles which task. Write it well now.</p>
+  <p>Confirm it worked:</p>
+  <pre><code>hermes profile list</code></pre>
+  <p>You should see both <code>default</code> and <code>peashooter</code>
+  listed.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why set Peashooter's --description now, when nothing routes tasks yet?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Later routing needs it</label>
+      <div class="reveal"><p class="feedback correct">Right — Stage 2's router reads profile descriptions to decide who handles what. Setting it well now saves a rewrite later.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Config schema wants text</label>
+      <div class="reveal"><p class="feedback incorrect">Not the reason — the field is optional; nothing breaks if you skip it.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Kanban board looks nicer</label>
+      <div class="reveal"><p class="feedback incorrect">Not yet relevant — there's no kanban board in this project until Stage 2.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> <code>hermes profile list</code> shows <code>peashooter</code></label>
+  <label><input type="checkbox"> You can say, in one sentence, what context contamination is</label>
+  <label><input type="checkbox"> You can name what's isolating Peashooter's context from your default profile</label>
+</div>
+
+<p>All three checked? Tell me in chat what you ran and what
+<code>hermes profile list</code> printed — I'll confirm before we move on,
+and if anything didn't work as described, that's exactly the kind of thing
+worth debugging together rather than guessing past.</p>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> (5 terms so far)</p>
+
+<p class="ask-agent">Anything above unclear? Ask your teacher (this chat) —
+that's what it's for. Next up: writing Peashooter's <code>SOUL.md</code>,
+and the reference-project idea it maps to (narrow domain + personality).</p>
+
+<div class="nav">
+  <span>Lesson 1 of Stage 1</span>
+  <span><a href="../MISSION.md">Mission</a></span>
+</div>
+
+</body>
+</html>

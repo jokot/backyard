@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glossary — Personal Multi-Agent AI System</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  dl { margin-top: 1.5em; }
+  dt { font-weight: 600; margin-top: 1.4em; }
+  dt .src { font-weight: 400; font-size: 0.75em; color: var(--ink-soft); }
+  dd { margin: 0.3em 0 0 0; }
+  dd .from { display: block; font-size: 0.8em; color: var(--ink-soft); margin-top: 0.3em; }
+</style>
+</head>
+<body>
+
+<p class="kicker">Reference</p>
+<h1>Glossary</h1>
+<p class="lede">Every term introduced across lessons, kept current. Definitions
+are scoped to how the term is used <em>in this project</em>, not the broadest
+possible definition.</p>
+
+<dl>
+
+  <dt>Multi-agent system (MAS)</dt>
+  <dd>Several autonomous AI agents that coordinate to get work done, instead
+  of one general-purpose agent doing everything. The umbrella term for what
+  this whole project is.
+  <span class="from">Introduced in: <a href="../lessons/0001-context-contamination-and-your-first-profile.html">Lesson 1</a></span></dd>
+
+  <dt>Context contamination</dt>
+  <dd>What happens when one AI assistant handles unrelated domains and
+  irrelevant context from one leaks into another — e.g. tax details showing
+  up while it's meant to be reviewing code. The core problem a multi-agent
+  system is built to solve.
+  <span class="from">Introduced in: <a href="../lessons/0001-context-contamination-and-your-first-profile.html">Lesson 1</a> · coined in Zain Fathoni's <a href="https://www.zainfathoni.com/blog/project-transformers-building-personal-ai-army">Project Transformers</a></span></dd>
+
+  <dt>Specialist agent</dt>
+  <dd>An agent scoped to one narrow domain (e.g. "coding only"), with its
+  own memory and personality, isolated from every other agent's context.
+  <span class="from">Introduced in: <a href="../lessons/0001-context-contamination-and-your-first-profile.html">Lesson 1</a></span></dd>
+
+  <dt>Coordinator agent</dt>
+  <dd>A router agent that decides which specialist should handle a given
+  request, and holds cross-agent context the specialists don't need. In
+  Zain's project this is "Optimus." Not built yet in this project — see
+  Stage 2 of the build spec.
+  <span class="from">Introduced in: <a href="../lessons/0001-context-contamination-and-your-first-profile.html">Lesson 1</a></span></dd>
+
+  <dt>Hermes profile</dt>
+  <dd>Hermes Agent's unit of "a separate agent identity" — its own config
+  file, default model/provider, skills, and memory, isolated from every
+  other profile. This is the mechanism this project uses to build
+  specialist agents: one profile per specialist.
+  <span class="from">Introduced in: <a href="../lessons/0001-context-contamination-and-your-first-profile.html">Lesson 1</a></span></dd>
+
+</dl>
+
+<p style="margin-top:3rem; font-family:-apple-system,sans-serif; font-size:0.85rem; color:var(--ink-soft);">
+Terms get added here as lessons introduce them: SOUL.md, MEMORY.md/USER.md,
+gateway, and kanban are coming in later lessons.
+</p>
+
+</body>
+</html>

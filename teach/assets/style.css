@@ -1,0 +1,196 @@
+/* Shared stylesheet for teach/ lessons and reference docs.
+   Tufte-inspired: serif text, generous margin, minimal chrome. */
+
+:root {
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --paper: #fdfcf9;
+  --paper-inset: #f4f1ea;
+  --rule: #d8d2c4;
+  --accent: #2f6f4f;   /* Peashooter green */
+  --accent-soft: #e4efe8;
+  --code-bg: #f0ede4;
+  --max-width: 760px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e8e6df;
+    --ink-soft: #b8b4a8;
+    --paper: #1c1b18;
+    --paper-inset: #24231f;
+    --rule: #3a382f;
+    --accent: #7fbf9c;
+    --accent-soft: #223129;
+    --code-bg: #26251f;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--paper); }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  font-size: 19px;
+  line-height: 1.6;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 3rem 1.5rem 6rem;
+}
+
+h1, h2, h3 {
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 0.2em;
+}
+
+.kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  margin-bottom: 0.5em;
+}
+
+h2 {
+  font-size: 1.35rem;
+  margin-top: 2.2em;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.3em;
+}
+
+h3 {
+  font-size: 1.1rem;
+  margin-top: 1.6em;
+}
+
+p, li { color: var(--ink); }
+
+.lede {
+  font-size: 1.1rem;
+  color: var(--ink-soft);
+}
+
+a { color: var(--accent); }
+a:visited { color: var(--accent); }
+
+code, pre {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+
+code {
+  background: var(--code-bg);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+pre {
+  background: var(--code-bg);
+  padding: 1em 1.2em;
+  border-radius: 6px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; }
+
+/* Term: an inline glossary definition, expands on the page (no JS needed) */
+.term {
+  border-bottom: 1px dotted var(--accent);
+  cursor: help;
+}
+
+/* Sidenote-style callout box */
+.box {
+  background: var(--paper-inset);
+  border-left: 3px solid var(--accent);
+  padding: 0.9em 1.2em;
+  margin: 1.5em 0;
+  border-radius: 0 4px 4px 0;
+}
+.box.knowledge { border-left-color: var(--accent); }
+.box.skill { border-left-color: #b08a2e; background: color-mix(in srgb, var(--paper-inset) 80%, #b08a2e 8%); }
+.box .box-label {
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin-bottom: 0.4em;
+  display: block;
+}
+
+blockquote {
+  margin: 1.2em 0;
+  padding-left: 1em;
+  border-left: 3px solid var(--rule);
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+/* Quiz widget */
+.quiz {
+  background: var(--paper-inset);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1.2em;
+  margin: 1.5em 0;
+}
+.quiz p.q { font-weight: 600; margin-top: 0; }
+.quiz .choices { display: flex; flex-direction: column; gap: 0.5em; }
+.quiz label {
+  display: block;
+  padding: 0.5em 0.8em;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  font-size: 0.9rem;
+}
+.quiz input[type="radio"] { margin-right: 0.6em; }
+.quiz .feedback {
+  display: none;
+  margin-top: 0.8em;
+  padding: 0.6em 0.9em;
+  border-radius: 5px;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  font-size: 0.9rem;
+}
+.quiz .feedback.correct { background: var(--accent-soft); color: var(--accent); }
+.quiz .feedback.incorrect { background: #f3e2e2; color: #8a3b3b; }
+.quiz input:checked ~ .reveal .feedback { display: block; }
+
+.checklist label {
+  display: flex;
+  gap: 0.6em;
+  align-items: flex-start;
+  margin: 0.5em 0;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  font-size: 0.95rem;
+}
+
+.nav {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  font-size: 0.9rem;
+}
+
+.ask-agent {
+  margin-top: 2.5rem;
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
