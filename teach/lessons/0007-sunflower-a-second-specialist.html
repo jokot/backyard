@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 7 — Sunflower, a Second Specialist</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 7 of the Stage 2 build</p>
+<h1>A second brain, a second bot</h1>
+<p class="lede">Peashooter proved the pattern works. Stage 2 repeats it
+on purpose — a second specialist, in a domain Peashooter should never
+touch, so scope stays split instead of drifting back into one
+assistant doing everything.</p>
+
+<h2>What Sunflower is</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <strong>Sunflower</strong> is Stage 2's second specialist. Its domain
+  is brainstorming, planning, task breakdown, and writing PRDs,
+  proposals, and specs — turning a rough idea into a structured
+  document. It does not write or review code; that stays Peashooter's
+  job. The name follows the same logic as Peashooter's: in Plants vs.
+  Zombies, Sunflower produces the sun every other plant spends to act.
+  Here, Sunflower produces the plans Peashooter later implements.
+</div>
+
+<p>This is the same fix as Stage 1, applied a second time: instead of
+widening Peashooter's scope to also cover planning, a second, separate
+profile keeps the two domains from bleeding into each other — the
+"context contamination" problem from
+<a href="https://www.zainfathoni.com/blog/project-transformers-building-personal-ai-army" target="_blank" rel="noopener">Zain Fathoni's original writeup</a>,
+the same source Stage 1 started from.</p>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Create the profile</strong>, with a description from
+  the start (not added later, the way Peashooter's was refined
+  mid-project):</p>
+  <pre><code>hermes profile create sunflower --clone-from default --description "Brainstorming, planning, task breakdown, and writing PRDs, proposals, and specs"</code></pre>
+
+  <p><strong>2. Make it the active profile, then reset its memory
+  immediately</strong> — before it is ever used for real:</p>
+  <pre><code>hermes profile use sunflower
+echo yes | hermes memory reset</code></pre>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — why reset memory before first use, not after</span>
+  <p>In Stage 1, Peashooter's memory turned out to hold unrelated
+  content from the <code>default</code> profile, discovered only while
+  preparing Lesson 4 — see
+  <a href="../learning-records/0005-clone-from-carries-memory-too.md">learning record 0005</a>.
+  The cause: <code>--clone-from</code> copies memory files along with
+  config, not just config. Sunflower gets the fix applied from the
+  start this time, instead of being found as a bug later.</p>
+</div>
+
+<p><strong>3. Confirm the reset actually worked:</strong></p>
+<pre><code>cat ~/.hermes/profiles/sunflower/memories/MEMORY.md</code></pre>
+<p>This should print <code>No such file or directory</code> — a clean
+slate. The file gets created automatically the first time Sunflower
+writes to it.</p>
+
+<p><strong>4. Assign a model.</strong> While <code>sunflower</code> is
+still the active profile:</p>
+<pre><code>hermes model</code></pre>
+<p>Pick the same OpenRouter model used for Peashooter, unless you want
+to try a different one for this specialist.</p>
+
+<div class="quiz">
+  <p class="q">Why does Sunflower get its own profile instead of a new mode inside Peashooter?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Profiles don't share memory or context</label>
+      <div class="reveal"><p class="feedback correct">Right — a mode inside Peashooter would mix planning context into the same memory and system prompt as coding, the exact contamination this project is built to avoid.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Hermes profiles are faster than modes</label>
+      <div class="reveal"><p class="feedback incorrect">Not the reason — this is about keeping domains isolated, not about speed.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Telegram requires one bot per mode</label>
+      <div class="reveal"><p class="feedback incorrect">Telegram doesn't enforce this — the one-bot-per-profile design is a choice this project made, not a platform requirement.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> <code>hermes profile create sunflower ...</code> succeeded</label>
+  <label><input type="checkbox"> <code>hermes memory reset</code> confirmed clean (file not found)</label>
+  <label><input type="checkbox"> A model is assigned to Sunflower via <code>hermes model</code></label>
+</div>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../docs/superpowers/specs/2026-09-06-stage2-sunflower-crazydave-design.md">Stage 2 spec</a></p>
+
+<p class="ask-agent">Tell me what each command printed — especially
+the <code>hermes model</code> picker's output, so I can confirm which
+model got assigned before we write Sunflower's <code>SOUL.md</code>
+next.</p>
+
+<div class="nav">
+  <span><a href="0006-the-end-to-end-check.html">← Lesson 6</a></span>
+  <span>Lesson 7 of Stage 2</span>
+</div>
+
+</body>
+</html>
