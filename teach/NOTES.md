@@ -18,3 +18,12 @@
   `../docs/superpowers/specs/2026-09-06-peashooter-stage1-design.md`.
 - Bot naming theme: Plants vs. Zombies. First agent = Peashooter (coding
   specialist).
+- **Hermes gotcha (verified 2026-09-06):** `hermes auth add <provider>
+  --type api-key` writes to a separate credential pool that `hermes
+  model`/`hermes doctor` do NOT read for plain API-key providers like
+  OpenRouter. The real mechanism is the `OPENROUTER_API_KEY` env var,
+  which `hermes model`'s own interactive picker prompts for directly and
+  presumably writes to a profile's `.env`. Watch for the same split with
+  other API-key providers (GLM, Kimi, MiniMax, Novita, Gemini, Ollama —
+  all templated as env vars in `.env`) before writing future lessons that
+  touch `hermes auth add` for a non-OAuth provider.

@@ -72,24 +72,34 @@ terminal rather than pasting the key anywhere in chat.</p>
   <a href="https://openrouter.ai/keys">openrouter.ai/keys</a>. Add a small
   amount of credit — this is pay-per-use, not a subscription.</p>
 
-  <p><strong>2. Add it as a pooled credential</strong> — leave off
-  <code>--api-key</code> so Hermes prompts you for it securely instead of
-  it sitting in your shell history:</p>
-  <pre><code>hermes auth add openrouter --type api-key</code></pre>
-
-  <p><strong>3. Make Peashooter the active profile</strong>, then pick its
-  model:</p>
+  <p><strong>2. Make Peashooter the active profile</strong>, then run the
+  picker:</p>
   <pre><code>hermes profile use peashooter
 hermes model</code></pre>
-  <p>This opens an interactive picker. Choose OpenRouter as the provider,
-  then browse its model list. For a coding specialist, a solid default is
-  a mid-tier general model to start (you can change this any time with the
-  same command) — worth also noting where DeepSeek, GLM, Kimi, and MiniMax
-  show up in the list, since those are the cheap options you asked about;
-  check OpenRouter's own pricing page for current rates before picking one
-  for real work, since they shift over time.</p>
+  <p>Choose OpenRouter as the provider. If no key is configured yet, Hermes
+  prompts you directly: <code>OPENROUTER_API_KEY (or Enter to cancel):</code> —
+  paste your real key there. That prompt <em>is</em> the mechanism; it's
+  what actually gets read later, not a separate step.</p>
 
-  <p><strong>4. Confirm it stuck:</strong></p>
+  <div class="box" style="border-left-color:#b08a2e;">
+    <span class="box-label">Correction</span>
+    An earlier version of this lesson had you run
+    <code>hermes auth add openrouter --type api-key</code> first. Skip
+    that — it stores the key in a different credential pool that
+    <code>hermes model</code> and <code>hermes doctor</code> don't
+    actually read for OpenRouter. They read the
+    <code>OPENROUTER_API_KEY</code> prompt above instead. If you already
+    ran the old command, it's harmless, just unused — nothing to undo.
+  </div>
+
+  <p>Then browse the model list. For a coding specialist, a solid default
+  is a mid-tier general model to start (change it any time with the same
+  command) — worth noting where DeepSeek, GLM, Kimi, and MiniMax show up,
+  since those are the cheap options you asked about; check OpenRouter's
+  own pricing page for current rates before picking one for real work,
+  since they shift over time.</p>
+
+  <p><strong>3. Confirm it stuck:</strong></p>
   <pre><code>hermes profile show peashooter</code></pre>
   <p>The <code>Model</code> line should now show what you picked instead
   of a blank.</p>
