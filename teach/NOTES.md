@@ -27,3 +27,10 @@
   other API-key providers (GLM, Kimi, MiniMax, Novita, Gemini, Ollama —
   all templated as env vars in `.env`) before writing future lessons that
   touch `hermes auth add` for a non-OAuth provider.
+- **Cheap-model gotcha (verified 2026-09-06):** cheap/free-tier models
+  (e.g. `deepseek/deepseek-v4-flash-0731`) can drift language even on
+  plain English input, with nothing in config causing it. Fix is an
+  explicit SOUL.md pin ("Always respond in English..."), not a config
+  setting. Expect to need similar explicit pins for other implicit
+  conventions when using cheap models — see
+  `learning-records/0003-cheap-model-language-drift.md`.
