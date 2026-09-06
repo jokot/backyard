@@ -1,7 +1,9 @@
 # Stage 1 Design: Peashooter, the first specialist agent
 
 **Date:** 2026-09-06
-**Status:** Approved for implementation
+**Status:** Complete (2026-09-06) — all four success criteria verified:
+Telegram reply, cross-session memory recall, off-topic decline (Telegram
+and terminal), and invocation from a non-`plants` project folder.
 **Author:** jokot, with Claude Code
 
 ## Background
