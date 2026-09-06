@@ -94,11 +94,27 @@ possible definition.</p>
   harder-worded clause with no soft middle ground.
   <span class="from">Introduced in: <a href="../lessons/0003-soul-md-and-the-scope-boundary.html">Lesson 3</a></span></dd>
 
+  <dt>MEMORY.md</dt>
+  <dd>A per-profile file where Hermes records durable agent notes —
+  conventions, decisions, recurring facts — read into every new session
+  automatically. Lives at
+  <code>~/.hermes/profiles/&lt;profile&gt;/memories/MEMORY.md</code> (the
+  <code>memories/</code> subfolder is easy to miss). Copied wholesale by
+  <code>--clone-from</code>, so a cloned profile inherits the source
+  profile's memory, not a blank slate.
+  <span class="from">Introduced in: <a href="../lessons/0004-memory-that-survives-the-session.html">Lesson 4</a></span></dd>
+
+  <dt>USER.md</dt>
+  <dd>A per-profile file holding facts specifically about the user,
+  separate from MEMORY.md's agent/project notes. Same location and
+  clone behavior as MEMORY.md.
+  <span class="from">Introduced in: <a href="../lessons/0004-memory-that-survives-the-session.html">Lesson 4</a></span></dd>
+
 </dl>
 
 <p style="margin-top:3rem; font-family:-apple-system,sans-serif; font-size:0.85rem; color:var(--ink-soft);">
-Terms get added here as lessons introduce them: SOUL.md, MEMORY.md/USER.md,
-gateway, and kanban are coming in later lessons.
+Terms get added here as lessons introduce them: gateway and kanban are
+coming in later lessons.
 </p>
 
 </body>

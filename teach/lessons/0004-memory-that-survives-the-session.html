@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 4 — Memory That Survives the Session</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 4 of the Peashooter build</p>
+<h1>Memory that survives the session</h1>
+<p class="lede">Stage 1's other success criterion: a fact you tell
+Peashooter today should still be there next time, without you repeating
+it.</p>
+
+<h2>Why this matters</h2>
+
+<p>In <a href="https://www.zainfathoni.com/blog/project-transformers-building-personal-ai-army">Project
+Transformers</a>, Zain's specialists keep working memory of your
+conventions and decisions — the whole point of a persistent specialist
+instead of a fresh chat every time. A coding specialist that forgets your
+stack between sessions is barely better than pasting context into a new
+tab each time.</p>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  Hermes's built-in memory is two files:
+  <span class="term" title="A per-profile file where Hermes records durable facts, conventions, and decisions across sessions.">MEMORY.md</span>
+  (agent notes — conventions, decisions, recurring facts) and
+  <span class="term" title="A per-profile file holding facts specifically about the user, separate from project/agent notes.">USER.md</span>
+  (facts about you specifically). Both live at
+  <code>~/.hermes/profiles/peashooter/memories/</code> — note the
+  <code>memories/</code> subfolder; they are <em>not</em> directly in the
+  profile root, which is easy to assume wrong (an assumption this build
+  actually got wrong once, while checking). Hermes reads both into every
+  new session automatically — no flag, no manual load.
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — clone-from carries memory too</span>
+  <p>Peashooter's memory wasn't empty going into this lesson. Checking
+  the files above turned up real content about <code>git-swap</code>, an
+  unrelated past Go CLI project, plus git identities and a stale provider
+  note — none of it something anyone told Peashooter directly.</p>
+  <p>Cause: <code>hermes profile create peashooter --clone-from
+  default</code> back in Lesson 1 clones the source profile's memory
+  files along with its config, not just config. A cloned profile starts
+  from the source's accumulated state, not a blank one. Fixed with
+  <code>hermes memory reset</code> (asks for a typed <code>yes</code>) —
+  Peashooter's memory is a clean slate as of this lesson.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Start a session and teach it one real fact</strong> —
+  something true about your actual stack or a convention you want
+  remembered (not a throwaway test string; you'll get more out of this
+  if it's something Peashooter should really know going forward):</p>
+  <pre><code>peashooter</code></pre>
+  <p>Tell it the fact directly, e.g. "Remember: I use pnpm, not npm, for
+  all my JS projects" — or whatever's actually true for you. Then exit
+  the session (Ctrl+D, or however you normally leave a Hermes chat).</p>
+
+  <p><strong>2. Start a completely new session</strong> — a fresh process,
+  not <code>--continue</code>:</p>
+  <pre><code>peashooter</code></pre>
+  <p>Ask a question that needs the fact <em>without</em> restating it —
+  e.g. "what package manager do I use for JS projects?" if that's what you
+  told it. You're testing recall, not re-teaching.</p>
+
+  <p><strong>3. Confirm it actually hit disk</strong>, not just the live
+  session:</p>
+  <pre><code>cat ~/.hermes/profiles/peashooter/memories/MEMORY.md</code></pre>
+  <p>Your fact should be in there in some form.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why did this lesson run <code>hermes memory reset</code> before the hands-on steps?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Clone copied unrelated memory</label>
+      <div class="reveal"><p class="feedback correct">Right — --clone-from copies the source profile's memory files too, so Peashooter had inherited an unrelated project's context.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">MEMORY.md had a syntax error</label>
+      <div class="reveal"><p class="feedback incorrect">Not the issue — the file was valid, just full of content from a different, unrelated project.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">SOUL.md requires an empty file</label>
+      <div class="reveal"><p class="feedback incorrect">SOUL.md says nothing about memory file state — it's free text with no such requirement.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Told Peashooter one real fact in a session, then exited</label>
+  <label><input type="checkbox"> In a brand-new session, Peashooter recalled it without being told again</label>
+  <label><input type="checkbox"> Confirmed the fact is actually in <code>memories/MEMORY.md</code> on disk</label>
+</div>
+
+<p>That's both of Stage 1's core behavioral success criteria done: a
+clean scope boundary (Lesson 3) and memory that survives a session
+(this lesson). What's left is making Peashooter reachable somewhere
+other than a terminal.</p>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a></p>
+
+<p class="ask-agent">Tell me what fact you taught it and what it said
+back in the new session. Next: connecting Peashooter to Telegram.</p>
+
+<div class="nav">
+  <span><a href="0003-soul-md-and-the-scope-boundary.html">← Lesson 3</a></span>
+  <span>Lesson 4 of Stage 1</span>
+</div>
+
+</body>
+</html>

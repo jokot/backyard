@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dino Run</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; overflow:hidden; background:#f7f7f7; font-family:monospace; }
+  body { display:flex; align-items:center; justify-content:center; flex-direction:column; }
+  #game {
+    background:#fff;
+    border:1px solid #ccc;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);
+    display:block;
+    max-width:100%;
+    height:auto;
+  }
+  #hud {
+    position:fixed; top:10px; right:14px;
+    font:13px/1 monospace; color:#555; background:rgba(255,255,255,.9);
+    padding:6px 10px; border:1px solid #d8d8d8; border-radius:4px;
+  }
+  #hud b { color:#222; }
+  #overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.45);
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    color:#fff; font-family:monospace; z-index:5;
+  }
+  #overlay h1 { font-size:34px; letter-spacing:2px; margin-bottom:8px; }
+  #overlay p  { font-size:15px; margin-bottom:22px; }
+  #overlay button {
+    font-size:17px; padding:12px 30px; border:0; border-radius:6px; cursor:pointer;
+    background:#6ddb6d; color:#222; font-family:monospace;
+  }
+  #overlay button:hover { background:#5cc95c; }
+  #overlay kbd {
+    display:inline-block; padding:2px 7px; border:1px solid #fff; border-radius:4px;
+    font-size:12px; margin:0 2px; background:#333;
+  }
+</style>
+</head>
+<body>
+<div id="hud"><b>SCORE</b> <span id="score">00000</span> &nbsp; <b>HI</b> <span id="hi">00000</span></div>
+<div id="overlay">
+  <h1 id="overlayTitle">DINO RUN</h1>
+  <p id="overlayHint" style="max-width:460px;text-align:center;">
+    <kbd>SPACE</kbd>/<kbd>↑</kbd> jump &nbsp;•&nbsp; <kbd>↓</kbd> duck under birds &nbsp;•&nbsp; run as far as you can
+  </p>
+  <button id="startbtn">PLAY</button>
+</div>
+<canvas id="game" width="1200" height="420"></canvas>
+<script>
+(function () {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  canvas.style.width = '100%';
+  canvas.style.maxWidth = W + 'px';
+  canvas.style.aspectRatio = W + '/' + H;
+
+  // ---- world scale (up from the old s=4 to make gameplay bigger) ----
+  const GROUND_Y = H - 80;          // ground line y
+  const GRAVITY = 1.1;
+  const JUMP_VY = -14.5;
+
+  // ---- dino dims (logical, matches drawn art) ----
+  const DINO_W = 62, DINO_H = 48;   // standing hitbox
+  const DUCK_W = 74, DUCK_H = 30;   // crouch hitbox
+
+  // ---- sprite painters: explicit rectangles (coords are px, y = bottom) ----
+  function dino(x, y, duck) {       // y = bottom
+    if (duck) {
+      // low, wide crouch pose
+      ctx.fillStyle = '#53a14b';
+      ctx.fillRect(x + 2,  y - 20, 66, 20);  // long low body
+      ctx.fillRect(x + 58, y - 30, 16, 12);  // head up at the front
+      ctx.fillRect(x + 10, y - 12, 12, 12);  // back leg stub
+      ctx.fillRect(x + 30, y - 12, 12, 12);  // front leg stub
+      ctx.fillStyle = '#1d3a1d';
+      ctx.fillRect(x + 62, y - 28, 4, 4);    // eye
+    } else {
+      // standing runner
+      ctx.fillStyle = '#53a14b';
+      ctx.fillRect(x - 6,  y - 28, 12, 10);  // tail
+      ctx.fillRect(x + 6,  y - 14, 10, 14);  // back leg
+      ctx.fillRect(x + 18, y - 12, 8, 12);   // back foot
+      ctx.fillRect(x + 34, y - 14, 10, 14);  // front leg
+      ctx.fillRect(x + 44, y - 12, 8, 12);   // front foot
+      ctx.fillRect(x + 4,  y - 32, 44, 20);  // torso
+      ctx.fillRect(x + 40, y - 26, 8, 8);    // arm
+      ctx.fillRect(x + 38, y - 46, 18, 16);  // head
+      ctx.fillStyle = '#1d3a1d';
+      ctx.fillRect(x + 42, y - 44, 4, 4);    // eye
+    }
+  }
+  function cactus(x, y, kind) {     // y = ground
+    ctx.fillStyle = '#4a7a34';
+    if (kind === 'tall') {
+      ctx.fillRect(x, y - 26, 12, 26);
+      ctx.fillRect(x - 7, y - 16, 6, 7);
+      ctx.fillRect(x + 9, y - 12, 6, 7);
+    } else if (kind === 'double') {
+      ctx.fillRect(x,      y - 22, 11, 22);
+      ctx.fillRect(x + 16, y - 18, 11, 18);
+      ctx.fillRect(x - 4,  y - 13, 5, 6);
+      ctx.fillRect(x + 22, y - 11, 5, 6);
+    } else { // small
+      ctx.fillRect(x, y - 18, 9, 18);
+      ctx.fillRect(x - 4, y - 12, 4, 5);
+      ctx.fillRect(x + 7, y - 12, 4, 5);
+    }
+  }
+  function bird(x, y) {             // y = bottom; flaps via global frame
+    ctx.fillStyle = '#8a6fb5';
+    const f = (frame / 6) % 2;
+    ctx.fillRect(x, y - 9, 30, 9);                 // body
+    ctx.fillRect(x + 22, y - 18, 5, 9);            // tail up
+    ctx.fillRect(x + 8, y - 20, 9, 11);            // body upright
+    ctx.fillRect(x + (f < 1 ? 8 : 18), y - 22, 7, 4); // flapping wing
+  }
+
+  // ---- game state ----
+  let state = 'idle';
+  let score = 0, hi = 0;
+  const savedHi = localStorage.getItem('dinoHi');
+  if (savedHi) hi = parseInt(savedHi, 10) || 0;
+
+  let dinoX = 80, dinoY = GROUND_Y;   // dinoY = bottom
+  let vy = 0, ducking = false, grounded = true;
+  let obstacles = [];
+  let speed = 6.0, frame = 0, spawnTimer = 0;
+
+  function reset() {
+    dinoY = GROUND_Y; vy = 0; ducking = false; grounded = true;
+    obstacles = []; score = 0; speed = 6.0; frame = 0; spawnTimer = 36;
+    state = 'running';
+  }
+
+  // RANDOM obstacle: type is random, so each one is different.
+  function addObstacle() {
+    const r = Math.random();
+    if (r < 0.18) {
+      // pterodactyl at a RANDOM height — duck under or time the jump
+      const alt = 34 + Math.random() * 16;          // 34..50 px above ground
+      obstacles.push({ kind: 'bird', x: W + 30, bottom: GROUND_Y - alt });
+    } else if (r < 0.40) {
+      obstacles.push({ kind: 'tall', x: W + 30, bottom: GROUND_Y });
+    } else if (r < 0.62) {
+      obstacles.push({ kind: 'double', x: W + 30, bottom: GROUND_Y });
+    } else {
+      obstacles.push({ kind: 'small', x: W + 30, bottom: GROUND_Y });
+    }
+  }
+
+  function jump(pressed) {
+    if (grounded && pressed) { vy = JUMP_VY; grounded = false; }
+  }
+  function duck(pressed) {
+    ducking = pressed;
+    if (!grounded && pressed) vy = 7;   // fast-fall while ducking
+  }
+
+  // ---- input ----
+  document.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'Space') {
+      e.preventDefault();
+      if (state === 'idle' || state === 'over') startGame();
+      else if (state === 'running') jump(true);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (state === 'running') duck(true);
+    }
+  });
+  document.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowDown') duck(false);
+  });
+
+  let touchDown = false;
+  canvas.addEventListener('pointerdown', () => {
+    if (state === 'idle' || state === 'over') { startGame(); return; }
+    if (state === 'running') { touchDown = true; jump(true); }
+  });
+  canvas.addEventListener('pointerup', () => { touchDown = false; duck(false); });
+
+  // ---- collisions (AABB, forgiving) ----
+  function collide(a, b) {
+    const pad = 4;
+    return a.x < b.x + b.w - pad && a.x + a.w > b.x + pad &&
+           a.y < b.y + b.h - pad && a.y + a.h > b.y + pad;
+  }
+
+  function update() {
+    if (!grounded) {
+      vy += GRAVITY;
+      dinoY += vy;
+      if (dinoY >= GROUND_Y) { dinoY = GROUND_Y; vy = 0; grounded = true; ducking = false; }
+    }
+
+    for (const o of obstacles) o.x -= speed;
+    obstacles = obstacles.filter(o => o.x > -60);
+
+    spawnTimer--;
+    if (spawnTimer <= 0) {
+      addObstacle();
+      spawnTimer = 34 + Math.floor(Math.random() * 34) - Math.min(26, score / 4000);
+      if (spawnTimer < 20) spawnTimer = 20;
+    }
+
+    score += speed;
+    speed = Math.min(12, 6.0 + score / 2600);
+
+    const dinoH = ducking ? DUCK_H : DINO_H;
+    const dinoW = ducking ? DUCK_W : DINO_W;
+    const dinoBox = { x: dinoX + 8, y: dinoY - dinoH, w: dinoW - 14, h: dinoH };
+
+    for (const o of obstacles) {
+      let oBox;
+      if (o.kind === 'bird') oBox = { x: o.x + 4, y: o.bottom - 20, w: 34, h: 20 };
+      else if (o.kind === 'tall') oBox = { x: o.x + 2, y: o.bottom - 26, w: 16, h: 26 };
+      else if (o.kind === 'double') oBox = { x: o.x, y: o.bottom - 22, w: 34, h: 22 };
+      else oBox = { x: o.x + 2, y: o.bottom - 18, w: 12, h: 18 };
+      if (collide(dinoBox, oBox)) { state = 'over'; gameOver(); }
+    }
+    frame++;
+  }
+
+  function gameOver() {
+    const final = Math.floor(score);
+    if (final > hi) { hi = final; localStorage.setItem('dinoHi', String(hi)); }
+    document.getElementById('hi').textContent = String(hi).padStart(5, '0');
+    setTimeout(() => {
+      overlay.style.display = 'flex';
+      overlayTitle.textContent = 'GAME OVER';
+      overlayHint.textContent = 'space to play again';
+      startBtn.textContent = 'PLAY AGAIN';
+    }, 300);
+  }
+
+  function startGame() {
+    overlay.style.display = 'none';
+    reset();
+    document.getElementById('hi').textContent = String(hi).padStart(5, '0');
+  }
+
+  // ---- render ----
+  function render() {
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    // ground
+    ctx.fillStyle = '#e8e3d4'; ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+    ctx.fillStyle = '#cf6';    ctx.fillRect(0, GROUND_Y, W, 2);
+    ctx.fillStyle = '#9b9b9b';
+    for (let i = 0; i < W; i += 60) {
+      const xoff = (frame * speed) % 60;
+      ctx.fillRect(Math.floor(i - xoff), GROUND_Y + 12, 24, 3);
+    }
+    for (const o of obstacles) {
+      if (o.kind === 'bird') bird(o.x, o.bottom);
+      else cactus(o.x, o.bottom, o.kind);
+    }
+    if (state !== 'over' || (frame % 30) < 6) dino(dinoX, dinoY, ducking);
+    // on-canvas score
+    ctx.fillStyle = '#222';
+    ctx.font = '22px monospace';
+    ctx.fillText(String(Math.floor(score)).padStart(5, '0'), W - 150, 32);
+  }
+
+  function loop() {
+    if (state === 'running') update();
+    render();
+    if (state === 'running') {
+      document.getElementById('score').textContent = String(Math.floor(score)).padStart(5, '0');
+    }
+    requestAnimationFrame(loop);
+  }
+
+  const overlay = document.getElementById('overlay');
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlayHint = document.getElementById('overlayHint');
+  const startBtn = document.getElementById('startbtn');
+  startBtn.addEventListener('click', startGame);
+
+  document.getElementById('hi').textContent = String(hi).padStart(5, '0');
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

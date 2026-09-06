@@ -24,3 +24,10 @@ default when the profile runs a cheap model — don't assume a polite
 instruction is strong enough to survive dilution. Retest exclusions with
 a real off-topic question before trusting them, the same way Lesson 3
 did — don't take the wording on faith.
+
+**Confirmed fixed (2026-09-06):** retested with "what is volcano" (clean
+decline) and "what is bumblebee in android studio" (answered in full,
+correctly read as an on-topic dev-tool question, not a trivia one). The
+hard-rule wording holds up, and the model correctly distinguishes a
+same-word off-topic case from an on-topic one instead of pattern-matching
+on keywords alone.
