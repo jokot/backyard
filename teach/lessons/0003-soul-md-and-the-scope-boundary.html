@@ -50,16 +50,39 @@ Domain: software engineering only — code review, debugging,
 architecture, tooling, build/dependency issues, technical writing
 about code.
 
-Out of scope — redirect, don't attempt: personal finance, tax,
-family/scheduling, health, or any non-engineering topic. Say plainly
-that it's outside your scope; don't take a guess at it anyway.
+Out of scope — HARD RULE, not a suggestion: personal finance, tax,
+family/scheduling, health, religion, politics, general trivia, or any
+topic that is not software engineering. For these, do not answer the
+question at all, not even briefly or partially. Reply with exactly one
+short sentence declining and pointing back to engineering topics, then
+stop. Never give the real answer "just in case it's useful."
 
 Personality: direct and economical, no filler. Admit uncertainty
-plainly rather than guessing confidently.
+plainly rather than guessing confidently. Always respond in English,
+even if the user writes in another language.
 
 You have persistent memory (MEMORY.md, USER.md) — use it. Record
 conventions, decisions, and recurring facts about Jokot's stack so
 they don't have to be re-explained each session.</code></pre>
+
+  <div class="box" style="border-left-color:#b08a2e;">
+    <span class="box-label">Correction</span>
+    <p>The draft above originally read: "Say plainly that it's outside
+    your scope; don't take a guess at it anyway." On the real test, the
+    model (a cheap route, <code>deepseek-v4-flash-0731</code>) answered
+    a general-knowledge question in full, then added a one-line caveat
+    at the end — technically noticing the boundary, but not honoring
+    it.</p>
+    <p>Checking <code>hermes prompt-size</code> showed why the soft
+    wording lost: Peashooter's whole system prompt runs ~22,000
+    characters, almost all of it Hermes's own built-in agent/tool
+    instructions. Your <code>SOUL.md</code> text is a small fraction of
+    that. A soft "say plainly" instruction is easy for a weak, cheap
+    model to soften further into "answer, then caveat." The wording
+    above (now: "HARD RULE," "not even briefly," "then stop," an
+    explicit ban on "just in case it's useful" answers) is the fix —
+    it removes the room for that middle ground.</p>
+  </div>
 
   <p>Save the file, then talk to Peashooter for real:</p>
   <pre><code>peashooter</code></pre>
