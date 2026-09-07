@@ -220,9 +220,9 @@ lesson filenames from `0009` on shifted by one number too.
 - Consumes: the `sunflower` profile (Task 1) and Peashooter's existing
   profile from Stage 1.
 - Produces: `brainstorming` and `writing-plans` copied into Sunflower's
-  own skill folder (and `writing-plans` into Peashooter's); the
-  unwanted skill folders deleted from both `sunflower`'s and
-  `peashooter`'s `skills/` directory, scoping each profile's `ls` to
+  own skill folder; the unwanted skill folders deleted from both
+  `sunflower`'s and `peashooter`'s `skills/` directory (including
+  Peashooter's pre-existing `teach`), scoping each profile's `ls` to
   only the skills its own domain needs. Neither profile's
   `config.yaml` changes.
 
@@ -265,6 +265,20 @@ lesson filenames from `0009` on shifted by one number too.
      `hermes skills reset <name> --restore`, which recopies one skill
      from Hermes's own bundled source — no plugin path or backup file
      needed.
+  5. Checked against Peashooter's own `SOUL.md` ("software engineering
+     only — code review, debugging, architecture, tooling,
+     build/dependency issues, technical writing about code"), two
+     earlier calls don't hold up. `writing-plans` never goes to
+     Peashooter at all — it authors full implementation-plan
+     documents, Sunflower's artifact type, not Peashooter's; Peashooter
+     implements plans, it doesn't write them. `teach`, copied into
+     Peashooter's profile in an earlier session, gets removed too — a
+     generic "teach any topic" skill, unrelated to code, that risks
+     walking Peashooter past its own HARD RULE if it ever fires.
+     `brainstorming` stays: its "bounded" path (scope a change, present
+     a short design in chat, get a yes, implement) is a real
+     pre-implementation step for engineering work, not a
+     planning-domain skill in disguise.
   Give the exact commands:
   ```
   cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/brainstorming ~/.hermes/profiles/sunflower/skills/
@@ -309,6 +323,10 @@ lesson filenames from `0009` on shifted by one number too.
          openclaw-imports productivity research smart-home social-media \
          yuanbao
 
+  # A standalone skill that doesn't fit either — teaches any topic, not
+  # code, and risks stepping past Peashooter's own HARD RULE
+  rm -rf teach
+
   # Mixed categories — remove only the unwanted skills, keep the rest
   rm -rf devops/expose-local-web-over-tunnel devops/kanban-orchestrator
   rm -rf software-development/cli-distribution \
@@ -316,9 +334,9 @@ lesson filenames from `0009` on shifted by one number too.
          software-development/hermes-agent-skill-authoring \
          software-development/plan
   ```
-  What's left in Peashooter's `skills/`: `brainstorming`, `teach`,
-  `writing-plans`, all seven `github/` skills, `devops/kanban-worker`,
-  and ten remaining `software-development` skills.
+  What's left in Peashooter's `skills/`: `brainstorming`, all seven
+  `github/` skills, `devops/kanban-worker`, and ten remaining
+  `software-development` skills.
 - [ ] **Step 2: Ask the user to run the two `cp -R` commands and the
   `hermes skills list -p sunflower --source local` check**, and report
   the output — confirm `brainstorming` and `writing-plans` both show
@@ -330,15 +348,18 @@ lesson filenames from `0009` on shifted by one number too.
   `kanban-worker` also stays but won't show — it declares
   `environments: [kanban]`, so it's hidden until Task 8 activates the
   kanban environment.
-- [ ] **Step 4: Ask the user to copy `writing-plans` into Peashooter's
-  skill folder too**
-  (`cp -R .../superpowers/6.3.0/skills/writing-plans ~/.hermes/profiles/peashooter/skills/`,
-  then confirm with `ls` that the folder exists — a silently-failed
-  copy here is easy to miss), **run Peashooter's deletion commands**,
-  then run `hermes skills list -p peashooter --enabled-only` and
-  report the output. Confirm exactly twenty skills show enabled — the
-  twenty-one named in Step 1's design-call list minus `kanban-worker`,
-  hidden for the same reason as Sunflower's.
+- [ ] **Step 4: Ask the user to run Peashooter's deletion commands**
+  (`teach` included), then run
+  `hermes skills list -p peashooter --enabled-only` and report the
+  output. Confirm exactly eighteen skills show enabled: `brainstorming`,
+  `codebase-inspection`, `git-account-switching`, `git-multi-account`,
+  `github-auth`, `github-code-review`, `github-issues`,
+  `github-pr-workflow`, `github-repo-management`,
+  `headless-webapp-testing`, `node-inspect-debugger`, `python-debugpy`,
+  `requesting-code-review`, `simplify-code`, `spike`,
+  `systematic-debugging`, `technical-documentation`,
+  `test-driven-development`. `kanban-worker` also stays but won't
+  show — hidden for the same reason as Sunflower's.
 - [ ] **Step 5: Commit.** Nothing in either profile's `config.yaml`
   changed, so there is nothing to mirror into `hermes-config/` this
   time — commit only the lesson and reference changes.

@@ -70,7 +70,7 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
   <p>Both should show <code>local</code> / <code>enabled</code>.</p>
 </div>
 
-<h2>Two design calls, made once and reused for both profiles</h2>
+<h2>Three design calls, checked against each profile's actual job</h2>
 
 <div class="box knowledge">
   <span class="box-label">Knowledge</span>
@@ -90,6 +90,34 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
     Sunflower and Peashooter become workers once Lesson 14
     initializes the board, so both keep it, ahead of needing it.</li>
   </ol>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — checked Peashooter's own skills against its job, not just carried them forward</span>
+  <p>Peashooter's live <code>SOUL.md</code> states its domain plainly:
+  "software engineering only — code review, debugging, architecture,
+  tooling, build/dependency issues, technical writing about code." It
+  implements and reviews code. Writing specs and task breakdowns is
+  explicitly Sunflower's job, not Peashooter's.</p>
+  <p>Checked against that line, two earlier calls do not hold up:</p>
+  <ul>
+    <li><strong><code>writing-plans</code> was never given to
+    Peashooter</strong> — dropped before the copy step below. It
+    produces full architectural implementation-plan documents, the
+    artifact type Sunflower owns. Peashooter implements plans; it does
+    not author them.</li>
+    <li><strong><code>teach</code> gets removed from Peashooter</strong>,
+    alongside the rest of Step 5 below. It is a generic
+    "teach any topic through interactive lessons" skill, not code-specific
+    — real, byte-identical, copied in during an earlier Telegram
+    session (see the correction above), but nothing in Peashooter's own
+    domain calls for it. Worse, if it ever fires, it can walk Peashooter
+    straight past its own HARD RULE into teaching an off-topic subject.</li>
+  </ul>
+  <p><code>brainstorming</code> stays for Peashooter — its "bounded"
+  path (scope a change to existing code, present a short design in
+  chat, get a yes, then implement) is a real pre-implementation step
+  for engineering work, not a planning-domain skill in disguise.</p>
 </div>
 
 <h2>Why delete, instead of turning skills off in config</h2>
@@ -180,17 +208,10 @@ rm -rf openclaw-imports/caveman openclaw-imports/diagnose \
 
 <div class="box skill">
   <span class="box-label">Skill — hands on</span>
-  <p><strong>5. Give Peashooter <code>writing-plans</code> too</strong>
-  (it already has <code>brainstorming</code> and <code>teach</code>
-  from an earlier session):</p>
-  <pre><code>cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/writing-plans ~/.hermes/profiles/peashooter/skills/
-ls ~/.hermes/profiles/peashooter/skills/writing-plans</code></pre>
-  <p>The <code>ls</code> should print the skill's files
-  (<code>SKILL.md</code> and a prompt file), not
-  "No such file or directory" — confirm this before moving on, since a
-  silently-failed copy here is easy to miss.</p>
-  <p><strong>6. Delete the skill folders Peashooter's domain doesn't
-  touch.</strong> The whole <code>github/</code> category stays —
+  <p><strong>5. Delete the skill folders Peashooter's domain doesn't
+  touch</strong> — including <code>teach</code>, copied in during an
+  earlier session but not a fit for Peashooter's own domain (see the
+  correction above). The whole <code>github/</code> category stays —
   every skill in it is wanted — and only four
   <code>software-development</code> skills go, alongside two more in
   <code>devops</code>:</p>
@@ -202,20 +223,22 @@ rm -rf apple autonomous-ai-agents computer-use creative data-science \
        openclaw-imports productivity research smart-home social-media \
        yuanbao
 
+# A standalone skill that doesn't fit either — teaches any topic, not
+# code, and risks stepping past Peashooter's own HARD RULE
+rm -rf teach
+
 # Mixed categories — remove only the unwanted skills, keep the rest
 rm -rf devops/expose-local-web-over-tunnel devops/kanban-orchestrator
 rm -rf software-development/cli-distribution \
        software-development/cli-onboarding-design \
        software-development/hermes-agent-skill-authoring \
        software-development/plan</code></pre>
-  <p>What's left: <code>brainstorming</code>, <code>teach</code>,
-  <code>writing-plans</code>, all seven <code>github/</code> skills,
-  <code>devops/kanban-worker</code>, and ten remaining
-  <code>software-development</code> skills.</p>
-  <p><strong>7. Verify:</strong></p>
+  <p>What's left: <code>brainstorming</code>, all seven
+  <code>github/</code> skills, <code>devops/kanban-worker</code>, and
+  ten remaining <code>software-development</code> skills.</p>
+  <p><strong>6. Verify:</strong></p>
   <pre><code>hermes skills list -p peashooter --enabled-only</code></pre>
-  <p>Exactly twenty skills should show: <code>brainstorming</code>,
-  <code>teach</code>, <code>writing-plans</code>,
+  <p>Exactly eighteen skills should show: <code>brainstorming</code>,
   <code>codebase-inspection</code>, <code>git-account-switching</code>,
   <code>git-multi-account</code>, <code>github-auth</code>,
   <code>github-code-review</code>, <code>github-issues</code>,
@@ -255,8 +278,7 @@ rm -rf software-development/cli-distribution \
 <div class="checklist">
   <label><input type="checkbox"> <code>brainstorming</code> and <code>writing-plans</code> copied into Sunflower's skill folder, both showing <code>enabled</code></label>
   <label><input type="checkbox"> Sunflower's unwanted skill folders deleted — exactly five skills show enabled (<code>kanban-worker</code> stays hidden until Lesson 14)</label>
-  <label><input type="checkbox"> <code>writing-plans</code> copied into Peashooter's skill folder too</label>
-  <label><input type="checkbox"> Peashooter's unwanted skill folders deleted — exactly twenty skills show enabled (<code>kanban-worker</code> stays hidden until Lesson 14)</label>
+  <label><input type="checkbox"> Peashooter's unwanted skill folders deleted, including <code>teach</code> — exactly eighteen skills show enabled (<code>kanban-worker</code> stays hidden until Lesson 14)</label>
 </div>
 
 <p><a href="../reference/glossary.html">→ Full glossary</a> ·
