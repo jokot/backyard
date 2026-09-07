@@ -127,12 +127,17 @@ possible definition.</p>
   see it too.
   <span class="from">Introduced in: <a href="../lessons/0009-sunflowers-skill-kit.html">Lesson 9</a></span></dd>
 
-  <dt><code>skills.disabled</code></dt>
-  <dd>A plain list under <code>skills:</code> in a profile's
-  <code>config.yaml</code>, naming skills to turn off without deleting
-  their files. Every installed skill is active by default; a name added
-  here opts it out. Reversible — remove the name to turn the skill back
-  on.
+  <dt>Bundled skill manifest</dt>
+  <dd>A <code>.bundled_manifest</code> file inside every profile's
+  <code>skills/</code> folder, one line per bundled skill as
+  <code>name:hash</code>. <code>hermes update</code> reads it to decide
+  what to sync — a skill whose folder is missing but still listed here
+  is read as a deliberate deletion, not damage, and is never recopied.
+  This is what makes deleting an unwanted bundled skill's folder a safe,
+  permanent choice instead of a fragile hand-typed
+  <code>skills.disabled</code> list. Reversible with
+  <code>hermes skills reset &lt;name&gt; --restore</code>, which
+  recopies one skill from Hermes's own bundled source.
   <span class="from">Introduced in: <a href="../lessons/0009-sunflowers-skill-kit.html">Lesson 9</a></span></dd>
 
 </dl>

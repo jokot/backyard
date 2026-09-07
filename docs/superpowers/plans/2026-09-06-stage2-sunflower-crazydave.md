@@ -59,7 +59,7 @@ self-contained HTML file per hands-on step).
   forward nav link to Lesson 7 (Stage 1's last lesson currently has no
   forward link).
 - `teach/reference/glossary.html` — modify across several tasks, add
-  entries for "Hermes skill," "`skills.disabled`," "Kanban board,"
+  entries for "Hermes skill," "Bundled skill manifest," "Kanban board,"
   "Profile description," "Decompose," and "Orchestrator profile" as
   each concept is introduced.
 - `teach/learning-records/000N-<finding>.md` — create one per real
@@ -213,18 +213,20 @@ lesson filenames from `0009` on shifted by one number too.
 - Modify: `teach/lessons/0008-sunflower-soul-and-scope.html:118-121` (add
   a forward nav link to Lesson 9)
 - Modify: `teach/reference/glossary.html` (add "Hermes skill" and
-  "`skills.disabled`" entries — already done during planning; verify
-  present)
+  "Bundled skill manifest" entries — already done during planning;
+  verify present)
 
 **Interfaces:**
 - Consumes: the `sunflower` profile (Task 1) and Peashooter's existing
   profile from Stage 1.
 - Produces: `brainstorming` and `writing-plans` copied into Sunflower's
-  own skill folder; a `skills.disabled` list in both `sunflower`'s and
-  `peashooter`'s `config.yaml`, scoping each profile to only the
-  skills its own domain needs.
+  own skill folder (and `writing-plans` into Peashooter's); the
+  unwanted skill folders deleted from both `sunflower`'s and
+  `peashooter`'s `skills/` directory, scoping each profile's `ls` to
+  only the skills its own domain needs. Neither profile's
+  `config.yaml` changes.
 
-- [ ] **Step 1: Write Lesson 9.** Cover three things, each grounded in
+- [ ] **Step 1: Write Lesson 9.** Cover four things, each grounded in
   direct verification, not assumption:
   1. Hermes skills and Claude Code skills share one format (a folder
      with a `SKILL.md`). Peashooter already proved a raw folder copy
@@ -233,240 +235,118 @@ lesson filenames from `0009` on shifted by one number too.
      `teach/SKILL.md` is byte-identical to `~/.claude/skills/teach/SKILL.md`.
      Neither exists in Sunflower's or the default profile's skill
      folder, confirming skills are scoped per profile, not global.
-  2. The `skills.disabled` mechanism, read from
-     `hermes_cli/skills_config.py`: a plain YAML list under `skills:`
-     in a profile's own `config.yaml`. Every installed skill is active
-     by default; a name added to this list turns it off without
-     deleting its files — reversible by removing the name again.
-  3. Two skills already bundled with Hermes overlap the two being
+  2. Two skills already bundled with Hermes overlap the two being
      copied in: `software-development/plan` ("adapted from
      obra/superpowers") and `software-development/spike`. The plan
      keeps `writing-plans` over the bundled `plan` skill for both
      profiles, since it carries the fuller self-review checklist this
-     project has been using all along, and disables the thinner
-     bundled one. `spike` stays enabled for Peashooter (implementation
-     feasibility checks fit its domain) and gets disabled for
-     Sunflower (spec-writing, not implementation). Also newly found:
-     `devops/kanban-worker` documents the pitfalls a profile hits when
-     Hermes dispatches it a kanban task — relevant to both Sunflower
-     and Peashooter once Task 8 initializes the board, since the
-     dispatcher spawns each of them as a worker.
+     project has been using all along, and removes the thinner bundled
+     one. `spike` stays for Peashooter (implementation feasibility
+     checks fit its domain) and goes for Sunflower (spec-writing, not
+     implementation). Also newly found: `devops/kanban-worker`
+     documents the pitfalls a profile hits when Hermes dispatches it a
+     kanban task — relevant to both Sunflower and Peashooter once Task
+     8 initializes the board, since the dispatcher spawns each of them
+     as a worker. Both keep it.
+  3. Why deletion, not `skills.disabled`: a first draft of this lesson
+     used a hand-typed `skills.disabled` YAML list (documented in
+     `hermes_cli/skills_config.py`) instead of deleting folders. Real
+     testing found it wrong in four places — a `find -maxdepth 3` scan
+     missed six skills nested under `mlops/{evaluation,inference,models}/`,
+     and `spike`/`yuanbao` were dropped by hand while copying one
+     profile's list into the other's. Deleting the folder removes the
+     list to maintain entirely.
+  4. Why deletion is safe long-term: every profile's `skills/` folder
+     carries a `.bundled_manifest` (`name:hash` per bundled skill),
+     read by `tools/skills_sync.py`. Its own comment settles it: "In
+     manifest but not on disk — user deleted it" → `skipped += 1`.
+     `hermes update` never recopies a skill that is missing but still
+     in the manifest. Reversible via
+     `hermes skills reset <name> --restore`, which recopies one skill
+     from Hermes's own bundled source — no plugin path or backup file
+     needed.
   Give the exact commands:
   ```
   cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/brainstorming ~/.hermes/profiles/sunflower/skills/
   cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/writing-plans ~/.hermes/profiles/sunflower/skills/
   hermes skills list -p sunflower --source local
   ```
-  Then the exact `skills.disabled` block to add under the existing
-  `skills:` key in `~/.hermes/profiles/sunflower/config.yaml` (keeping
-  `to-prd`, `to-issues`, `grill-me`, `kanban-worker`, `brainstorming`,
-  and `writing-plans` enabled — everything else in Sunflower's current
-  89-skill roster disabled):
-  ```yaml
-  skills:
-    disabled:
-      - airtable
-      - apple-notes
-      - apple-reminders
-      - architecture-diagram
-      - arxiv
-      - ascii-art
-      - ascii-video
-      - baoyu-infographic
-      - blogwatcher
-      - caveman
-      - claude-code
-      - claude-design
-      - cli-distribution
-      - cli-onboarding-design
-      - codebase-inspection
-      - codex
-      - comfyui
-      - computer-use
-      - design-md
-      - diagnose
-      - dogfood
-      - excalidraw
-      - find-skills
-      - findmy
-      - gif-search
-      - git-account-switching
-      - git-multi-account
-      - github-auth
-      - github-code-review
-      - github-issues
-      - github-pr-workflow
-      - github-repo-management
-      - google-workspace
-      - grill-with-docs
-      - heartmula
-      - hermes-agent
-      - hermes-agent-skill-authoring
-      - hermes-desktop-plugins
-      - himalaya
-      - huggingface-hub
-      - humanizer
-      - imessage
-      - improve-codebase-architecture
-      - jupyter-live-kernel
-      - kanban-orchestrator
-      - llm-wiki
-      - macos-computer-use
-      - manim-video
-      - maps
-      - nano-pdf
-      - node-inspect-debugger
-      - notion
-      - obsidian
-      - ocr-and-documents
-      - opencode
-      - openhue
-      - p5js
-      - petdex
-      - plan
-      - polymarket
-      - popular-web-designs
-      - powerpoint
-      - pretext
-      - prototype
-      - python-debugpy
-      - requesting-code-review
-      - research-paper-writing
-      - setup-matt-pocock-skills
-      - simplify-code
-      - sketch
-      - songsee
-      - songwriting-and-ai-music
-      - systematic-debugging
-      - tdd
-      - teams-meeting-pipeline
-      - technical-documentation
-      - test-driven-development
-      - touchdesigner-mcp
-      - triage
-      - write-a-skill
-      - xurl
-      - youtube-content
-      - yuanbao
-      - zoom-out
+  Then the exact deletion commands for Sunflower — every skill in a
+  whole category goes except two mixed categories, where only the
+  named skills are removed, keeping `devops/kanban-worker` and
+  `openclaw-imports/{grill-me,to-issues,to-prd}` in place:
+  ```bash
+  cd ~/.hermes/profiles/sunflower/skills
+
+  # Whole categories — nothing inside them fits Sunflower's domain
+  rm -rf apple autonomous-ai-agents computer-use creative data-science \
+         dogfood email github hermes-desktop-plugins media mlops \
+         note-taking productivity research smart-home social-media \
+         software-development yuanbao
+
+  # Mixed categories — remove only the unwanted skills, keep the rest
+  rm -rf devops/kanban-orchestrator
+  rm -rf openclaw-imports/caveman openclaw-imports/diagnose \
+         openclaw-imports/find-skills openclaw-imports/grill-with-docs \
+         openclaw-imports/improve-codebase-architecture \
+         openclaw-imports/prototype openclaw-imports/setup-matt-pocock-skills \
+         openclaw-imports/tdd openclaw-imports/triage \
+         openclaw-imports/write-a-skill openclaw-imports/zoom-out
   ```
-  And, for Peashooter's `~/.hermes/profiles/peashooter/config.yaml`
-  (keeping `codebase-inspection`, `git-account-switching`,
-  `github-auth`, `github-code-review`, `github-issues`,
-  `github-pr-workflow`, `github-repo-management`, `git-multi-account`,
-  `node-inspect-debugger`, `python-debugpy`, `requesting-code-review`,
-  `simplify-code`, `systematic-debugging`, `technical-documentation`,
-  `test-driven-development`, `spike`, `headless-webapp-testing`,
-  `kanban-worker`, `brainstorming`, `teach`, and the newly copied
-  `writing-plans` enabled — everything else in Peashooter's current
-  94-skill roster disabled):
-  ```yaml
-  skills:
-    disabled:
-      - airtable
-      - apple-notes
-      - apple-reminders
-      - architecture-diagram
-      - arxiv
-      - ascii-art
-      - ascii-video
-      - baoyu-infographic
-      - blogwatcher
-      - caveman
-      - claude-code
-      - claude-design
-      - cli-distribution
-      - cli-onboarding-design
-      - codex
-      - comfyui
-      - computer-use
-      - design-md
-      - diagnose
-      - dogfood
-      - excalidraw
-      - expose-local-web-over-tunnel
-      - find-skills
-      - findmy
-      - gif-search
-      - google-workspace
-      - grill-me
-      - grill-with-docs
-      - heartmula
-      - hermes-agent
-      - hermes-agent-skill-authoring
-      - hermes-desktop-plugins
-      - himalaya
-      - html5-canvas-games
-      - huggingface-hub
-      - humanizer
-      - imessage
-      - improve-codebase-architecture
-      - jupyter-live-kernel
-      - kanban-orchestrator
-      - llm-wiki
-      - macos-computer-use
-      - manim-video
-      - maps
-      - nano-pdf
-      - notion
-      - obsidian
-      - ocr-and-documents
-      - opencode
-      - openhue
-      - p5js
-      - petdex
-      - plan
-      - polymarket
-      - popular-web-designs
-      - powerpoint
-      - pretext
-      - prototype
-      - research-paper-writing
-      - setup-matt-pocock-skills
-      - sketch
-      - songsee
-      - songwriting-and-ai-music
-      - tdd
-      - teams-meeting-pipeline
-      - to-issues
-      - to-prd
-      - touchdesigner-mcp
-      - triage
-      - write-a-skill
-      - xurl
-      - youtube-content
-      - zoom-out
+  What's left in Sunflower's `skills/`: `brainstorming`,
+  `writing-plans`, `devops/kanban-worker`, and
+  `openclaw-imports/{grill-me,to-issues,to-prd}`.
+
+  And, for Peashooter — the whole `github/` category stays (all seven
+  skills are wanted), and only four `software-development` skills and
+  two `devops` skills are removed:
+  ```bash
+  cd ~/.hermes/profiles/peashooter/skills
+
+  # Whole categories — nothing inside them fits Peashooter's domain
+  rm -rf apple autonomous-ai-agents computer-use creative data-science \
+         dogfood email hermes-desktop-plugins media mlops note-taking \
+         openclaw-imports productivity research smart-home social-media \
+         yuanbao
+
+  # Mixed categories — remove only the unwanted skills, keep the rest
+  rm -rf devops/expose-local-web-over-tunnel devops/kanban-orchestrator
+  rm -rf software-development/cli-distribution \
+         software-development/cli-onboarding-design \
+         software-development/hermes-agent-skill-authoring \
+         software-development/plan
   ```
+  What's left in Peashooter's `skills/`: `brainstorming`, `teach`,
+  `writing-plans`, all seven `github/` skills, `devops/kanban-worker`,
+  and ten remaining `software-development` skills.
 - [ ] **Step 2: Ask the user to run the two `cp -R` commands and the
   `hermes skills list -p sunflower --source local` check**, and report
   the output — confirm `brainstorming` and `writing-plans` both show
   `local` / `enabled`.
-- [ ] **Step 3: Ask the user to add the `skills.disabled` block to
-  Sunflower's `config.yaml`**, then run
-  `hermes skills list -p sunflower --enabled-only` and report the
-  output. Confirm exactly six skills remain enabled: `to-prd`,
-  `to-issues`, `grill-me`, `kanban-worker`, `brainstorming`,
-  `writing-plans`.
+- [ ] **Step 3: Ask the user to run Sunflower's deletion commands**,
+  then run `hermes skills list -p sunflower --enabled-only` and report
+  the output. Confirm exactly five skills show enabled: `to-prd`,
+  `to-issues`, `grill-me`, `brainstorming`, `writing-plans`.
+  `kanban-worker` also stays but won't show — it declares
+  `environments: [kanban]`, so it's hidden until Task 8 activates the
+  kanban environment.
 - [ ] **Step 4: Ask the user to copy `writing-plans` into Peashooter's
   skill folder too**
-  (`cp -R .../superpowers/6.3.0/skills/writing-plans ~/.hermes/profiles/peashooter/skills/`),
-  **add the `skills.disabled` block to Peashooter's `config.yaml`**,
+  (`cp -R .../superpowers/6.3.0/skills/writing-plans ~/.hermes/profiles/peashooter/skills/`,
+  then confirm with `ls` that the folder exists — a silently-failed
+  copy here is easy to miss), **run Peashooter's deletion commands**,
   then run `hermes skills list -p peashooter --enabled-only` and
-  report the output. Confirm the twenty-one skills listed in Step 1
-  remain, nothing else.
-- [ ] **Step 5: Mirror and commit.** Copy both real `config.yaml`
-  files (now carrying `skills.disabled`) to
-  `hermes-config/sunflower/config.yaml` and
-  `hermes-config/peashooter/config.yaml`. Do not mirror the
-  `brainstorming` / `writing-plans` skill folders themselves — the
-  mirroring practice covers `SOUL.md` and `config.yaml` only.
+  report the output. Confirm exactly twenty skills show enabled — the
+  twenty-one named in Step 1's design-call list minus `kanban-worker`,
+  hidden for the same reason as Sunflower's.
+- [ ] **Step 5: Commit.** Nothing in either profile's `config.yaml`
+  changed, so there is nothing to mirror into `hermes-config/` this
+  time — commit only the lesson and reference changes.
   ```
   git add teach/lessons/0009-sunflowers-skill-kit.html \
           teach/lessons/0008-sunflower-soul-and-scope.html \
-          teach/reference/glossary.html \
-          hermes-config/sunflower/config.yaml \
-          hermes-config/peashooter/config.yaml
-  git commit -m "Add Lesson 9: give Sunflower its skill kit, prune both profiles"
+          teach/reference/glossary.html
+  git commit -m "Add Lesson 9: give Sunflower its skill kit, prune both profiles by deletion"
   ```
 
 ---
