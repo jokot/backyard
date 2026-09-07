@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 8 — Sunflower's SOUL and Scope</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 8 of the Stage 2 build</p>
+<h1>A hard rule from the first draft</h1>
+<p class="lede">Peashooter's scope boundary started soft and had to be
+hardened after a real failure (Lesson 3). Sunflower gets the hardened
+wording from the start — the lesson learned, applied a second time,
+before it is needed instead of after.</p>
+
+<h2>Why "hard rule" wording matters</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  A <span class="term" title="A per-profile system prompt: who the agent is, what it owns, what it's out of scope for, and its tone.">SOUL.md</span>
+  that politely says a topic is "outside scope" competes with the rest
+  of the system prompt for the model's attention — with a cheap model,
+  the polite version often loses. Peashooter's Lesson 3 traced this to
+  <span class="term" title="A small, polite instruction gets lost or softened inside a much larger system prompt, especially with cheaper models.">prompt dilution</span>,
+  diagnosed with <code>hermes prompt-size --json</code>. The fix was
+  blunt, explicit wording: "HARD RULE, not a suggestion," an explicit
+  ban on partial answers, "then stop." See
+  <a href="../learning-records/0004-soft-instructions-lose-to-prompt-size.md">learning record 0004</a>
+  for the full diagnosis.
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p>Write this to <code>~/.hermes/profiles/sunflower/SOUL.md</code>,
+  replacing the inherited file entirely:</p>
+  <pre><code>You are Sunflower, the planning and spec-writing specialist in
+Jokot's personal agent team.
+
+Domain: brainstorming, planning, task breakdown, and writing PRDs,
+proposals, and specs — turning a rough idea into a structured
+document. You do not write or review code; that is Peashooter's
+domain.
+
+Out of scope — HARD RULE, not a suggestion: software implementation,
+personal finance, tax, family/scheduling, health, religion, politics,
+general trivia, or any topic that is not planning or spec-writing.
+For these, do not answer the question at all, not even briefly or
+partially. Reply with exactly one short sentence declining and
+pointing back to planning topics, then stop. Never give the real
+answer "just in case it's useful."
+
+Personality: ask clarifying questions before writing a plan or spec,
+rather than guessing at scope. Always respond in English, even if the
+user writes in another language.
+
+You have persistent memory (MEMORY.md, USER.md) — use it. Record
+recurring facts about Jokot's planning conventions and past
+decisions so they don't have to be re-explained each session.</code></pre>
+</div>
+
+<p><strong>Test on-topic</strong> — run <code>sunflower</code> in a
+terminal and ask something clearly in scope, for example:</p>
+<pre><code>break this feature idea into a task list: add a dark mode toggle to a settings page</code></pre>
+<p>Confirm the reply stays at the planning level — a task breakdown,
+not actual code.</p>
+
+<p><strong>Test off-topic</strong> — same style of question that broke
+Peashooter in Lesson 3, for example "what is islam?" or "what is the
+capital of France?" Confirm Sunflower declines in one short sentence,
+not a full answer with a caveat attached.</p>
+
+<p><strong>Test code-adjacent-but-not-planning</strong> — one more,
+sharper than a generic off-topic question: ask Sunflower to write
+actual code, for example "write a Python function to reverse a
+string." This should also get declined — writing code is Peashooter's
+domain, not Sunflower's, even though it is technical.</p>
+
+<div class="quiz">
+  <p class="q">If Sunflower answers an off-topic question with a caveat attached instead of declining outright, what is the most likely cause?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Prompt dilution, same as Peashooter's bug</label>
+      <div class="reveal"><p class="feedback correct">Right — check <code>hermes prompt-size --json</code> first, then tighten the wording the same way Peashooter's fix did, before assuming anything else is wrong.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Sunflower's model is broken</label>
+      <div class="reveal"><p class="feedback incorrect">Not the first thing to suspect — the same model class handled Peashooter's fixed wording correctly, so wording is the more likely cause.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">The kanban board needs to be initialized first</label>
+      <div class="reveal"><p class="feedback incorrect">Unrelated — the kanban board (Lesson 13) has no effect on how one profile answers a direct question.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Sunflower's <code>SOUL.md</code> written, with the hard-rule wording</label>
+  <label><input type="checkbox"> On-topic test stayed at the planning level, no actual code written</label>
+  <label><input type="checkbox"> Off-topic test declined in one short sentence</label>
+  <label><input type="checkbox"> Code-writing request declined too, not treated as in-scope</label>
+</div>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a></p>
+
+<p class="ask-agent">Tell me the results of all three tests — paste
+Sunflower's actual replies, not just pass/fail, so I can catch a
+partial-answer failure even if it looks like a pass at a glance.</p>
+
+<div class="nav">
+  <span><a href="0007-sunflower-a-second-specialist.html">← Lesson 7</a></span>
+  <span>Lesson 8 of Stage 2</span>
+</div>
+
+</body>
+</html>
