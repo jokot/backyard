@@ -70,6 +70,39 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
   <p>Both should show <code>local</code> / <code>enabled</code>.</p>
 </div>
 
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — a second bug, found from your real output</span>
+  <p>After you ran the lists below and sent back
+  <code>--enabled-only</code> output, Sunflower showed 12 skills
+  enabled instead of five, and Peashooter showed 26 instead of
+  twenty. Two mistakes on my side, both now fixed in the lists
+  below:</p>
+  <ol>
+    <li>My first pass built the skill inventory with
+    <code>find ... -maxdepth 3</code>, which stopped one level too
+    early. Six skills live a level deeper, under
+    <code>mlops/{evaluation,inference,models}/</code>, and never made
+    it onto either disabled list:
+    <code>audiocraft-audio-generation</code>,
+    <code>evaluating-llms-harness</code>, <code>llama-cpp</code>,
+    <code>segment-anything-model</code>,
+    <code>serving-llms-vllm</code>, <code>weights-and-biases</code>.
+    Their directory names don't even match — e.g. the directory
+    <code>lm-evaluation-harness</code> has frontmatter
+    <code>name: evaluating-llms-harness</code>, and the disabled list
+    has to use that frontmatter name, not the directory name.</li>
+    <li>Two more were dropped by hand: <code>spike</code> was missing
+    from Sunflower's list even though the prose above said it should
+    be off, and <code>yuanbao</code> was missing from Peashooter's
+    list, lost when I built it by copying Sunflower's.</li>
+  </ol>
+  <p>The lists below are corrected. If you already applied the
+  original version, add these seven lines to each profile's
+  <code>config.yaml</code>: the six <code>mlops</code> names above to
+  both, plus <code>spike</code> to Sunflower and <code>yuanbao</code>
+  to Peashooter.</p>
+</div>
+
 <h2>Turning off what Sunflower doesn't need</h2>
 
 <div class="box knowledge">
@@ -127,6 +160,7 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
     - arxiv
     - ascii-art
     - ascii-video
+    - audiocraft-audio-generation
     - baoyu-infographic
     - blogwatcher
     - caveman
@@ -141,6 +175,7 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
     - design-md
     - diagnose
     - dogfood
+    - evaluating-llms-harness
     - excalidraw
     - find-skills
     - findmy
@@ -165,6 +200,7 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
     - improve-codebase-architecture
     - jupyter-live-kernel
     - kanban-orchestrator
+    - llama-cpp
     - llm-wiki
     - macos-computer-use
     - manim-video
@@ -187,11 +223,14 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
     - python-debugpy
     - requesting-code-review
     - research-paper-writing
+    - segment-anything-model
+    - serving-llms-vllm
     - setup-matt-pocock-skills
     - simplify-code
     - sketch
     - songsee
     - songwriting-and-ai-music
+    - spike
     - systematic-debugging
     - tdd
     - teams-meeting-pipeline
@@ -199,6 +238,7 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
     - test-driven-development
     - touchdesigner-mcp
     - triage
+    - weights-and-biases
     - write-a-skill
     - xurl
     - youtube-content
@@ -206,9 +246,13 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
     - zoom-out</code></pre>
   <p><strong>4. Verify:</strong></p>
   <pre><code>hermes skills list -p sunflower --enabled-only</code></pre>
-  <p>Exactly six skills should remain: <code>to-prd</code>,
-  <code>to-issues</code>, <code>grill-me</code>, <code>kanban-worker</code>,
-  <code>brainstorming</code>, <code>writing-plans</code>.</p>
+  <p>Exactly five skills should show: <code>to-prd</code>,
+  <code>to-issues</code>, <code>grill-me</code>, <code>brainstorming</code>,
+  <code>writing-plans</code>. <code>kanban-worker</code> is also meant
+  to stay enabled, but its <code>SKILL.md</code> declares
+  <code>environments: [kanban]</code> — Hermes only lists it once a
+  kanban environment is active, which isn't until Lesson 14. Its
+  absence here is expected, not a sixth skill to chase down.</p>
 </div>
 
 <h2>The same cleanup for Peashooter</h2>
@@ -218,7 +262,12 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
   <p><strong>5. Give Peashooter <code>writing-plans</code> too</strong>
   (it already has <code>brainstorming</code> and <code>teach</code>
   from an earlier session):</p>
-  <pre><code>cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/writing-plans ~/.hermes/profiles/peashooter/skills/</code></pre>
+  <pre><code>cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/writing-plans ~/.hermes/profiles/peashooter/skills/
+ls ~/.hermes/profiles/peashooter/skills/writing-plans</code></pre>
+  <p>The <code>ls</code> should print the skill's files
+  (<code>SKILL.md</code> and a prompt file), not
+  "No such file or directory" — confirm this before moving on, since a
+  silently-failed copy here is easy to miss.</p>
   <p><strong>6. Add the same kind of <code>disabled:</code> list to
   <code>~/.hermes/profiles/peashooter/config.yaml</code></strong> —
   this one keeps the coding-relevant skills, plus
@@ -233,6 +282,7 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
     - arxiv
     - ascii-art
     - ascii-video
+    - audiocraft-audio-generation
     - baoyu-infographic
     - blogwatcher
     - caveman
@@ -246,6 +296,7 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
     - design-md
     - diagnose
     - dogfood
+    - evaluating-llms-harness
     - excalidraw
     - expose-local-web-over-tunnel
     - find-skills
@@ -266,6 +317,7 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
     - improve-codebase-architecture
     - jupyter-live-kernel
     - kanban-orchestrator
+    - llama-cpp
     - llm-wiki
     - macos-computer-use
     - manim-video
@@ -285,6 +337,8 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
     - pretext
     - prototype
     - research-paper-writing
+    - segment-anything-model
+    - serving-llms-vllm
     - setup-matt-pocock-skills
     - sketch
     - songsee
@@ -295,20 +349,28 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
     - to-prd
     - touchdesigner-mcp
     - triage
+    - weights-and-biases
     - write-a-skill
     - xurl
     - youtube-content
+    - yuanbao
     - zoom-out</code></pre>
   <p><strong>7. Verify:</strong></p>
   <pre><code>hermes skills list -p peashooter --enabled-only</code></pre>
-  <p>Twenty-one skills should remain: the seven <code>github-*</code>
-  and code-review/debugging skills, <code>git-account-switching</code>,
-  <code>git-multi-account</code>, <code>node-inspect-debugger</code>,
-  <code>python-debugpy</code>, <code>technical-documentation</code>,
-  <code>test-driven-development</code>, <code>spike</code>,
-  <code>headless-webapp-testing</code>, <code>kanban-worker</code>,
-  <code>brainstorming</code>, <code>teach</code>, and
-  <code>writing-plans</code>.</p>
+  <p>Exactly twenty skills should show: <code>brainstorming</code>,
+  <code>teach</code>, <code>writing-plans</code>,
+  <code>codebase-inspection</code>, <code>git-account-switching</code>,
+  <code>git-multi-account</code>, <code>github-auth</code>,
+  <code>github-code-review</code>, <code>github-issues</code>,
+  <code>github-pr-workflow</code>, <code>github-repo-management</code>,
+  <code>headless-webapp-testing</code>, <code>node-inspect-debugger</code>,
+  <code>python-debugpy</code>, <code>requesting-code-review</code>,
+  <code>simplify-code</code>, <code>spike</code>,
+  <code>systematic-debugging</code>, <code>technical-documentation</code>,
+  <code>test-driven-development</code>. <code>kanban-worker</code> also
+  stays enabled but, like Sunflower's, won't show here — same
+  <code>environments: [kanban]</code> gating, same "not until Lesson
+  14" reason.</p>
 </div>
 
 <div class="quiz">
@@ -335,9 +397,9 @@ cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3
 <h2>Checkpoint</h2>
 <div class="checklist">
   <label><input type="checkbox"> <code>brainstorming</code> and <code>writing-plans</code> copied into Sunflower's skill folder, both showing <code>enabled</code></label>
-  <label><input type="checkbox"> Sunflower's <code>skills.disabled</code> list added — exactly six skills remain enabled</label>
+  <label><input type="checkbox"> Sunflower's <code>skills.disabled</code> list added — exactly five skills show enabled (<code>kanban-worker</code> stays hidden until Lesson 14)</label>
   <label><input type="checkbox"> <code>writing-plans</code> copied into Peashooter's skill folder too</label>
-  <label><input type="checkbox"> Peashooter's <code>skills.disabled</code> list added — exactly twenty-one skills remain enabled</label>
+  <label><input type="checkbox"> Peashooter's <code>skills.disabled</code> list added — exactly twenty skills show enabled (<code>kanban-worker</code> stays hidden until Lesson 14)</label>
 </div>
 
 <p><a href="../reference/glossary.html">→ Full glossary</a> ·
