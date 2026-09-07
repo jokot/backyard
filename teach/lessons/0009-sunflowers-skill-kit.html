@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 9 — Sunflower's Skill Kit</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 9 of the Stage 2 build</p>
+<h1>Only the skills each specialist needs</h1>
+<p class="lede">Sunflower's SOUL.md sets the boundary in words. This
+lesson sets it in tools too — giving Sunflower two skills from Claude
+Code's superpowers plugin, then trimming both Sunflower's and
+Peashooter's skill rosters down to what each profile's own domain
+actually uses.</p>
+
+<h2>A correction, made in front of you</h2>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — I was wrong about this, and checked before saying so again</span>
+  <p>Asked earlier whether a Claude Code skill like
+  <code>superpowers:brainstorming</code> could be given to a Hermes
+  profile, I said no confirmed path existed. That was wrong — I had
+  only checked <code>hermes skills install</code>, which needs a URL
+  or registry name, and stopped there.</p>
+  <p>Peashooter's own bot had already done it, by a plainer route: a
+  Hermes skill and a Claude Code skill are the same format, a folder
+  with a <code>SKILL.md</code> file. Copying the folder straight into
+  a profile's <code>skills/</code> directory works — no install
+  command needed. I diffed the copies against the real source myself
+  before trusting the claim:</p>
+  <pre><code>diff ~/.hermes/profiles/peashooter/skills/brainstorming/SKILL.md \
+     /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/brainstorming/SKILL.md
+# → identical
+
+diff ~/.hermes/profiles/peashooter/skills/teach/SKILL.md \
+     ~/.claude/skills/teach/SKILL.md
+# → identical</code></pre>
+  <p>Both were byte-for-byte the real thing, and neither existed in
+  Sunflower's skill folder or the shared default profile — confirming
+  skills are scoped per profile, exactly like memory and SOUL.md.</p>
+</div>
+
+<h2>What Sunflower is getting, and why</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p><strong><span class="term" title="A folder with a SKILL.md file that a profile can load and follow. Same format as a Claude Code skill.">Hermes skill</span></strong>
+  — a folder with a <code>SKILL.md</code> (name, description,
+  instructions) that a profile can load and follow. Copy the folder
+  into <code>~/.hermes/profiles/&lt;profile&gt;/skills/</code> and
+  Hermes picks it up with no extra step, no reload command needed.</p>
+  <p>Two skills fit Sunflower's domain from the official superpowers
+  plugin: <code>brainstorming</code> (the dialogue this whole project
+  has been built through) and <code>writing-plans</code> (the format
+  this project's own implementation plans follow). The other twelve
+  skills in that plugin are code, git, or review skills — Peashooter's
+  domain, not Sunflower's.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p><strong>1. Copy both skills into Sunflower's profile:</strong></p>
+  <pre><code>cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/brainstorming ~/.hermes/profiles/sunflower/skills/
+cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/writing-plans ~/.hermes/profiles/sunflower/skills/</code></pre>
+  <p><strong>2. Confirm Hermes sees them:</strong></p>
+  <pre><code>hermes skills list -p sunflower --source local</code></pre>
+  <p>Both should show <code>local</code> / <code>enabled</code>.</p>
+</div>
+
+<h2>Turning off what Sunflower doesn't need</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Sunflower's profile carries 89 skills before this lesson, most of
+  them seeded from the base install — Apple Notes, GitHub PR review,
+  MLOps tools, songwriting, none of it planning or spec work. Every
+  installed skill is active by default; disabling one does not delete
+  it.</p>
+  <p>The real mechanism, read from <code>hermes_cli/skills_config.py</code>:
+  a plain list under <code>skills:</code> in the profile's own
+  <code>config.yaml</code>.</p>
+  <pre><code>skills:
+  disabled: [skill-a, skill-b]</code></pre>
+  <p>A name on this list turns that skill off. Removing the name turns
+  it back on — nothing is deleted, so the change is fully reversible.</p>
+</div>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge — two things worth knowing before you edit the list</span>
+  <ol>
+    <li>Hermes already bundles <code>software-development/plan</code>
+    ("adapted from obra/superpowers") and
+    <code>software-development/spike</code>, which overlap the two
+    skills just copied in. This lesson disables the bundled
+    <code>plan</code> in favor of the richer <code>writing-plans</code>
+    copy — the one with the self-review checklist this project's own
+    plans have used throughout. <code>spike</code> (throwaway
+    feasibility experiments) fits Peashooter's implementation work,
+    not Sunflower's spec-writing, so it stays off for Sunflower and on
+    for Peashooter.</li>
+    <li><code>devops/kanban-worker</code> documents the pitfalls a
+    profile hits once Hermes dispatches it a kanban task. Both
+    Sunflower and Peashooter become workers once Lesson 14
+    initializes the board, so both keep it enabled now, ahead of
+    needing it.</li>
+  </ol>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p><strong>3. Open <code>~/.hermes/profiles/sunflower/config.yaml</code>,
+  find the existing <code>skills:</code> key, and add a
+  <code>disabled:</code> list under it</strong> — this keeps
+  <code>to-prd</code>, <code>to-issues</code>, <code>grill-me</code>,
+  <code>kanban-worker</code>, <code>brainstorming</code>, and
+  <code>writing-plans</code> enabled, and turns off everything else in
+  Sunflower's current roster:</p>
+  <pre><code>skills:
+  disabled:
+    - airtable
+    - apple-notes
+    - apple-reminders
+    - architecture-diagram
+    - arxiv
+    - ascii-art
+    - ascii-video
+    - baoyu-infographic
+    - blogwatcher
+    - caveman
+    - claude-code
+    - claude-design
+    - cli-distribution
+    - cli-onboarding-design
+    - codebase-inspection
+    - codex
+    - comfyui
+    - computer-use
+    - design-md
+    - diagnose
+    - dogfood
+    - excalidraw
+    - find-skills
+    - findmy
+    - gif-search
+    - git-account-switching
+    - git-multi-account
+    - github-auth
+    - github-code-review
+    - github-issues
+    - github-pr-workflow
+    - github-repo-management
+    - google-workspace
+    - grill-with-docs
+    - heartmula
+    - hermes-agent
+    - hermes-agent-skill-authoring
+    - hermes-desktop-plugins
+    - himalaya
+    - huggingface-hub
+    - humanizer
+    - imessage
+    - improve-codebase-architecture
+    - jupyter-live-kernel
+    - kanban-orchestrator
+    - llm-wiki
+    - macos-computer-use
+    - manim-video
+    - maps
+    - nano-pdf
+    - node-inspect-debugger
+    - notion
+    - obsidian
+    - ocr-and-documents
+    - opencode
+    - openhue
+    - p5js
+    - petdex
+    - plan
+    - polymarket
+    - popular-web-designs
+    - powerpoint
+    - pretext
+    - prototype
+    - python-debugpy
+    - requesting-code-review
+    - research-paper-writing
+    - setup-matt-pocock-skills
+    - simplify-code
+    - sketch
+    - songsee
+    - songwriting-and-ai-music
+    - systematic-debugging
+    - tdd
+    - teams-meeting-pipeline
+    - technical-documentation
+    - test-driven-development
+    - touchdesigner-mcp
+    - triage
+    - write-a-skill
+    - xurl
+    - youtube-content
+    - yuanbao
+    - zoom-out</code></pre>
+  <p><strong>4. Verify:</strong></p>
+  <pre><code>hermes skills list -p sunflower --enabled-only</code></pre>
+  <p>Exactly six skills should remain: <code>to-prd</code>,
+  <code>to-issues</code>, <code>grill-me</code>, <code>kanban-worker</code>,
+  <code>brainstorming</code>, <code>writing-plans</code>.</p>
+</div>
+
+<h2>The same cleanup for Peashooter</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p><strong>5. Give Peashooter <code>writing-plans</code> too</strong>
+  (it already has <code>brainstorming</code> and <code>teach</code>
+  from an earlier session):</p>
+  <pre><code>cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/writing-plans ~/.hermes/profiles/peashooter/skills/</code></pre>
+  <p><strong>6. Add the same kind of <code>disabled:</code> list to
+  <code>~/.hermes/profiles/peashooter/config.yaml</code></strong> —
+  this one keeps the coding-relevant skills, plus
+  <code>kanban-worker</code>, <code>spike</code>, <code>brainstorming</code>,
+  <code>teach</code>, and the new <code>writing-plans</code>:</p>
+  <pre><code>skills:
+  disabled:
+    - airtable
+    - apple-notes
+    - apple-reminders
+    - architecture-diagram
+    - arxiv
+    - ascii-art
+    - ascii-video
+    - baoyu-infographic
+    - blogwatcher
+    - caveman
+    - claude-code
+    - claude-design
+    - cli-distribution
+    - cli-onboarding-design
+    - codex
+    - comfyui
+    - computer-use
+    - design-md
+    - diagnose
+    - dogfood
+    - excalidraw
+    - expose-local-web-over-tunnel
+    - find-skills
+    - findmy
+    - gif-search
+    - google-workspace
+    - grill-me
+    - grill-with-docs
+    - heartmula
+    - hermes-agent
+    - hermes-agent-skill-authoring
+    - hermes-desktop-plugins
+    - himalaya
+    - html5-canvas-games
+    - huggingface-hub
+    - humanizer
+    - imessage
+    - improve-codebase-architecture
+    - jupyter-live-kernel
+    - kanban-orchestrator
+    - llm-wiki
+    - macos-computer-use
+    - manim-video
+    - maps
+    - nano-pdf
+    - notion
+    - obsidian
+    - ocr-and-documents
+    - opencode
+    - openhue
+    - p5js
+    - petdex
+    - plan
+    - polymarket
+    - popular-web-designs
+    - powerpoint
+    - pretext
+    - prototype
+    - research-paper-writing
+    - setup-matt-pocock-skills
+    - sketch
+    - songsee
+    - songwriting-and-ai-music
+    - tdd
+    - teams-meeting-pipeline
+    - to-issues
+    - to-prd
+    - touchdesigner-mcp
+    - triage
+    - write-a-skill
+    - xurl
+    - youtube-content
+    - zoom-out</code></pre>
+  <p><strong>7. Verify:</strong></p>
+  <pre><code>hermes skills list -p peashooter --enabled-only</code></pre>
+  <p>Twenty-one skills should remain: the seven <code>github-*</code>
+  and code-review/debugging skills, <code>git-account-switching</code>,
+  <code>git-multi-account</code>, <code>node-inspect-debugger</code>,
+  <code>python-debugpy</code>, <code>technical-documentation</code>,
+  <code>test-driven-development</code>, <code>spike</code>,
+  <code>headless-webapp-testing</code>, <code>kanban-worker</code>,
+  <code>brainstorming</code>, <code>teach</code>, and
+  <code>writing-plans</code>.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does the plan disable the bundled <code>plan</code> skill instead of the newly copied <code>writing-plans</code>, when both do a similar job?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a"><code>writing-plans</code> has the fuller self-review checklist already in use</label>
+      <div class="reveal"><p class="feedback correct">Right — this project's own spec and plan documents were built using that exact checklist, so keeping it is keeping consistency, not novelty.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">The bundled <code>plan</code> skill is broken</label>
+      <div class="reveal"><p class="feedback incorrect">Nothing found suggests it's broken — the choice is about depth of process, not a defect.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Bundled skills can't be disabled</label>
+      <div class="reveal"><p class="feedback incorrect">They can — <code>skills.disabled</code> works on bundled, local, and hub skills alike, regardless of source.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> <code>brainstorming</code> and <code>writing-plans</code> copied into Sunflower's skill folder, both showing <code>enabled</code></label>
+  <label><input type="checkbox"> Sunflower's <code>skills.disabled</code> list added — exactly six skills remain enabled</label>
+  <label><input type="checkbox"> <code>writing-plans</code> copied into Peashooter's skill folder too</label>
+  <label><input type="checkbox"> Peashooter's <code>skills.disabled</code> list added — exactly twenty-one skills remain enabled</label>
+</div>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../docs/superpowers/plans/2026-09-06-stage2-sunflower-crazydave.md">Stage 2 plan</a></p>
+
+<p class="ask-agent">Tell me the output of both
+<code>hermes skills list -p &lt;profile&gt; --enabled-only</code>
+commands, so I can confirm the keep-lists match before we mirror and
+commit both <code>config.yaml</code> files.</p>
+
+<div class="nav">
+  <span><a href="0008-sunflower-soul-and-scope.html">← Lesson 8</a></span>
+  <span>Lesson 9 of Stage 2</span>
+</div>
+
+</body>
+</html>
