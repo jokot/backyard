@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 13 — Crazy Dave's Skill Kit</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 13 of the Stage 2 build</p>
+<h1>Pruning almost everything, not most things</h1>
+<p class="lede">Lesson 9 pruned Peashooter and Sunflower down to what
+their domains actually need — each kept a real working set. Crazy
+Dave's domain line reads "none," so this cleanup goes the other
+direction: almost nothing survives.</p>
+
+<h2>Why this cleanup looks different</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Crazy Dave was created with <code>--clone-from default</code> in
+  Lesson 12, same as every other profile — so it inherited the same
+  full, unpruned bundle Peashooter and Sunflower started with before
+  Lesson 9. Running <code>hermes skills list -p crazydave
+  --enabled-only</code> confirms it: the entire default bundle, still
+  there.</p>
+  <p>The difference is what Crazy Dave's own <code>SOUL.md</code> says
+  it's allowed to do: "Domain: none — you do not answer requests
+  yourself." Peashooter's and Sunflower's cleanups were case-by-case —
+  each bundled skill got checked against a real domain line, and a lot
+  of them fit. Crazy Dave's domain line rules out the entire bundle at
+  once. There's no case-by-case review to do, because there's no
+  domain for a skill to fit into.</p>
+</div>
+
+<h2>The one exception</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>One bundled skill does fit: <code>devops/kanban-orchestrator</code>.
+  Its own description calls it "the deeper playbook when you're an
+  orchestrator profile whose whole job is routing" — and Lesson 15 sets
+  <code>kanban.orchestrator_profile</code> to <code>'crazydave'</code>
+  in every profile's <code>config.yaml</code>, naming Crazy Dave as
+  that orchestrator explicitly.</p>
+  <p><code>devops/kanban-worker</code> — the skill Peashooter and
+  Sunflower both kept in Lesson 9 — is the mirror-image case: it
+  documents pitfalls for a profile the dispatcher spawns to actually
+  <em>do</em> a task. Crazy Dave is never dispatched that way, so it
+  goes.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Worth knowing, not a contradiction</span>
+  <p><code>kanban-orchestrator</code>'s playbook describes a fuller job
+  than Crazy Dave's current <code>SOUL.md</code> asks for — it covers
+  discovering profiles and fanning a task out across several with
+  explicit <code>assignee=</code> reasoning. Crazy Dave's own hard rule
+  is narrower: create one task, no assignee logic, stop. The skill
+  stays anyway. Its core "don't do the work yourself" rule reinforces
+  Crazy Dave's hard rule rather than fighting it, and if Lesson 16's
+  end-to-end test shows Crazy Dave actually needs the fuller playbook,
+  it's already in place. If it turns out unused, that costs nothing.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>Delete everything except the orchestrator skill:</strong></p>
+  <pre><code>cd ~/.hermes/profiles/crazydave/skills
+
+# Whole categories — nothing inside them fits a profile with no domain
+rm -rf apple autonomous-ai-agents computer-use creative data-science \
+       dogfood email github hermes-desktop-plugins media mlops \
+       note-taking openclaw-imports productivity research smart-home \
+       social-media software-development yuanbao
+
+# Mixed category — remove the worker half, keep the orchestrator half
+rm -rf devops/kanban-worker</code></pre>
+
+  <p><strong>Verify:</strong></p>
+  <pre><code>hermes skills list -p crazydave --enabled-only</code></pre>
+  <p>This should report <strong>zero</strong> enabled skills. That's
+  correct, not a bug — the one skill left,
+  <code>devops/kanban-orchestrator</code>, declares
+  <code>environments: [kanban]</code>, so it stays hidden until Lesson
+  15 activates the kanban environment, the same way
+  <code>kanban-worker</code> stayed hidden for Peashooter and Sunflower
+  after their own Lesson 9 cleanup.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does Crazy Dave keep <code>devops/kanban-orchestrator</code> but not <code>devops/kanban-worker</code>, the opposite of what Peashooter and Sunflower kept?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Crazy Dave is the profile the dispatcher names as the orchestrator, never one it dispatches a task to</label>
+      <div class="reveal"><p class="feedback correct">Right — kanban-worker documents pitfalls for a profile spawned to do a task; Crazy Dave never does the task itself, so it never hits those pitfalls.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">kanban-worker was already deleted from the default bundle</label>
+      <div class="reveal"><p class="feedback incorrect">Not the case — Crazy Dave inherited the full default bundle at creation, kanban-worker included, same as Peashooter and Sunflower did before their own cleanup.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Only one kanban skill can be enabled per Hermes installation</label>
+      <div class="reveal"><p class="feedback incorrect">Not a real constraint — Peashooter and Sunflower both have kanban-worker enabled at the same time as this cleanup runs.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> All whole-category folders removed from Crazy Dave's skills</label>
+  <label><input type="checkbox"> <code>devops/kanban-worker</code> removed, <code>devops/kanban-orchestrator</code> kept</label>
+  <label><input type="checkbox"> <code>hermes skills list -p crazydave --enabled-only</code> confirmed empty</label>
+</div>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../docs/superpowers/plans/2026-09-06-stage2-sunflower-crazydave.md">Stage 2 plan</a></p>
+
+<p class="ask-agent">Tell me the output of the verify command, so I can
+confirm the empty result is the expected one before we move on to
+Crazy Dave's own Telegram door.</p>
+
+<div class="nav">
+  <span><a href="0012-crazy-dave-the-coordinator.html">← Lesson 12</a></span>
+  <span>Lesson 13 of Stage 2</span>
+  <span><a href="0014-crazy-dave-on-telegram.html">Lesson 14 →</a></span>
+</div>
+
+</body>
+</html>

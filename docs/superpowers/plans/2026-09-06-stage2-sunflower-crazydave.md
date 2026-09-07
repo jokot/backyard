@@ -52,7 +52,7 @@ self-contained HTML file per hands-on step).
 ## File Structure
 
 - `teach/lessons/0007-sunflower-a-second-specialist.html` through
-  `teach/lessons/0015-the-stage2-end-to-end-check.html` — one lesson
+  `teach/lessons/0016-the-stage2-end-to-end-check.html` — one lesson
   per task below, following the Stage 1 template
   (`teach/lessons/0001*.html` through `0006*.html`).
 - `teach/lessons/0006-the-end-to-end-check.html` — modify, add a
@@ -82,6 +82,16 @@ original spec, since it surfaced during Lesson 8's follow-up
 questions. This inserted a new Task 3 below, and every task after it
 shifted down by one (old Task 3 → Task 4, ... old Task 8 → Task 9), so
 lesson filenames from `0009` on shifted by one number too.
+
+## Amendment (post-Task 6)
+
+After Task 6, the user asked for the same skill-roster cleanup for
+Crazy Dave that Task 3 gave Sunflower and Peashooter — not addressed
+in the original spec, since Crazy Dave's profile didn't exist until
+Task 6 created it. This inserted a new Task 7 below, and every task
+after it shifted down by one (old Task 7 → Task 8, old Task 8 → Task
+9, old Task 9 → Task 10), so lesson filenames from `0013` on shifted
+by one number too.
 
 ---
 
@@ -376,7 +386,7 @@ lesson filenames from `0009` on shifted by one number too.
   the output. Confirm exactly five skills show enabled: `to-prd`,
   `to-issues`, `grill-me`, `brainstorming`, `writing-plans`.
   `kanban-worker` also stays but won't show — it declares
-  `environments: [kanban]`, so it's hidden until Task 8 activates the
+  `environments: [kanban]`, so it's hidden until Task 9 activates the
   kanban environment.
 - [ ] **Step 4: Ask the user to run Peashooter's deletion commands**
   (`teach` included), then run
@@ -427,7 +437,7 @@ lesson filenames from `0009` on shifted by one number too.
 - Consumes: `sunflower`'s description, set at creation in Task 1;
   Peashooter's existing description from Stage 1.
 - Produces: two profile descriptions specific enough for
-  `hermes kanban decompose` (Task 8) to route correctly between them.
+  `hermes kanban decompose` (Task 9) to route correctly between them.
 
 - [ ] **Step 1: Write Lesson 10.** Explain, citing
   `hermes_cli/kanban_decompose.py`'s `_build_roster()`/`_format_roster()`,
@@ -514,7 +524,7 @@ lesson filenames from `0009` on shifted by one number too.
 - Consumes: none new — a fresh profile, same as Task 1's pattern.
 - Produces: a real `crazydave` profile whose only behavior is
   creating a kanban task and subscribing the chat to it. The kanban
-  tool calls in its `SOUL.md` become callable once Task 8 initializes
+  tool calls in its `SOUL.md` become callable once Task 9 initializes
   the board; until then, this task only sets up the profile and its
   instructions.
 
@@ -563,17 +573,101 @@ lesson filenames from `0009` on shifted by one number too.
 
 ---
 
-### Task 7: Connect Crazy Dave to Telegram
+### Task 7: Give Crazy Dave its skill kit, pruned to routing only
 
 **Files:**
-- Create: `teach/lessons/0013-crazy-dave-on-telegram.html`
+- Create: `teach/lessons/0013-crazy-daves-skill-kit.html`
 
 **Interfaces:**
-- Consumes: the `crazydave` profile from Task 5.
+- Consumes: the `crazydave` profile from Task 6, and the same
+  `.bundled_manifest` deletion mechanism Task 3 established.
+- Produces: a `crazydave` skills folder holding only
+  `devops/kanban-orchestrator`, hidden until Task 9 activates the
+  kanban environment — no domain skills at all, matching a profile
+  whose `SOUL.md` forbids it from answering anything itself.
+
+- [ ] **Step 1: Write Lesson 13.** Same structure as Task 3's lesson,
+  but the opposite shape of cleanup: Peashooter and Sunflower each
+  kept a broad slice of their bundled skills because they have a real
+  domain to work in. Crazy Dave's `SOUL.md` domain line reads "none —
+  you do not answer requests yourself," so almost nothing in the
+  default bundle fits — the cleanup here is closer to "remove
+  everything except one skill" than "prune down to a working set."
+  Cover:
+  1. Crazy Dave inherited the full, unpruned default bundle
+     (`--clone-from default` in Task 6), same starting state Peashooter
+     and Sunflower had before Task 3 — confirmed live via
+     `hermes skills list -p crazydave --enabled-only`, which lists the
+     entire bundle.
+  2. The one skill that does fit: `devops/kanban-orchestrator`. Its own
+     description calls it "the deeper playbook when you're an
+     orchestrator profile whose whole job is routing" — and Task 9 sets
+     `kanban.orchestrator_profile` to `'crazydave'` in every profile's
+     `config.yaml`, naming Crazy Dave as that orchestrator explicitly.
+     `devops/kanban-worker`, which Peashooter and Sunflower both kept,
+     is the mirror-image skill for a profile the dispatcher spawns to
+     *do* a task — Crazy Dave is never dispatched that way, so it goes.
+  3. Note honestly, don't paper over: `kanban-orchestrator`'s playbook
+     describes a fuller job (discover profiles, fan tasks out across
+     several with explicit `assignee=` reasoning) than Crazy Dave's own
+     `SOUL.md` currently asks for (create one task, no assignee logic,
+     stop). Keep the skill anyway — its core "don't do the work
+     yourself" rule reinforces Crazy Dave's hard rule rather than
+     conflicting with it, and if Task 10's end-to-end test shows Crazy
+     Dave actually needs the fuller playbook, the skill is already in
+     place. If it turns out unused, that costs nothing.
+  4. Every other category — `apple`, `autonomous-ai-agents`,
+     `computer-use`, `creative`, `data-science`, `dogfood`, `email`,
+     `github`, `hermes-desktop-plugins`, `media`, `mlops`,
+     `note-taking`, `openclaw-imports`, `productivity`, `research`,
+     `smart-home`, `social-media`, `software-development`, `yuanbao` —
+     is engineering, writing, or general-assistant capability Crazy
+     Dave's `SOUL.md` explicitly forbids it from using. None of it gets
+     a case-by-case review the way Peashooter's and Sunflower's did in
+     Task 3, since the domain line rules out the entire bundle at once,
+     not skill-by-skill.
+
+  Give the exact deletion commands:
+  ```bash
+  cd ~/.hermes/profiles/crazydave/skills
+
+  # Whole categories — nothing inside them fits a profile with no domain
+  rm -rf apple autonomous-ai-agents computer-use creative data-science \
+         dogfood email github hermes-desktop-plugins media mlops \
+         note-taking openclaw-imports productivity research smart-home \
+         social-media software-development yuanbao
+
+  # Mixed category — remove the worker half, keep the orchestrator half
+  rm -rf devops/kanban-worker
+  ```
+  What's left in Crazy Dave's `skills/`: only `devops/kanban-orchestrator`
+  — and that one is hidden from `--enabled-only` until Task 9
+  activates the kanban environment, same as `kanban-worker` was for
+  Peashooter and Sunflower.
+- [ ] **Step 2: Ask the user to run the deletion commands**, then run
+  `hermes skills list -p crazydave --enabled-only` and report the
+  output. Confirm it shows zero enabled skills — the empty result is
+  correct here, not a bug, since the one remaining skill stays hidden
+  until the kanban environment exists.
+- [ ] **Step 3: Commit.**
+  ```
+  git add teach/lessons/0013-crazy-daves-skill-kit.html
+  git commit -m "Add Lesson 13: prune Crazy Dave's skill kit to routing only"
+  ```
+
+---
+
+### Task 8: Connect Crazy Dave to Telegram
+
+**Files:**
+- Create: `teach/lessons/0014-crazy-dave-on-telegram.html`
+
+**Interfaces:**
+- Consumes: the `crazydave` profile from Task 6.
 - Produces: a third, running Telegram bot, separate from Peashooter's
   and Sunflower's.
 
-- [ ] **Step 1: Write Lesson 13.** Same structure as Task 5's lesson,
+- [ ] **Step 1: Write Lesson 14.** Same structure as Task 5's lesson,
   commands:
   ```
   hermes profile use crazydave
@@ -586,26 +680,26 @@ lesson filenames from `0009` on shifted by one number too.
 - [ ] **Step 3: Verify it shows Crazy Dave's gateway running.**
 - [ ] **Step 4: Commit.**
   ```
-  git add teach/lessons/0013-crazy-dave-on-telegram.html
-  git commit -m "Add Lesson 13: connect Crazy Dave to Telegram"
+  git add teach/lessons/0014-crazy-dave-on-telegram.html
+  git commit -m "Add Lesson 14: connect Crazy Dave to Telegram"
   ```
 
 ---
 
-### Task 8: Initialize the kanban board
+### Task 9: Initialize the kanban board
 
 **Files:**
-- Create: `teach/lessons/0014-the-shared-kanban-board.html`
+- Create: `teach/lessons/0015-the-shared-kanban-board.html`
 - Modify: `teach/reference/glossary.html` (add "Kanban board,"
   "Decompose," and "Orchestrator profile" entries)
 
 **Interfaces:**
 - Consumes: both `sunflower` and `crazydave` profiles, existing and
-  described (Tasks 1, 3, 5).
+  described (Tasks 1, 4, 6).
 - Produces: one shared kanban board with `orchestrator_profile` set to
-  `crazydave`, ready for Task 8's real test.
+  `crazydave`, ready for Task 10's real test.
 
-- [ ] **Step 1: Write Lesson 14.** Cover what the board is (shared
+- [ ] **Step 1: Write Lesson 15.** Cover what the board is (shared
   SQLite task board, columns triage → todo → ready → running → done),
   what `decompose` does (reads the profile roster with descriptions,
   fans a task into assigned children), and what the dispatcher does
@@ -648,20 +742,20 @@ lesson filenames from `0009` on shifted by one number too.
   `hermes-config/sunflower/config.yaml` and
   `hermes-config/crazydave/config.yaml`, then:
   ```
-  git add teach/lessons/0014-the-shared-kanban-board.html \
+  git add teach/lessons/0015-the-shared-kanban-board.html \
           teach/reference/glossary.html \
           hermes-config/peashooter/config.yaml \
           hermes-config/sunflower/config.yaml \
           hermes-config/crazydave/config.yaml
-  git commit -m "Add Lesson 14: initialize the shared kanban board"
+  git commit -m "Add Lesson 15: initialize the shared kanban board"
   ```
 
 ---
 
-### Task 9: End-to-end test — the full route
+### Task 10: End-to-end test — the full route
 
 **Files:**
-- Create: `teach/lessons/0015-the-stage2-end-to-end-check.html`
+- Create: `teach/lessons/0016-the-stage2-end-to-end-check.html`
 - Create: `teach/learning-records/0009-stage2-complete.md` (once all
   four Stage 2 success criteria pass, following the shape of
   `0007-stage1-complete.md`)
@@ -669,11 +763,11 @@ lesson filenames from `0009` on shifted by one number too.
   (update **Status** to Complete, same as Stage 1's spec)
 
 **Interfaces:**
-- Consumes: all profiles and the kanban board from Tasks 1–8.
+- Consumes: all profiles and the kanban board from Tasks 1–9.
 - Produces: a verified, working route from one Telegram message to
   Crazy Dave through to a completion notice back in that same chat.
 
-- [ ] **Step 1: Write Lesson 15.** Give the exact test: message
+- [ ] **Step 1: Write Lesson 16.** Give the exact test: message
   Crazy Dave's bot on Telegram with one request spanning both
   specialists, for example "write a short spec for a small feature,
   then implement it," and the exact verification commands:
@@ -706,7 +800,7 @@ lesson filenames from `0009` on shifted by one number too.
   today's date.
 - [ ] **Step 7: Commit.**
   ```
-  git add teach/lessons/0015-the-stage2-end-to-end-check.html \
+  git add teach/lessons/0016-the-stage2-end-to-end-check.html \
           teach/learning-records/0009-stage2-complete.md \
           docs/superpowers/specs/2026-09-06-stage2-sunflower-crazydave-design.md
   git commit -m "Complete Stage 2: Sunflower, Crazy Dave, and the kanban board"
