@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 11 — Sunflower on Telegram</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 11 of the Stage 2 build</p>
+<h1>The same door, a second time</h1>
+<p class="lede">Peashooter got its Telegram door in Lesson 5. Sunflower
+gets the same door now — same gateway, same two setup paths, same
+profile-scoped isolation once it's wired up.</p>
+
+<h2>What's already known</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The gateway mechanism itself doesn't change per profile — see the
+  <a href="../reference/glossary.html">Gateway</a> glossary entry from
+  Lesson 5 if you need a refresher. What changes is which profile is
+  active when you run setup: <code>hermes gateway setup</code> attaches
+  the new bot to whichever profile <code>hermes profile use</code> last
+  selected. Get that wrong and Sunflower's Telegram bot ends up talking
+  to Peashooter's <code>SOUL.md</code> instead of its own.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Known failure mode — don't re-debug it</span>
+  <p>Lesson 5's Automatic setup failed in Telegram Web with no response
+  from the "Create a bot" button — a Telegram-side issue with that
+  in-app bot-creation feature, not a Hermes bug. Full details in
+  <a href="../learning-records/0006-telegram-automatic-setup-failed-in-web.md">learning
+  record 0006</a>. If Automatic fails the same way again, don't spend
+  time re-debugging it — go straight to Manual BotFather below.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Make Sunflower the active profile, then run setup:</strong></p>
+  <pre><code>hermes profile use sunflower
+hermes gateway setup</code></pre>
+  <p>Pick Telegram. Try Automatic (<code>[1]</code>) first — scan the QR
+  code with your phone's Telegram app and confirm. If it errors with no
+  response, switch to Manual instead: message <code>@BotFather</code>,
+  run <code>/newbot</code>, pick a name and a globally-unique
+  <code>...bot</code>-suffixed username (different from Peashooter's
+  bot username), and paste the returned token into the manual prompt.</p>
+
+  <p><strong>2. Install it as a standing background service:</strong></p>
+  <pre><code>hermes gateway install</code></pre>
+
+  <p><strong>3. Confirm it's running:</strong></p>
+  <pre><code>hermes gateway status</code></pre>
+  <p>Should show Sunflower's gateway as running, alongside Peashooter's
+  — two separate bots, two separate profiles, both live at once.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why must <code>hermes profile use sunflower</code> run before <code>hermes gateway setup</code>, not after?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Setup attaches the new bot to whichever profile is currently active</label>
+      <div class="reveal"><p class="feedback correct">Right — get the active profile wrong and the new Telegram bot ends up wired to the wrong SOUL.md entirely.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Hermes caches the bot token before the profile loads</label>
+      <div class="reveal"><p class="feedback incorrect">Not the mechanism — nothing about token caching depends on load order here.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Telegram requires the profile name in the bot's username</label>
+      <div class="reveal"><p class="feedback incorrect">Not required — a bot's username is whatever you pick with BotFather, unrelated to the Hermes profile name.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Sunflower's Telegram bot created (Automatic or Manual)</label>
+  <label><input type="checkbox"> <code>hermes gateway install</code> succeeded</label>
+  <label><input type="checkbox"> <code>hermes gateway status</code> shows Sunflower's gateway running</label>
+</div>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../docs/superpowers/plans/2026-09-06-stage2-sunflower-crazydave.md">Stage 2 plan</a></p>
+
+<p class="ask-agent">Tell me what <code>hermes gateway status</code>
+showed, so I can confirm Sunflower is reachable before we move on to
+building Crazy Dave, the coordinator.</p>
+
+<div class="nav">
+  <span><a href="0010-descriptions-are-the-routing-signal.html">← Lesson 10</a></span>
+  <span>Lesson 11 of Stage 2</span>
+  <span><a href="0012-crazy-dave-the-coordinator.html">Lesson 12 →</a></span>
+</div>
+
+</body>
+</html>
