@@ -222,9 +222,10 @@ lesson filenames from `0009` on shifted by one number too.
 - Produces: `brainstorming` and `writing-plans` copied into Sunflower's
   own skill folder; the unwanted skill folders deleted from both
   `sunflower`'s and `peashooter`'s `skills/` directory (including
-  Peashooter's pre-existing `teach`), scoping each profile's `ls` to
-  only the skills its own domain needs. Neither profile's
-  `config.yaml` changes.
+  Peashooter's pre-existing `teach`); five Matt Pocock skills copied
+  into Peashooter and two into Sunflower; `ste-writing` copied into
+  both. Peashooter ends at twenty-four enabled skills, Sunflower at
+  eight. Neither profile's `config.yaml` changes.
 
 - [ ] **Step 1: Write Lesson 9.** Cover four things, each grounded in
   direct verification, not assumption:
@@ -279,6 +280,35 @@ lesson filenames from `0009` on shifted by one number too.
      a short design in chat, get a yes, implement) is a real
      pre-implementation step for engineering work, not a
      planning-domain skill in disguise.
+  6. Checked two more sources against each profile's domain: Matt
+     Pocock's skill pack (`github.com/mattpocock/skills`, pinned to
+     commit `6654f6b`) and a personal `ste-writing` skill already on
+     this machine. Five of Matt Pocock's skills add real capability to
+     Peashooter with no overlap against what it keeps already —
+     `code-review`, `codebase-design`, `improve-codebase-architecture`,
+     `domain-modeling`, `resolving-merge-conflicts`. Two do the same
+     for Sunflower — `wayfinder`, `research`. The rest of the pack
+     either duplicates a skill already kept (`diagnosing-bugs` vs
+     `systematic-debugging`, `tdd` vs `test-driven-development`,
+     `prototype` vs `spike`, `grilling` vs `brainstorming`'s bounded
+     path, `to-spec`/`to-tickets` vs Sunflower's own `to-prd`,
+     `to-issues`, `writing-plans`), or is off-domain, or needs a
+     configured issue tracker first. `ste-writing` (rewrites
+     documentation, READMEs, PR text, commit messages into ASD-STE100
+     Simplified Technical English, never code) fits both profiles —
+     Peashooter's own domain names "technical writing about code,"
+     Sunflower writes PRDs, proposals, and specs.
+  7. First copy attempt for `ste-writing` broke: its usual source,
+     `~/.claude/skills/ste-writing`, is a symlink into a shared
+     `~/.agents/skills/` store (confirmed — all 82 entries under
+     `~/.claude/skills/` are symlinks, tracked by that store's own
+     `.skill-lock.json`). macOS `cp -R` of a symlink copies the link
+     itself, not its target, so the copy landed as a symlink whose
+     relative target no longer resolved from its new home inside a
+     profile's `skills/` folder — `ls` printed the dead link's target
+     path back instead of real files. Fix: source from
+     `~/.agents/skills/ste-writing`, the real directory, not the
+     `~/.claude/skills/` alias.
   Give the exact commands:
   ```
   cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/brainstorming ~/.hermes/profiles/sunflower/skills/
@@ -360,7 +390,21 @@ lesson filenames from `0009` on shifted by one number too.
   `systematic-debugging`, `technical-documentation`,
   `test-driven-development`. `kanban-worker` also stays but won't
   show — hidden for the same reason as Sunflower's.
-- [ ] **Step 5: Commit.** Nothing in either profile's `config.yaml`
+- [ ] **Step 5: Ask the user to copy the five Matt Pocock skills into
+  Peashooter and the two into Sunflower**, then confirm each target
+  directory has a real `SKILL.md`, not a missing folder.
+- [ ] **Step 6: Ask the user to copy `ste-writing` into both profiles**
+  from `~/.agents/skills/ste-writing` — not the `~/.claude/skills/`
+  alias, which breaks per Step 1 point 7 above.
+- [ ] **Step 7: Ask the user to run both
+  `hermes skills list -p <profile> --enabled-only` commands again**
+  and report the output. Confirm Peashooter shows exactly twenty-four
+  skills (the eighteen from Step 4, plus `code-review`,
+  `codebase-design`, `improve-codebase-architecture`,
+  `domain-modeling`, `resolving-merge-conflicts`, `ste-writing`), and
+  Sunflower shows exactly eight (the five from Step 3, plus
+  `wayfinder`, `research`, `ste-writing`).
+- [ ] **Step 8: Commit.** Nothing in either profile's `config.yaml`
   changed, so there is nothing to mirror into `hermes-config/` this
   time — commit only the lesson and reference changes.
   ```

@@ -127,6 +127,18 @@ possible definition.</p>
   see it too.
   <span class="from">Introduced in: <a href="../lessons/0009-sunflowers-skill-kit.html">Lesson 9</a></span></dd>
 
+  <dt>Shared skill store</dt>
+  <dd><code>~/.agents/skills/</code> — a personal skill folder shared
+  across this machine's agent tools, tracked by its own
+  <code>~/.agents/skills/.skill-lock.json</code>. Every entry in
+  <code>~/.claude/skills/</code> is a symlink into it, not a real
+  folder. Copying a skill with <code>cp -R</code>, source it from here
+  directly — copying the <code>~/.claude/skills/</code> alias instead
+  copies the symlink itself (macOS <code>cp -R</code> default
+  behavior), producing a broken link once it's moved somewhere the
+  original relative path no longer resolves from.
+  <span class="from">Introduced in: <a href="../lessons/0009-sunflowers-skill-kit.html">Lesson 9</a></span></dd>
+
   <dt>Bundled skill manifest</dt>
   <dd>A <code>.bundled_manifest</code> file inside every profile's
   <code>skills/</code> folder, one line per bundled skill as

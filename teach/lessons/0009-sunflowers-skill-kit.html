@@ -12,9 +12,10 @@
 <h1>Only the skills each specialist needs</h1>
 <p class="lede">Sunflower's SOUL.md sets the boundary in words. This
 lesson sets it in tools too — giving Sunflower two skills from Claude
-Code's superpowers plugin, then deleting the skill folders neither
-Sunflower nor Peashooter actually uses, so each profile's <code>ls</code>
-matches its own domain.</p>
+Code's superpowers plugin, deleting the skill folders neither Sunflower
+nor Peashooter actually uses, then widening the net to two more skill
+sources outside Hermes's own bundle, so each profile's <code>ls</code>
+matches its own domain and nothing more.</p>
 
 <h2>A correction, made in front of you</h2>
 
@@ -253,6 +254,121 @@ rm -rf software-development/cli-distribution \
   14" reason.</p>
 </div>
 
+<h2>A wider net: skills from outside Hermes's own bundle</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Two more sources got checked against each profile's domain, the
+  same way the earlier design calls were: Matt Pocock's own skill
+  pack (<code>github.com/mattpocock/skills</code>, pinned to commit
+  <code>6654f6b</code>) and a personal <code>ste-writing</code> skill
+  already sitting on this machine.</p>
+  <p>From Matt Pocock's pack, five skills add real capability to
+  Peashooter with no overlap against what it already keeps:
+  <code>code-review</code>, <code>codebase-design</code>,
+  <code>improve-codebase-architecture</code>, <code>domain-modeling</code>,
+  <code>resolving-merge-conflicts</code>. Two do the same for Sunflower:
+  <code>wayfinder</code> (plans work too big for one session) and
+  <code>research</code> (grounds a spec in cited primary sources before
+  it's written). The rest of the pack got skipped, either because it
+  duplicates a skill already kept —
+  <code>diagnosing-bugs</code>/<code>systematic-debugging</code>,
+  <code>tdd</code>/<code>test-driven-development</code>,
+  <code>prototype</code>/<code>spike</code>,
+  <code>grilling</code>/<code>brainstorming</code>'s bounded path,
+  <code>to-spec</code> and <code>to-tickets</code>/Sunflower's own
+  <code>to-prd</code>, <code>to-issues</code>, <code>writing-plans</code>
+  — or because it's off-domain (a teaching skill, a bash-wizard
+  generator) or needs a configured issue tracker first
+  (<code>setup-matt-pocock-skills</code> and everything that depends
+  on it).</p>
+  <p><code>ste-writing</code> rewrites documentation, READMEs, PR text,
+  error messages, and commit messages into ASD-STE100 Simplified
+  Technical English — never code. It fits both: Peashooter's own domain
+  names "technical writing about code," and Sunflower writes PRDs,
+  proposals, and specs. Neither profile had anything like it.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — a symlink broke the first copy attempt</span>
+  <p><code>~/.claude/skills/</code> turned out not to be a plain folder
+  of skills. Every one of its 82 entries is a symlink into
+  <code>~/.agents/skills/</code>, a store shared across this machine's
+  agent tools, tracked by its own
+  <code>~/.agents/skills/.skill-lock.json</code>.</p>
+  <p>The first <code>ste-writing</code> copy used
+  <code>~/.claude/skills/ste-writing</code> as the source. On macOS,
+  <code>cp -R</code> of a symlink copies the symlink itself, not the
+  folder it points to — the new copy kept the same relative target
+  string, <code>../../.agents/skills/ste-writing</code>, which no
+  longer resolved from its new home inside a profile's
+  <code>skills/</code> folder. Both copies landed broken: <code>ls</code>
+  printed the dead link's target path back, not real files, which is
+  what gave it away — a working copy prints <code>SKILL.md</code> and
+  <code>references/</code>, not a repeated path.</p>
+  <p>The fix: source straight from <code>~/.agents/skills/ste-writing</code>,
+  the real directory, not the <code>~/.claude/skills/</code> alias. Any
+  future copy sourced from <code>~/.claude/skills/</code> would hit the
+  same bug — the commands below source the real directory instead.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p><strong>7. Copy five Matt Pocock skills into Peashooter:</strong></p>
+  <pre><code>SRC=/Users/jokot/dev/mattpocock/skills/skills/engineering
+DST=~/.hermes/profiles/peashooter/skills
+
+cp -R "$SRC/code-review" "$DST/"
+cp -R "$SRC/codebase-design" "$DST/"
+cp -R "$SRC/improve-codebase-architecture" "$DST/"
+cp -R "$SRC/domain-modeling" "$DST/"
+cp -R "$SRC/resolving-merge-conflicts" "$DST/"</code></pre>
+  <p><strong>8. Copy two into Sunflower:</strong></p>
+  <pre><code>SRC=/Users/jokot/dev/mattpocock/skills/skills/engineering
+DST=~/.hermes/profiles/sunflower/skills
+
+cp -R "$SRC/wayfinder" "$DST/"
+cp -R "$SRC/research" "$DST/"</code></pre>
+  <p><strong>9. Copy <code>ste-writing</code> into both</strong> —
+  from the real directory, not the <code>~/.claude/skills/</code>
+  symlink:</p>
+  <pre><code>SRC=~/.agents/skills/ste-writing
+
+cp -R "$SRC" ~/.hermes/profiles/peashooter/skills/
+cp -R "$SRC" ~/.hermes/profiles/sunflower/skills/</code></pre>
+  <p><strong>10. Verify both profiles:</strong></p>
+  <pre><code>hermes skills list -p peashooter --enabled-only
+hermes skills list -p sunflower --enabled-only</code></pre>
+  <p>Peashooter should show exactly twenty-four skills: the eighteen
+  from Step 6, plus <code>code-review</code>, <code>codebase-design</code>,
+  <code>improve-codebase-architecture</code>, <code>domain-modeling</code>,
+  <code>resolving-merge-conflicts</code>, and <code>ste-writing</code>.
+  Sunflower should show exactly eight: the five from Step 4, plus
+  <code>wayfinder</code>, <code>research</code>, and
+  <code>ste-writing</code>.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why did copying <code>~/.claude/skills/ste-writing</code> straight into a profile's skill folder produce a broken skill?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">It was a symlink, and cp -R copied the link, not the folder it pointed to</label>
+      <div class="reveal"><p class="feedback correct">Right — confirmed with <code>ls -la ~/.claude/skills/</code>: all 82 entries are symlinks into <code>~/.agents/skills/</code>, and the copied link's relative target didn't resolve from its new location.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">Hermes doesn't allow personal, non-bundled skills</label>
+      <div class="reveal"><p class="feedback incorrect">Not the cause — Hermes loads any folder with a SKILL.md the same way, bundled or not. The five Matt Pocock skills copied the same way worked fine.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">The skill's name collided with one already installed</label>
+      <div class="reveal"><p class="feedback incorrect">No collision existed — this was confirmed before the first copy attempt. The problem was the source path, not the destination name.</p></div>
+    </div>
+  </div>
+</div>
+
 <div class="quiz">
   <p class="q">Why is it safe to permanently delete a bundled skill's folder instead of listing it under <code>skills.disabled</code>?</p>
   <div class="choices">
@@ -279,16 +395,20 @@ rm -rf software-development/cli-distribution \
   <label><input type="checkbox"> <code>brainstorming</code> and <code>writing-plans</code> copied into Sunflower's skill folder, both showing <code>enabled</code></label>
   <label><input type="checkbox"> Sunflower's unwanted skill folders deleted — exactly five skills show enabled (<code>kanban-worker</code> stays hidden until Lesson 14)</label>
   <label><input type="checkbox"> Peashooter's unwanted skill folders deleted, including <code>teach</code> — exactly eighteen skills show enabled (<code>kanban-worker</code> stays hidden until Lesson 14)</label>
+  <label><input type="checkbox"> Five Matt Pocock skills copied into Peashooter, two into Sunflower, real directories not broken symlinks</label>
+  <label><input type="checkbox"> <code>ste-writing</code> copied into both profiles from <code>~/.agents/skills/ste-writing</code>, not the <code>~/.claude/skills/</code> alias</label>
+  <label><input type="checkbox"> Final counts confirmed — twenty-four skills enabled for Peashooter, eight for Sunflower</label>
 </div>
 
 <p><a href="../reference/glossary.html">→ Full glossary</a> ·
 <a href="../docs/superpowers/plans/2026-09-06-stage2-sunflower-crazydave.md">Stage 2 plan</a></p>
 
-<p class="ask-agent">Tell me the output of both
+<p class="ask-agent">Tell me the output of all four
 <code>hermes skills list -p &lt;profile&gt; --enabled-only</code>
-commands, so I can confirm the counts before we close out this
-lesson. Neither profile's <code>config.yaml</code> changes in this
-version, so there's nothing to mirror this time.</p>
+commands (the eighteen/five checkpoint, then the twenty-four/eight
+one), so I can confirm the counts before we close out this lesson.
+Neither profile's <code>config.yaml</code> changes in this version, so
+there's nothing to mirror this time.</p>
 
 <div class="nav">
   <span><a href="0008-sunflower-soul-and-scope.html">← Lesson 8</a></span>
