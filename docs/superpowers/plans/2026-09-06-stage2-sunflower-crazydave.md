@@ -52,15 +52,16 @@ self-contained HTML file per hands-on step).
 ## File Structure
 
 - `teach/lessons/0007-sunflower-a-second-specialist.html` through
-  `teach/lessons/0014-the-stage2-end-to-end-check.html` — one lesson
+  `teach/lessons/0015-the-stage2-end-to-end-check.html` — one lesson
   per task below, following the Stage 1 template
   (`teach/lessons/0001*.html` through `0006*.html`).
 - `teach/lessons/0006-the-end-to-end-check.html` — modify, add a
   forward nav link to Lesson 7 (Stage 1's last lesson currently has no
   forward link).
 - `teach/reference/glossary.html` — modify across several tasks, add
-  entries for "Kanban board," "Profile description," "Decompose," and
-  "Orchestrator profile" as each concept is introduced.
+  entries for "Hermes skill," "`skills.disabled`," "Kanban board,"
+  "Profile description," "Decompose," and "Orchestrator profile" as
+  each concept is introduced.
 - `teach/learning-records/000N-<finding>.md` — create one per real
   finding, numbered following on from `0007-stage1-complete.md`.
   Content cannot be predicted ahead of the real run; see Stage 1's
@@ -70,6 +71,17 @@ self-contained HTML file per hands-on step).
   `~/.hermes/profiles/sunflower/`.
 - `hermes-config/crazydave/SOUL.md`, `hermes-config/crazydave/config.yaml`
   — create, mirroring `~/.hermes/profiles/crazydave/`.
+
+## Amendment (post-Task 2)
+
+After Task 2, the user asked to give Sunflower two skills from the
+Claude Code superpowers plugin (`brainstorming`, `writing-plans`), and
+to prune both Sunflower's and Peashooter's skill rosters down to what
+each profile's own domain actually needs — not addressed in the
+original spec, since it surfaced during Lesson 8's follow-up
+questions. This inserted a new Task 3 below, and every task after it
+shifted down by one (old Task 3 → Task 4, ... old Task 8 → Task 9), so
+lesson filenames from `0009` on shifted by one number too.
 
 ---
 
@@ -194,10 +206,275 @@ self-contained HTML file per hands-on step).
 
 ---
 
-### Task 3: Set profile descriptions for both specialists
+### Task 3: Give Sunflower its skill kit, and prune both profiles
 
 **Files:**
-- Create: `teach/lessons/0009-descriptions-are-the-routing-signal.html`
+- Create: `teach/lessons/0009-sunflowers-skill-kit.html`
+- Modify: `teach/lessons/0008-sunflower-soul-and-scope.html:118-121` (add
+  a forward nav link to Lesson 9)
+- Modify: `teach/reference/glossary.html` (add "Hermes skill" and
+  "`skills.disabled`" entries — already done during planning; verify
+  present)
+
+**Interfaces:**
+- Consumes: the `sunflower` profile (Task 1) and Peashooter's existing
+  profile from Stage 1.
+- Produces: `brainstorming` and `writing-plans` copied into Sunflower's
+  own skill folder; a `skills.disabled` list in both `sunflower`'s and
+  `peashooter`'s `config.yaml`, scoping each profile to only the
+  skills its own domain needs.
+
+- [ ] **Step 1: Write Lesson 9.** Cover three things, each grounded in
+  direct verification, not assumption:
+  1. Hermes skills and Claude Code skills share one format (a folder
+     with a `SKILL.md`). Peashooter already proved a raw folder copy
+     works — `~/.hermes/profiles/peashooter/skills/brainstorming/SKILL.md`
+     is byte-identical to the official superpowers plugin's copy, and
+     `teach/SKILL.md` is byte-identical to `~/.claude/skills/teach/SKILL.md`.
+     Neither exists in Sunflower's or the default profile's skill
+     folder, confirming skills are scoped per profile, not global.
+  2. The `skills.disabled` mechanism, read from
+     `hermes_cli/skills_config.py`: a plain YAML list under `skills:`
+     in a profile's own `config.yaml`. Every installed skill is active
+     by default; a name added to this list turns it off without
+     deleting its files — reversible by removing the name again.
+  3. Two skills already bundled with Hermes overlap the two being
+     copied in: `software-development/plan` ("adapted from
+     obra/superpowers") and `software-development/spike`. The plan
+     keeps `writing-plans` over the bundled `plan` skill for both
+     profiles, since it carries the fuller self-review checklist this
+     project has been using all along, and disables the thinner
+     bundled one. `spike` stays enabled for Peashooter (implementation
+     feasibility checks fit its domain) and gets disabled for
+     Sunflower (spec-writing, not implementation). Also newly found:
+     `devops/kanban-worker` documents the pitfalls a profile hits when
+     Hermes dispatches it a kanban task — relevant to both Sunflower
+     and Peashooter once Task 8 initializes the board, since the
+     dispatcher spawns each of them as a worker.
+  Give the exact commands:
+  ```
+  cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/brainstorming ~/.hermes/profiles/sunflower/skills/
+  cp -R /Users/jokot/.claude/plugins/cache/claude-plugins-official/superpowers/6.3.0/skills/writing-plans ~/.hermes/profiles/sunflower/skills/
+  hermes skills list -p sunflower --source local
+  ```
+  Then the exact `skills.disabled` block to add under the existing
+  `skills:` key in `~/.hermes/profiles/sunflower/config.yaml` (keeping
+  `to-prd`, `to-issues`, `grill-me`, `kanban-worker`, `brainstorming`,
+  and `writing-plans` enabled — everything else in Sunflower's current
+  89-skill roster disabled):
+  ```yaml
+  skills:
+    disabled:
+      - airtable
+      - apple-notes
+      - apple-reminders
+      - architecture-diagram
+      - arxiv
+      - ascii-art
+      - ascii-video
+      - baoyu-infographic
+      - blogwatcher
+      - caveman
+      - claude-code
+      - claude-design
+      - cli-distribution
+      - cli-onboarding-design
+      - codebase-inspection
+      - codex
+      - comfyui
+      - computer-use
+      - design-md
+      - diagnose
+      - dogfood
+      - excalidraw
+      - find-skills
+      - findmy
+      - gif-search
+      - git-account-switching
+      - git-multi-account
+      - github-auth
+      - github-code-review
+      - github-issues
+      - github-pr-workflow
+      - github-repo-management
+      - google-workspace
+      - grill-with-docs
+      - heartmula
+      - hermes-agent
+      - hermes-agent-skill-authoring
+      - hermes-desktop-plugins
+      - himalaya
+      - huggingface-hub
+      - humanizer
+      - imessage
+      - improve-codebase-architecture
+      - jupyter-live-kernel
+      - kanban-orchestrator
+      - llm-wiki
+      - macos-computer-use
+      - manim-video
+      - maps
+      - nano-pdf
+      - node-inspect-debugger
+      - notion
+      - obsidian
+      - ocr-and-documents
+      - opencode
+      - openhue
+      - p5js
+      - petdex
+      - plan
+      - polymarket
+      - popular-web-designs
+      - powerpoint
+      - pretext
+      - prototype
+      - python-debugpy
+      - requesting-code-review
+      - research-paper-writing
+      - setup-matt-pocock-skills
+      - simplify-code
+      - sketch
+      - songsee
+      - songwriting-and-ai-music
+      - systematic-debugging
+      - tdd
+      - teams-meeting-pipeline
+      - technical-documentation
+      - test-driven-development
+      - touchdesigner-mcp
+      - triage
+      - write-a-skill
+      - xurl
+      - youtube-content
+      - yuanbao
+      - zoom-out
+  ```
+  And, for Peashooter's `~/.hermes/profiles/peashooter/config.yaml`
+  (keeping `codebase-inspection`, `git-account-switching`,
+  `github-auth`, `github-code-review`, `github-issues`,
+  `github-pr-workflow`, `github-repo-management`, `git-multi-account`,
+  `node-inspect-debugger`, `python-debugpy`, `requesting-code-review`,
+  `simplify-code`, `systematic-debugging`, `technical-documentation`,
+  `test-driven-development`, `spike`, `headless-webapp-testing`,
+  `kanban-worker`, `brainstorming`, `teach`, and the newly copied
+  `writing-plans` enabled — everything else in Peashooter's current
+  94-skill roster disabled):
+  ```yaml
+  skills:
+    disabled:
+      - airtable
+      - apple-notes
+      - apple-reminders
+      - architecture-diagram
+      - arxiv
+      - ascii-art
+      - ascii-video
+      - baoyu-infographic
+      - blogwatcher
+      - caveman
+      - claude-code
+      - claude-design
+      - cli-distribution
+      - cli-onboarding-design
+      - codex
+      - comfyui
+      - computer-use
+      - design-md
+      - diagnose
+      - dogfood
+      - excalidraw
+      - expose-local-web-over-tunnel
+      - find-skills
+      - findmy
+      - gif-search
+      - google-workspace
+      - grill-me
+      - grill-with-docs
+      - heartmula
+      - hermes-agent
+      - hermes-agent-skill-authoring
+      - hermes-desktop-plugins
+      - himalaya
+      - html5-canvas-games
+      - huggingface-hub
+      - humanizer
+      - imessage
+      - improve-codebase-architecture
+      - jupyter-live-kernel
+      - kanban-orchestrator
+      - llm-wiki
+      - macos-computer-use
+      - manim-video
+      - maps
+      - nano-pdf
+      - notion
+      - obsidian
+      - ocr-and-documents
+      - opencode
+      - openhue
+      - p5js
+      - petdex
+      - plan
+      - polymarket
+      - popular-web-designs
+      - powerpoint
+      - pretext
+      - prototype
+      - research-paper-writing
+      - setup-matt-pocock-skills
+      - sketch
+      - songsee
+      - songwriting-and-ai-music
+      - tdd
+      - teams-meeting-pipeline
+      - to-issues
+      - to-prd
+      - touchdesigner-mcp
+      - triage
+      - write-a-skill
+      - xurl
+      - youtube-content
+      - zoom-out
+  ```
+- [ ] **Step 2: Ask the user to run the two `cp -R` commands and the
+  `hermes skills list -p sunflower --source local` check**, and report
+  the output — confirm `brainstorming` and `writing-plans` both show
+  `local` / `enabled`.
+- [ ] **Step 3: Ask the user to add the `skills.disabled` block to
+  Sunflower's `config.yaml`**, then run
+  `hermes skills list -p sunflower --enabled-only` and report the
+  output. Confirm exactly six skills remain enabled: `to-prd`,
+  `to-issues`, `grill-me`, `kanban-worker`, `brainstorming`,
+  `writing-plans`.
+- [ ] **Step 4: Ask the user to copy `writing-plans` into Peashooter's
+  skill folder too**
+  (`cp -R .../superpowers/6.3.0/skills/writing-plans ~/.hermes/profiles/peashooter/skills/`),
+  **add the `skills.disabled` block to Peashooter's `config.yaml`**,
+  then run `hermes skills list -p peashooter --enabled-only` and
+  report the output. Confirm the twenty-one skills listed in Step 1
+  remain, nothing else.
+- [ ] **Step 5: Mirror and commit.** Copy both real `config.yaml`
+  files (now carrying `skills.disabled`) to
+  `hermes-config/sunflower/config.yaml` and
+  `hermes-config/peashooter/config.yaml`. Do not mirror the
+  `brainstorming` / `writing-plans` skill folders themselves — the
+  mirroring practice covers `SOUL.md` and `config.yaml` only.
+  ```
+  git add teach/lessons/0009-sunflowers-skill-kit.html \
+          teach/lessons/0008-sunflower-soul-and-scope.html \
+          teach/reference/glossary.html \
+          hermes-config/sunflower/config.yaml \
+          hermes-config/peashooter/config.yaml
+  git commit -m "Add Lesson 9: give Sunflower its skill kit, prune both profiles"
+  ```
+
+---
+
+### Task 4: Set profile descriptions for both specialists
+
+**Files:**
+- Create: `teach/lessons/0010-descriptions-are-the-routing-signal.html`
 - Modify: `teach/reference/glossary.html` (add "Profile description"
   entry, with a `.from` backlink to this lesson)
 
@@ -205,9 +482,9 @@ self-contained HTML file per hands-on step).
 - Consumes: `sunflower`'s `--description`, set at creation in Task 1;
   Peashooter's existing `--description` from Stage 1.
 - Produces: two profile descriptions specific enough for
-  `hermes kanban decompose` (Task 7) to route correctly between them.
+  `hermes kanban decompose` (Task 8) to route correctly between them.
 
-- [ ] **Step 1: Write Lesson 9.** Explain, citing
+- [ ] **Step 1: Write Lesson 10.** Explain, citing
   `hermes_cli/kanban_decompose.py`, that the decomposer reads exactly
   this text to choose an assignee, so a vague description
   ("engineering stuff") routes worse than a specific one. Give the
@@ -225,17 +502,17 @@ self-contained HTML file per hands-on step).
   value, then re-run `hermes profile list` to confirm.
 - [ ] **Step 4: Commit.**
   ```
-  git add teach/lessons/0009-descriptions-are-the-routing-signal.html \
+  git add teach/lessons/0010-descriptions-are-the-routing-signal.html \
           teach/reference/glossary.html
-  git commit -m "Add Lesson 9: profile descriptions as the routing signal"
+  git commit -m "Add Lesson 10: profile descriptions as the routing signal"
   ```
 
 ---
 
-### Task 4: Connect Sunflower to Telegram
+### Task 5: Connect Sunflower to Telegram
 
 **Files:**
-- Create: `teach/lessons/0010-sunflower-on-telegram.html`
+- Create: `teach/lessons/0011-sunflower-on-telegram.html`
 
 **Interfaces:**
 - Consumes: the `sunflower` profile, with model and `SOUL.md` set
@@ -243,7 +520,7 @@ self-contained HTML file per hands-on step).
 - Produces: a running Telegram bot for Sunflower, reachable the same
   way Peashooter's bot is.
 
-- [ ] **Step 1: Write Lesson 10.** Reuse Stage 1 Lesson 5's structure
+- [ ] **Step 1: Write Lesson 11.** Reuse Stage 1 Lesson 5's structure
   (gateway concept already taught; no need to re-explain it in full,
   link back instead). Give the exact commands:
   ```
@@ -264,16 +541,16 @@ self-contained HTML file per hands-on step).
   username, paste the token into the manual prompt), same as Stage 1.
 - [ ] **Step 4: Commit.**
   ```
-  git add teach/lessons/0010-sunflower-on-telegram.html
-  git commit -m "Add Lesson 10: connect Sunflower to Telegram"
+  git add teach/lessons/0011-sunflower-on-telegram.html
+  git commit -m "Add Lesson 11: connect Sunflower to Telegram"
   ```
 
 ---
 
-### Task 5: Create Crazy Dave and write its SOUL.md
+### Task 6: Create Crazy Dave and write its SOUL.md
 
 **Files:**
-- Create: `teach/lessons/0011-crazy-dave-the-coordinator.html`
+- Create: `teach/lessons/0012-crazy-dave-the-coordinator.html`
 - Create: `hermes-config/crazydave/SOUL.md`,
   `hermes-config/crazydave/config.yaml`
 
@@ -281,11 +558,11 @@ self-contained HTML file per hands-on step).
 - Consumes: none new — a fresh profile, same as Task 1's pattern.
 - Produces: a real `crazydave` profile whose only behavior is
   creating a kanban task and subscribing the chat to it. The kanban
-  tool calls in its `SOUL.md` become callable once Task 7 initializes
+  tool calls in its `SOUL.md` become callable once Task 8 initializes
   the board; until then, this task only sets up the profile and its
   instructions.
 
-- [ ] **Step 1: Write Lesson 11.** Explain Crazy Dave's narrow job —
+- [ ] **Step 1: Write Lesson 12.** Explain Crazy Dave's narrow job —
   route, never answer — and why that is a hard rule, not a
   preference, citing Peashooter's own prompt-dilution history as the
   reason to write it strict from day one. Give the exact commands:
@@ -322,25 +599,25 @@ self-contained HTML file per hands-on step).
   `hermes-config/crazydave/`, confirming no live secret in
   `config.yaml` first.
   ```
-  git add teach/lessons/0011-crazy-dave-the-coordinator.html \
+  git add teach/lessons/0012-crazy-dave-the-coordinator.html \
           hermes-config/crazydave/SOUL.md \
           hermes-config/crazydave/config.yaml
-  git commit -m "Add Lesson 11: create Crazy Dave and write its SOUL.md"
+  git commit -m "Add Lesson 12: create Crazy Dave and write its SOUL.md"
   ```
 
 ---
 
-### Task 6: Connect Crazy Dave to Telegram
+### Task 7: Connect Crazy Dave to Telegram
 
 **Files:**
-- Create: `teach/lessons/0012-crazy-dave-on-telegram.html`
+- Create: `teach/lessons/0013-crazy-dave-on-telegram.html`
 
 **Interfaces:**
 - Consumes: the `crazydave` profile from Task 5.
 - Produces: a third, running Telegram bot, separate from Peashooter's
   and Sunflower's.
 
-- [ ] **Step 1: Write Lesson 12.** Same structure as Task 4's lesson,
+- [ ] **Step 1: Write Lesson 13.** Same structure as Task 5's lesson,
   commands:
   ```
   hermes profile use crazydave
@@ -353,16 +630,16 @@ self-contained HTML file per hands-on step).
 - [ ] **Step 3: Verify it shows Crazy Dave's gateway running.**
 - [ ] **Step 4: Commit.**
   ```
-  git add teach/lessons/0012-crazy-dave-on-telegram.html
-  git commit -m "Add Lesson 12: connect Crazy Dave to Telegram"
+  git add teach/lessons/0013-crazy-dave-on-telegram.html
+  git commit -m "Add Lesson 13: connect Crazy Dave to Telegram"
   ```
 
 ---
 
-### Task 7: Initialize the kanban board
+### Task 8: Initialize the kanban board
 
 **Files:**
-- Create: `teach/lessons/0013-the-shared-kanban-board.html`
+- Create: `teach/lessons/0014-the-shared-kanban-board.html`
 - Modify: `teach/reference/glossary.html` (add "Kanban board,"
   "Decompose," and "Orchestrator profile" entries)
 
@@ -372,7 +649,7 @@ self-contained HTML file per hands-on step).
 - Produces: one shared kanban board with `orchestrator_profile` set to
   `crazydave`, ready for Task 8's real test.
 
-- [ ] **Step 1: Write Lesson 13.** Cover what the board is (shared
+- [ ] **Step 1: Write Lesson 14.** Cover what the board is (shared
   SQLite task board, columns triage → todo → ready → running → done),
   what `decompose` does (reads the profile roster with descriptions,
   fans a task into assigned children), and what the dispatcher does
@@ -415,20 +692,20 @@ self-contained HTML file per hands-on step).
   `hermes-config/sunflower/config.yaml` and
   `hermes-config/crazydave/config.yaml`, then:
   ```
-  git add teach/lessons/0013-the-shared-kanban-board.html \
+  git add teach/lessons/0014-the-shared-kanban-board.html \
           teach/reference/glossary.html \
           hermes-config/peashooter/config.yaml \
           hermes-config/sunflower/config.yaml \
           hermes-config/crazydave/config.yaml
-  git commit -m "Add Lesson 13: initialize the shared kanban board"
+  git commit -m "Add Lesson 14: initialize the shared kanban board"
   ```
 
 ---
 
-### Task 8: End-to-end test — the full route
+### Task 9: End-to-end test — the full route
 
 **Files:**
-- Create: `teach/lessons/0014-the-stage2-end-to-end-check.html`
+- Create: `teach/lessons/0015-the-stage2-end-to-end-check.html`
 - Create: `teach/learning-records/0009-stage2-complete.md` (once all
   four Stage 2 success criteria pass, following the shape of
   `0007-stage1-complete.md`)
@@ -436,11 +713,11 @@ self-contained HTML file per hands-on step).
   (update **Status** to Complete, same as Stage 1's spec)
 
 **Interfaces:**
-- Consumes: all profiles and the kanban board from Tasks 1–7.
+- Consumes: all profiles and the kanban board from Tasks 1–8.
 - Produces: a verified, working route from one Telegram message to
   Crazy Dave through to a completion notice back in that same chat.
 
-- [ ] **Step 1: Write Lesson 14.** Give the exact test: message
+- [ ] **Step 1: Write Lesson 15.** Give the exact test: message
   Crazy Dave's bot on Telegram with one request spanning both
   specialists, for example "write a short spec for a small feature,
   then implement it," and the exact verification commands:
@@ -473,7 +750,7 @@ self-contained HTML file per hands-on step).
   today's date.
 - [ ] **Step 7: Commit.**
   ```
-  git add teach/lessons/0014-the-stage2-end-to-end-check.html \
+  git add teach/lessons/0015-the-stage2-end-to-end-check.html \
           teach/learning-records/0009-stage2-complete.md \
           docs/superpowers/specs/2026-09-06-stage2-sunflower-crazydave-design.md
   git commit -m "Complete Stage 2: Sunflower, Crazy Dave, and the kanban board"

@@ -117,6 +117,24 @@ possible definition.</p>
   memory, same model as a terminal session.
   <span class="from">Introduced in: <a href="../lessons/0005-connecting-telegram.html">Lesson 5</a></span></dd>
 
+  <dt>Hermes skill</dt>
+  <dd>A folder with a <code>SKILL.md</code> file (name, description, and
+  instructions) that a profile can load and follow. Same format as a
+  Claude Code skill, so a folder can be copied straight from one system
+  into <code>~/.hermes/profiles/&lt;profile&gt;/skills/</code> and Hermes
+  picks it up with no extra step. Skills live under a profile, not
+  globally — copying one into Sunflower's folder does not make Peashooter
+  see it too.
+  <span class="from">Introduced in: <a href="../lessons/0009-sunflowers-skill-kit.html">Lesson 9</a></span></dd>
+
+  <dt><code>skills.disabled</code></dt>
+  <dd>A plain list under <code>skills:</code> in a profile's
+  <code>config.yaml</code>, naming skills to turn off without deleting
+  their files. Every installed skill is active by default; a name added
+  here opts it out. Reversible — remove the name to turn the skill back
+  on.
+  <span class="from">Introduced in: <a href="../lessons/0009-sunflowers-skill-kit.html">Lesson 9</a></span></dd>
+
 </dl>
 
 <p style="margin-top:3rem; font-family:-apple-system,sans-serif; font-size:0.85rem; color:var(--ink-soft);">
