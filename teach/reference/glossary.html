@@ -127,6 +127,17 @@ possible definition.</p>
   see it too.
   <span class="from">Introduced in: <a href="../lessons/0009-sunflowers-skill-kit.html">Lesson 9</a></span></dd>
 
+  <dt>Profile description</dt>
+  <dd>A one- or two-sentence field on each Hermes profile
+  (<code>profile.yaml</code>'s <code>description</code>, set or read
+  with <code>hermes profile describe &lt;name&gt; [--text "..."]</code>).
+  It is the only signal <code>hermes kanban decompose</code> sees when
+  choosing which profile to route a task to — not <code>SOUL.md</code>,
+  not memory, not skills. A profile with no description still appears
+  in the routing prompt, tagged <code>⚠ undescribed</code>, and the
+  LLM falls back to matching on the profile's name alone.
+  <span class="from">Introduced in: <a href="../lessons/0010-descriptions-are-the-routing-signal.html">Lesson 10</a></span></dd>
+
   <dt>Shared skill store</dt>
   <dd><code>~/.agents/skills/</code> — a personal skill folder shared
   across this machine's agent tools, tracked by its own

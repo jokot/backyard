@@ -424,28 +424,39 @@ lesson filenames from `0009` on shifted by one number too.
   entry, with a `.from` backlink to this lesson)
 
 **Interfaces:**
-- Consumes: `sunflower`'s `--description`, set at creation in Task 1;
-  Peashooter's existing `--description` from Stage 1.
+- Consumes: `sunflower`'s description, set at creation in Task 1;
+  Peashooter's existing description from Stage 1.
 - Produces: two profile descriptions specific enough for
   `hermes kanban decompose` (Task 8) to route correctly between them.
 
 - [ ] **Step 1: Write Lesson 10.** Explain, citing
-  `hermes_cli/kanban_decompose.py`, that the decomposer reads exactly
-  this text to choose an assignee, so a vague description
-  ("engineering stuff") routes worse than a specific one. Give the
-  exact command to check and, if needed, update each description:
+  `hermes_cli/kanban_decompose.py`'s `_build_roster()`/`_format_roster()`,
+  that the decomposer's system prompt sees exactly `name: description`
+  for every profile — a profile with no description still gets listed,
+  tagged `⚠ undescribed`, and the LLM falls back to matching on name
+  alone. A vague description ("Coding and engineering specialist")
+  routes worse than a specific one.
+  Read each profile's current description first (note: `hermes profile
+  list` does not show descriptions — its columns are Profile, Model,
+  Gateway, Alias, Distribution — use `describe` in read mode instead):
   ```
-  hermes profile list
-  hermes profile describe peashooter --description "Software engineering: code review, debugging, architecture, tooling, build and dependency issues, technical writing about code"
-  hermes profile describe sunflower --description "Brainstorming, planning, task breakdown, and writing PRDs, proposals, and specs"
+  hermes profile describe peashooter
+  hermes profile describe sunflower
   ```
-- [ ] **Step 2: Ask the user to run `hermes profile list` and paste
-  the output**, showing both descriptions as currently set.
-- [ ] **Step 3: Sharpen if needed.** If either description reads as a
-  one-word label rather than a real routing signal, ask the user to
-  run the `hermes profile describe` command above with a more specific
-  value, then re-run `hermes profile list` to confirm.
-- [ ] **Step 4: Commit.**
+  Sunflower's already matches the target text from Task 1
+  ("Brainstorming, planning, task breakdown, and writing PRDs,
+  proposals, and specs") — nothing to change there. Peashooter's reads
+  "Coding and engineering specialist," a label rather than a routing
+  signal. Sharpen it with the profile's own `SOUL.md` domain line
+  (`~/.hermes/profiles/peashooter/SOUL.md:4`). The real flag is
+  `--text`, not `--description`:
+  ```
+  hermes profile describe peashooter --text "Software engineering: code review, debugging, architecture, tooling, build and dependency issues, technical writing about code"
+  ```
+- [ ] **Step 2: Ask the user to run both `hermes profile describe`
+  read commands and paste the output**, confirming Sunflower's is
+  unchanged and Peashooter's now reads the sharpened text.
+- [ ] **Step 3: Commit.**
   ```
   git add teach/lessons/0010-descriptions-are-the-routing-signal.html \
           teach/reference/glossary.html

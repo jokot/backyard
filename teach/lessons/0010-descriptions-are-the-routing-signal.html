@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 10 — Descriptions Are the Routing Signal</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 10 of the Stage 2 build</p>
+<h1>The one line an LLM reads to pick a specialist</h1>
+<p class="lede">Every earlier lesson set up how a profile behaves once
+it's chosen. This lesson sets up how it gets chosen at all — the
+short description each profile carries, which is the only thing the
+kanban decomposer sees before it decides who does the work.</p>
+
+<h2>What actually reads this text</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p><code>hermes kanban decompose</code> — coming in Lesson 14, but
+  the mechanism is worth understanding now — fans a rough task out
+  into a graph of child tasks and routes each one to a profile. Its
+  system prompt, built in
+  <code>hermes_cli/kanban_decompose.py</code>'s
+  <code>_build_roster()</code> and <code>_format_roster()</code>,
+  hands the LLM exactly this, one line per profile:</p>
+  <pre><code>  - peashooter: Coding and engineering specialist
+  - sunflower: Brainstorming, planning, task breakdown, and writing PRDs, proposals, and specs</code></pre>
+  <p>That's the whole signal. Not <code>SOUL.md</code>, not memory,
+  not skills — one line of text per profile, decided once and reused
+  for every routing decision after. A profile with no description
+  still appears in the list, tagged <code>⚠ undescribed</code>, and
+  the LLM is left guessing from the profile's name alone. A vague
+  description like "Coding and engineering specialist" routes better
+  than nothing, but worse than text that names the actual domain.</p>
+</div>
+
+<h2>A correction, made in front of you</h2>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — the planned commands were wrong</span>
+  <p>This lesson's plan assumed <code>hermes profile describe &lt;name&gt; --description "..."</code>
+  and <code>hermes profile list</code> to check the current values.
+  Neither is right. Reading
+  <code>hermes_cli/subcommands/profile.py</code>'s real argument
+  parser: the flag is <code>--text</code>, not
+  <code>--description</code>. And running <code>hermes profile
+  list</code> directly shows this table — no description column at
+  all:</p>
+  <pre><code> Profile          Model                        Gateway      Alias
+ ───────────────    ───────────────────────────    ───────────    ───────────
+  default         —                            stopped      —
+  peashooter      deepseek/deepseek-v4-flash   running      peashooter
+ ◆sunflower       z-ai/glm-5.3-flash           stopped      sunflower</code></pre>
+  <p>To read one profile's current description, run <code>describe</code>
+  with just the profile name and no flags — it prints the text alone,
+  nothing else:</p>
+  <pre><code>hermes profile describe peashooter
+hermes profile describe sunflower</code></pre>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Check both current descriptions</strong> with the read
+  form above. Sunflower's was set at creation back in Lesson 7 and
+  should already print:</p>
+  <pre><code>Brainstorming, planning, task breakdown, and writing PRDs, proposals, and specs</code></pre>
+  <p>Peashooter's, carried over from Stage 1, should print something
+  shorter — a label, not a routing signal:</p>
+  <pre><code>Coding and engineering specialist</code></pre>
+  <p>If both already print exactly this, skip to Step 3 — Sunflower
+  needs no change.</p>
+
+  <p><strong>2. Sharpen Peashooter's description</strong> to match its
+  own <code>SOUL.md</code> domain line
+  (<code>~/.hermes/profiles/peashooter/SOUL.md:4</code>), so the same
+  words that bound what Peashooter answers also drive what gets routed
+  to it:</p>
+  <pre><code>hermes profile describe peashooter --text "Software engineering: code review, debugging, architecture, tooling, build and dependency issues, technical writing about code"</code></pre>
+
+  <p><strong>3. Verify both again:</strong></p>
+  <pre><code>hermes profile describe peashooter
+hermes profile describe sunflower</code></pre>
+  <p>Peashooter should now print the sharpened text from Step 2.
+  Sunflower's should be unchanged from Step 1.</p>
+</div>
+
+<p>There's also an <code>--auto</code> flag, which asks the auxiliary
+LLM to write the description instead — worth knowing about for a
+future profile, but not used here. Both descriptions above are
+hand-written on purpose: they quote the same domain line each
+profile's own <code>SOUL.md</code> already commits to, so the routing
+signal and the scope boundary never drift apart.</p>
+
+<div class="quiz">
+  <p class="q">Why does a profile with no description still show up in the decomposer's roster, tagged "⚠ undescribed," instead of being left out?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">So the LLM can still fall back to matching on the profile's name alone</label>
+      <div class="reveal"><p class="feedback correct">Right — <code>_build_roster()</code> always includes every profile; an undescribed one just loses its best signal, it isn't dropped from the routing choice entirely.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Hermes requires every profile to appear in every prompt</label>
+      <div class="reveal"><p class="feedback incorrect">Not the reason — this is specific to the decomposer's roster prompt, not a general Hermes requirement.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">The tag is only cosmetic and has no effect on routing</label>
+      <div class="reveal"><p class="feedback incorrect">The tag reflects a real difference — an undescribed profile genuinely gives the LLM less to route on, not just a warning label.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Both descriptions read with <code>hermes profile describe &lt;name&gt;</code> (no flags)</label>
+  <label><input type="checkbox"> Peashooter's description sharpened to its own <code>SOUL.md</code> domain line, via <code>--text</code></label>
+  <label><input type="checkbox"> Sunflower's description confirmed unchanged</label>
+</div>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../docs/superpowers/plans/2026-09-06-stage2-sunflower-crazydave.md">Stage 2 plan</a></p>
+
+<p class="ask-agent">Tell me both <code>hermes profile describe</code>
+outputs from Step 3, so I can confirm the routing signal is set before
+we move on to connecting Sunflower to Telegram.</p>
+
+<div class="nav">
+  <span><a href="0009-sunflowers-skill-kit.html">← Lesson 9</a></span>
+  <span>Lesson 10 of Stage 2</span>
+  <span><a href="0011-sunflower-on-telegram.html">Lesson 11 →</a></span>
+</div>
+
+</body>
+</html>
