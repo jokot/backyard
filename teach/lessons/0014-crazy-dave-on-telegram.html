@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 14 — Crazy Dave on Telegram</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 14 of the Stage 2 build</p>
+<h1>A third door, same mechanism</h1>
+<p class="lede">Peashooter and Sunflower each got a Telegram bot in
+Lessons 5 and 11. Crazy Dave gets its own third bot now — same
+gateway, same two setup paths, its own separate chat.</p>
+
+<h2>What's already known</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Nothing new about the mechanism itself — see the
+  <a href="../reference/glossary.html">Gateway</a> glossary entry.
+  What matters, same as Lesson 11: <code>hermes gateway setup</code>
+  attaches to whichever profile is active, so
+  <code>hermes profile use crazydave</code> has to run first. Get that
+  wrong and the new bot ends up wired to the wrong <code>SOUL.md</code>
+  — in this case, a bot that should only create kanban tasks would
+  instead answer directly as whichever profile was actually active.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Known failure mode — don't re-debug it</span>
+  <p>Same note as Lesson 11: Automatic setup failed once already in
+  Telegram Web, documented in
+  <a href="../learning-records/0006-telegram-automatic-setup-failed-in-web.md">learning
+  record 0006</a>. If it fails the same way a third time, skip straight
+  to Manual BotFather.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Make Crazy Dave the active profile, then run setup:</strong></p>
+  <pre><code>hermes profile use crazydave
+hermes gateway setup</code></pre>
+  <p>Pick Telegram. Try Automatic (<code>[1]</code>) first. If it
+  errors with no response, switch to Manual: message
+  <code>@BotFather</code>, run <code>/newbot</code>, pick a name and a
+  globally-unique <code>...bot</code>-suffixed username — different
+  from both Peashooter's and Sunflower's — and paste the returned token
+  into the manual prompt.</p>
+
+  <p><strong>2. Install it as a standing background service:</strong></p>
+  <pre><code>hermes gateway install</code></pre>
+
+  <p><strong>3. Confirm it's running:</strong></p>
+  <pre><code>hermes gateway status</code></pre>
+  <p>Should show all three gateways running now — Peashooter,
+  Sunflower, and Crazy Dave, each a separate bot, each talking to its
+  own profile.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">If you message Crazy Dave's new bot and it answers your question directly instead of just confirming a task was created, what's the most likely place to look first?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Whether the active profile was really crazydave when setup ran, or the SOUL.md's hard-rule wording softened</label>
+      <div class="reveal"><p class="feedback correct">Right — either the bot got wired to the wrong profile at setup, or this is Crazy Dave's own version of Peashooter's Lesson 3 prompt-dilution bug.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Whether Telegram's servers are down</label>
+      <div class="reveal"><p class="feedback incorrect">Not the first thing to check — a working reply from the bot at all means Telegram's side is fine.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Whether the kanban board has been initialized yet</label>
+      <div class="reveal"><p class="feedback incorrect">Unrelated to this symptom — an uninitialized board would make the kanban tool call fail, not make Crazy Dave answer directly instead of calling it.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Crazy Dave's Telegram bot created (Automatic or Manual)</label>
+  <label><input type="checkbox"> <code>hermes gateway install</code> succeeded</label>
+  <label><input type="checkbox"> <code>hermes gateway status</code> shows all three gateways running</label>
+</div>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../docs/superpowers/plans/2026-09-06-stage2-sunflower-crazydave.md">Stage 2 plan</a></p>
+
+<p class="ask-agent">Tell me what <code>hermes gateway status</code>
+showed, so I can confirm all three bots are live before we initialize
+the shared kanban board.</p>
+
+<div class="nav">
+  <span><a href="0013-crazy-daves-skill-kit.html">← Lesson 13</a></span>
+  <span>Lesson 14 of Stage 2</span>
+  <span><a href="0015-the-shared-kanban-board.html">Lesson 15 →</a></span>
+</div>
+
+</body>
+</html>
