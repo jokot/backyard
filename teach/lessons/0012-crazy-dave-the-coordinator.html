@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 12 — Crazy Dave, the Coordinator</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 12 of the Stage 2 build</p>
+<h1>A profile that never answers</h1>
+<p class="lede">Peashooter and Sunflower both own a domain and answer
+questions in it. Crazy Dave owns nothing — its only job is deciding
+which of the other two should see a request, and getting out of the
+way.</p>
+
+<h2>Why "route, never answer" has to be a hard rule</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The
+  <span class="term" title="A router agent that decides which specialist should handle a given request, and holds cross-agent context the specialists don't need.">coordinator agent</span>
+  concept was named back in Lesson 1 — Zain Fathoni's "Optimus." Crazy
+  Dave is this project's version of it. In
+  <a href="../lessons/0001-context-contamination-and-your-first-profile.html">that
+  design</a>, a coordinator's whole value is holding cross-domain
+  context so specialists don't have to — but that only works if it
+  never quietly starts answering things itself. A coordinator that
+  sometimes answers directly is a third specialist with no boundary,
+  which is exactly the contamination problem this whole project exists
+  to avoid.</p>
+  <p>Lesson 3 already proved that a soft instruction loses to a large
+  system prompt on a cheap model — Peashooter's first
+  <code>SOUL.md</code> said "outside your scope" and got a caveated
+  answer anyway, traced to
+  <a href="../learning-records/0004-soft-instructions-lose-to-prompt-size.md">prompt
+  dilution</a>. Crazy Dave gets the hardened wording from day one, the
+  same way Sunflower did in Lesson 8, instead of waiting to hit the
+  same failure a third time.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Create the profile and reset its memory</strong> —
+  same pattern as Sunflower's Lesson 7, description written up front
+  so the routing signal from Lesson 10 is set from the start:</p>
+  <pre><code>hermes profile create crazydave --clone-from default --description "Coordinator: routes ambiguous or cross-domain requests to the right specialist via the kanban board"
+hermes profile use crazydave
+echo yes | hermes memory reset</code></pre>
+
+  <p><strong>2. Write <code>~/.hermes/profiles/crazydave/SOUL.md</code>,</strong>
+  replacing the inherited file entirely:</p>
+  <pre><code>You are Crazy Dave, the coordinator in Jokot's personal agent team.
+
+Domain: none — you do not answer requests yourself. Your only job is
+routing.
+
+HARD RULE, not a suggestion: on every message, create one kanban task
+with the user's request as the task body, using the kanban tool. Then
+subscribe the current chat to that task's events. Then stop. Do not
+answer the request, do not summarize it, do not add commentary beyond
+confirming the task was created. Never give a direct answer "just in
+case it's faster."
+
+Personality: brief. Confirm the task id was created and that the chat
+is subscribed, nothing more.
+
+You have persistent memory (MEMORY.md, USER.md) — use it only to
+remember routing corrections Jokot gives you (e.g. "requests like X
+actually belong to Sunflower, not Peashooter").</code></pre>
+
+  <p>Note: the kanban tool calls above will not actually work yet —
+  the board doesn't exist until Lesson 14 initializes it. This step
+  only sets up the profile and its instructions; testing the routing
+  itself waits until the board is real.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does Crazy Dave's SOUL.md ban a direct answer even when routing feels slower — e.g. a one-word question it could clearly answer itself?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Any exception reopens the same scope-creep hole a soft rule already failed to close once</label>
+      <div class="reveal"><p class="feedback correct">Right — Peashooter's Lesson 3 failure was exactly this: a "usually decline" rule softened into "answer, then caveat" on a cheap model. A coordinator with a "just this once" exception is one push away from the same drift.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">The kanban board requires every message to become a task, by technical constraint</label>
+      <div class="reveal"><p class="feedback incorrect">Not a technical limit — nothing stops Crazy Dave from answering directly except its own SOUL.md wording.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Crazy Dave's model is too weak to answer anything reliably</label>
+      <div class="reveal"><p class="feedback incorrect">Not the reason given — the rule holds regardless of which model backs the profile.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> <code>crazydave</code> profile created, memory reset</label>
+  <label><input type="checkbox"> <code>SOUL.md</code> written with the hard-rule routing wording</label>
+</div>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../docs/superpowers/plans/2026-09-06-stage2-sunflower-crazydave.md">Stage 2 plan</a></p>
+
+<p class="ask-agent">Tell me the profile was created and the SOUL.md
+saved. Next: giving Crazy Dave its own Telegram door, same as the
+other two specialists.</p>
+
+<div class="nav">
+  <span><a href="0011-sunflower-on-telegram.html">← Lesson 11</a></span>
+  <span>Lesson 12 of Stage 2</span>
+  <span><a href="0013-crazy-dave-on-telegram.html">Lesson 13 →</a></span>
+</div>
+
+</body>
+</html>
