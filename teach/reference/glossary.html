@@ -164,11 +164,37 @@ possible definition.</p>
   recopies one skill from Hermes's own bundled source.
   <span class="from">Introduced in: <a href="../lessons/0009-sunflowers-skill-kit.html">Lesson 9</a></span></dd>
 
+  <dt>Kanban board</dt>
+  <dd>A single SQLite file, shared across every Hermes profile on the
+  machine — one board, not one per profile. A task moves through five
+  columns: triage → todo → ready → running → done.
+  Managed with <code>hermes kanban init</code>,
+  <code>hermes kanban boards</code>, and the rest of the
+  <code>hermes kanban</code> subcommands.
+  <span class="from">Introduced in: <a href="../lessons/0015-the-shared-kanban-board.html">Lesson 15</a></span></dd>
+
+  <dt>Decompose</dt>
+  <dd><code>hermes kanban decompose</code> — reads every profile's
+  description (the routing signal from
+  <a href="../lessons/0010-descriptions-are-the-routing-signal.html">Lesson
+  10</a>) and fans a raw task into one or more children, each with an
+  explicit <code>assignee=</code>. Turns a task Crazy Dave filed into
+  work a specialist can actually pick up.
+  <span class="from">Introduced in: <a href="../lessons/0015-the-shared-kanban-board.html">Lesson 15</a></span></dd>
+
+  <dt>Orchestrator profile</dt>
+  <dd>The <code>kanban.orchestrator_profile</code> key in every
+  profile's <code>config.yaml</code>, empty by default. Set to
+  <code>'crazydave'</code> in all three profiles so any profile's
+  gateway — whichever one holds the dispatcher lock at
+  <code>~/.hermes/kanban/.dispatcher.lock</code> — knows which
+  profile's requests are routing instructions, not direct work.
+  <span class="from">Introduced in: <a href="../lessons/0015-the-shared-kanban-board.html">Lesson 15</a></span></dd>
+
 </dl>
 
 <p style="margin-top:3rem; font-family:-apple-system,sans-serif; font-size:0.85rem; color:var(--ink-soft);">
-Terms get added here as lessons introduce them: kanban is coming in a
-later stage.
+Terms get added here as lessons introduce them.
 </p>
 
 </body>
