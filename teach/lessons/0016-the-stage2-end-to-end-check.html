@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 16 — The Stage 2 End-to-End Check</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 16 of the Stage 2 build</p>
+<h1>One message, the whole route</h1>
+<p class="lede">Lessons 7 through 15 built five separate pieces:
+Sunflower, Crazy Dave, both Telegram doors, and the shared board. This
+lesson sends one real request through all five at once and checks
+every hop, the same way Lesson 6 closed out Stage 1.</p>
+
+<h2>What "working" means here</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Four checks close Stage 2, straight from the
+  <a href="../docs/superpowers/specs/2026-09-06-stage2-sunflower-crazydave-design.md">design
+  spec</a>:</p>
+  <ol>
+    <li>Sunflower answers a direct, on-topic Telegram message in
+    character, and declines an off-topic one — Peashooter's Stage 1
+    checks, repeated for Sunflower.</li>
+    <li>A message to Crazy Dave produces a kanban task, never a direct
+    answer.</li>
+    <li>A cross-domain request produces two linked child tasks,
+    assigned to Sunflower and Peashooter, not left unassigned or sent
+    to the wrong profile.</li>
+    <li>One full run completes end to end — created, dispatched,
+    worked, and reported back to the Crazy Dave chat — with no
+    <code>hermes kanban</code> command run by hand during the run
+    itself.</li>
+  </ol>
+  <p>Checks 1 and 2 you already have evidence for, from Lessons 11 and
+  the retest after Lesson 12's correction. This lesson is built around
+  checks 3 and 4, the two that need every piece working together at
+  once.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Worth knowing, not a contradiction</span>
+  <p>Check 2 above reads "never a direct answer" — written before
+  Lesson 12's correction added one narrow exception for self-identity
+  questions. That exception still holds: it only fires for "what are
+  you" style questions, never for a real request like the one this
+  lesson sends. Check 2 is really checking that a real request always
+  becomes a task, and the exception was never in tension with that.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Message Crazy Dave's Telegram bot with one request
+  spanning both specialists</strong> — for example:</p>
+  <pre><code>Write a short spec for a small feature, then implement it.</code></pre>
+  <p>Report Crazy Dave's reply. It should confirm a task id and a
+  subscribed chat, nothing more.</p>
+
+  <p><strong>2. Check the board split the work:</strong></p>
+  <pre><code>hermes kanban list</code></pre>
+  <p>Report the output. Expect two child tasks — one assigned
+  <code>sunflower</code>, one assigned <code>peashooter</code> — with
+  the implementation task depending on the spec task.</p>
+
+  <p><strong>3. Inspect either child task directly:</strong></p>
+  <pre><code>hermes kanban show &lt;task_id&gt;</code></pre>
+
+  <p><strong>4. Wait, watch the Telegram chat, don't intervene.</strong>
+  Don't run any <code>hermes kanban</code> command to move things
+  along — the dispatcher does that on its own 60-second tick. Report
+  when the Crazy Dave chat receives a completion message for each
+  child task.</p>
+
+  <p>If any step doesn't match what's expected — Crazy Dave answers
+  directly, a child task is unassigned or misrouted, or nothing ever
+  completes — say what you saw. That's a real bug to diagnose and fix,
+  not something to route around, the same way every bug in Stage 1 got
+  a fix and a learning record instead of a workaround.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Crazy Dave's Telegram reply confirms a task id, but <code>hermes kanban list</code> shows only one task instead of two linked children. Where's the most useful place to look first?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Whether <code>hermes kanban decompose</code> ran on that task, and what the roster it saw looked like</label>
+      <div class="reveal"><p class="feedback correct">Right — a task sitting undecomposed in triage never gets split into children. The roster decompose sees is exactly Sunflower's and Peashooter's descriptions, so a stale or missing description would surface right there.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Whether Crazy Dave's SOUL.md hard rule needs another exception</label>
+      <div class="reveal"><p class="feedback incorrect">Not this symptom — Crazy Dave already did its one job correctly by creating the task. Decompose is a separate step that runs after.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Whether Telegram silently dropped part of the message</label>
+      <div class="reveal"><p class="feedback incorrect">Not likely — the task id came back fine, so the full message reached Crazy Dave and got filed.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Sunflower's on-topic/off-topic checks confirmed (carried over from Lesson 11)</label>
+  <label><input type="checkbox"> Crazy Dave's reply confirms a task id and subscription only</label>
+  <label><input type="checkbox"> <code>hermes kanban list</code> shows two linked children, correctly assigned</label>
+  <label><input type="checkbox"> Both children completed with no manual <code>hermes kanban</code> command, completion messages received in the Crazy Dave chat</label>
+</div>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../docs/superpowers/plans/2026-09-06-stage2-sunflower-crazydave.md">Stage 2 plan</a> ·
+<a href="../docs/superpowers/specs/2026-09-06-stage2-sunflower-crazydave-design.md">Stage 2 spec</a></p>
+
+<p class="ask-agent">Send the test message, then report back at each
+step — Crazy Dave's reply, the <code>hermes kanban list</code> output,
+and the completion messages. If anything doesn't match, tell me
+exactly what you saw rather than what you expected — that's how every
+real bug so far in this project got found.</p>
+
+<div class="nav">
+  <span><a href="0015-the-shared-kanban-board.html">← Lesson 15</a></span>
+  <span>Lesson 16 of Stage 2 — last lesson of Stage 2</span>
+  <span></span>
+</div>
+
+</body>
+</html>
