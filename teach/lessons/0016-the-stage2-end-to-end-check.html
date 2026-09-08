@@ -85,6 +85,66 @@ every hop, the same way Lesson 6 closed out Stage 1.</p>
   a fix and a learning record instead of a workaround.</p>
 </div>
 
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — silence is not progress</span>
+  <p>The first real run of this lesson found the largest bug in the
+  project so far. <code>decompose</code> split the request into three
+  children correctly, Sunflower finished its spec task, and Peashooter
+  then hit a GitHub credential no automation can mint and marked its own
+  task <code>blocked</code>. Telegram stayed quiet. The only way to find
+  out was to run <code>hermes kanban list</code> by hand.</p>
+  <p>Three defects stack up to produce that silence, each confirmed in
+  Hermes's source. First, <code>decompose</code> never subscribes the
+  children it creates — <code>_maybe_auto_subscribe</code>
+  (<code>tools/kanban_tools.py</code>) runs only on the
+  <code>kanban_create</code> path, so only the root task Crazy Dave files
+  gets a subscription. Second, a blocked child never propagates status to
+  its parent: <code>recompute_ready</code>
+  (<code>hermes_cli/kanban_db.py</code>) promotes a task only when every
+  parent is <code>done</code> or <code>archived</code>, so a blocked
+  parent leaves the root sitting in <code>todo</code> with no event to
+  report.</p>
+  <p>Third, and worst, the notifier has two gates that reject opposite
+  values. Gate one (<code>gateway/kanban_watchers.py</code>) compares the
+  subscription's stored profile name against the gateway's own name and
+  skips on a mismatch. Gate two, <code>_authorization_adapter</code>
+  (<code>gateway/authz_mixin.py</code>), treats any name other than
+  <code>default</code> as a multiplex profile and fails closed when a
+  single-profile gateway has no registry entry. So
+  <code>crazydave</code> passes gate one and fails gate two, while
+  <code>default</code> fails gate one. No profile name satisfies both.
+  The notifier claimed each event and rewound the cursor every 5 seconds
+  forever, which is why every subscription still read
+  <code>last_event_id = 0</code> hours later.</p>
+  <p>The fix is a NULL <code>notifier_profile</code> — the only value
+  that passes both gates. The CLI cannot write it, so it needs a direct
+  update:</p>
+  <pre><code>sqlite3 ~/.hermes/kanban.db "UPDATE kanban_notify_subs SET notifier_profile = NULL WHERE platform = 'telegram';"</code></pre>
+  <p>Accept one side effect: with NULL every gateway treats the row as
+  its own, and whichever claims the event first sends it. Exactly one
+  message arrives, but the sending bot is a race — in the confirming test
+  Peashooter's bot delivered a notification for a task subscribed through
+  Crazy Dave. Full detail in
+  <a href="../learning-records/0008-blocked-child-tasks-report-to-nobody.md">learning
+  record 0008</a>.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill — subscribe the children by hand</span>
+  <p>Until <code>decompose</code> subscribes its own children, do it
+  yourself after every fan-out. Run <code>hermes kanban list</code>, then
+  for each child id:</p>
+  <pre><code>hermes kanban notify-subscribe &lt;task_id&gt; --platform telegram --chat-id &lt;your_chat_id&gt;
+sqlite3 ~/.hermes/kanban.db "UPDATE kanban_notify_subs SET notifier_profile = NULL WHERE platform = 'telegram';"</code></pre>
+  <p>One debugging note that cost real time: setting
+  <code>logging.level: DEBUG</code> does nothing for
+  <code>gateway.log</code>, which carries a hardcoded
+  <code>level=logging.INFO</code> in <code>hermes_logging.py</code>. Only
+  <code>agent.log</code> honors the configured level. Read
+  <code>~/.hermes/profiles/&lt;name&gt;/logs/agent.log</code> when you
+  need notifier detail.</p>
+</div>
+
 <div class="quiz">
   <p class="q">Crazy Dave's Telegram reply confirms a task id, but <code>hermes kanban list</code> shows only one task instead of two linked children. Where's the most useful place to look first?</p>
   <div class="choices">
@@ -111,6 +171,7 @@ every hop, the same way Lesson 6 closed out Stage 1.</p>
   <label><input type="checkbox"> Sunflower's on-topic/off-topic checks confirmed (carried over from Lesson 11)</label>
   <label><input type="checkbox"> Crazy Dave's reply confirms a task id and subscription only</label>
   <label><input type="checkbox"> <code>hermes kanban list</code> shows two linked children, correctly assigned</label>
+  <label><input type="checkbox"> Every child task subscribed by hand, with <code>notifier_profile</code> set to NULL</label>
   <label><input type="checkbox"> Both children completed with no manual <code>hermes kanban</code> command, completion messages received in the Crazy Dave chat</label>
 </div>
 
