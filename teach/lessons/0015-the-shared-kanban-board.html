@@ -55,8 +55,32 @@ writes to and Peashooter and Sunflower work from.</p>
   many are up — the lock file at
   <code>~/.hermes/kanban/.dispatcher.lock</code> enforces that. Setting
   <code>orchestrator_profile</code> doesn't change who holds the lock;
-  it tells <code>decompose</code> which profile's requests to treat as
-  routing instructions rather than direct work.</p>
+  it names which profile owns the root task after <code>decompose</code>
+  fans it into children — Crazy Dave's own <code>config.yaml</code>
+  points to itself for the same reason the other two do: whichever
+  gateway holds the lock at a given moment must resolve the same
+  answer, and any of the three could be the one holding it.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">A fourth profile is in the roster too</span>
+  <p><code>hermes kanban init</code> lists every profile it finds on
+  disk as a possible <code>--assignee</code> — including
+  <code>default</code>, the template every other profile in this
+  project was cloned from with <code>--clone-from default</code>. It
+  was never given a Telegram gateway, a pruned skill kit, or a
+  reviewed <code>SOUL.md</code> — it was never meant to do work.</p>
+  <p>Deleting it is not the fix: <code>hermes profile create
+  --clone-from default</code> needs that folder to exist on disk, and
+  removing it would break creating any future specialist the same way
+  Sunflower and Crazy Dave were created. The real fix is Lesson 10's
+  rule — description is the only signal <code>decompose</code> uses to
+  route a task. Reading Hermes's own
+  <code>kanban_decompose.py</code> confirms <code>list_profiles()</code>
+  always includes <code>default</code>, tagged
+  <code>⚠ undescribed</code>, with no setting to drop it from the
+  roster. An explicit description that rules it out is the only
+  guard that actually exists.</p>
 </div>
 
 <h2>Do this now</h2>
@@ -70,7 +94,10 @@ hermes kanban boards</code></pre>
   <p><code>init</code> is idempotent — safe to run even if a board
   already exists. <code>boards</code> should list one board.</p>
 
-  <p><strong>2. Set the orchestrator in all three profiles.</strong>
+  <p><strong>2. Rule out <code>default</code> as a work destination:</strong></p>
+  <pre><code>hermes profile describe default --text "Template only — never a work destination. Do not assign kanban tasks here."</code></pre>
+
+  <p><strong>3. Set the orchestrator in all three profiles.</strong>
   For each of <code>peashooter</code>, <code>sunflower</code>, and
   <code>crazydave</code>, open
   <code>~/.hermes/profiles/&lt;name&gt;/config.yaml</code>, find the
@@ -83,13 +110,13 @@ hermes kanban boards</code></pre>
   <p>Leave every other key in that section — <code>dispatch_in_gateway</code>,
   <code>failure_limit</code>, and the rest — exactly as it is.</p>
 
-  <p><strong>3. Restart all three gateways so the new config loads:</strong></p>
+  <p><strong>4. Restart all three gateways so the new config loads:</strong></p>
   <pre><code>hermes gateway restart -p peashooter
 hermes gateway restart -p sunflower
 hermes gateway restart -p crazydave
 hermes gateway status</code></pre>
 
-  <p><strong>4. Mirror the three config files into this repo</strong>
+  <p><strong>5. Mirror the three config files into this repo</strong>
   (no live secret lives in <code>config.yaml</code> — the model API
   key is stored separately by <code>hermes auth</code>):</p>
   <pre><code>cp ~/.hermes/profiles/peashooter/config.yaml hermes-config/peashooter/config.yaml
@@ -98,7 +125,7 @@ mkdir -p hermes-config/crazydave
 cp ~/.hermes/profiles/crazydave/config.yaml hermes-config/crazydave/config.yaml
 cp ~/.hermes/profiles/crazydave/SOUL.md hermes-config/crazydave/SOUL.md</code></pre>
 
-  <p><strong>5. Commit:</strong></p>
+  <p><strong>6. Commit:</strong></p>
   <pre><code>git add teach/lessons/0015-the-shared-kanban-board.html \
         teach/reference/glossary.html \
         hermes-config/peashooter/config.yaml \
@@ -132,6 +159,7 @@ git commit -m "Add Lesson 15: initialize shared kanban board"</code></pre>
 <h2>Checkpoint</h2>
 <div class="checklist">
   <label><input type="checkbox"> <code>hermes kanban init</code> ran, one board listed</label>
+  <label><input type="checkbox"> <code>default</code> profile described as never a work destination</label>
   <label><input type="checkbox"> <code>orchestrator_profile: 'crazydave'</code> set in all three config.yaml files</label>
   <label><input type="checkbox"> All three gateways restarted and running</label>
 </div>
