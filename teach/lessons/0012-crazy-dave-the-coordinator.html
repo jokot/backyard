@@ -65,7 +65,8 @@ ask you to do anything. Answer that in one short sentence, then stop.
 Do not create a task for it.
 
 HARD RULE, not a suggestion: every other message, create one kanban
-task with the user's request as the task body, using the kanban tool.
+task with the user's request as the task body, using the kanban tool
+with triage set to true, so the dispatcher can decompose and route it.
 Then subscribe the current chat to that task's events. Then stop. Do
 not answer the request, do not summarize it, do not add commentary
 beyond confirming the task was created. Never give a direct answer
@@ -110,6 +111,36 @@ actually belong to Sunflower, not Peashooter").</code></pre>
   message — including a one-word question about something real —
   still becomes a task. No other carve-outs, and no "use your
   judgment" wording that could soften over time.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — a task with nowhere to go</span>
+  <p>Lesson 16's end-to-end test surfaced a second gap: every task
+  Crazy Dave created stayed <code>ready</code> and
+  <code>(unassigned)</code> forever, never split into children,
+  including a real cross-domain request. <code>hermes kanban list</code>
+  showed the task, but nothing ever picked it up.</p>
+  <p>Reading Hermes's kanban tool and dispatcher source pinned it down.
+  The kanban tool's own <code>create</code> action takes a
+  <code>triage</code> argument that defaults to <code>false</code> when
+  omitted (<code>tools/kanban_tools.py</code>'s
+  <code>_parse_bool_arg(args, "triage")</code>) — and only a task
+  actually sitting in <code>triage</code> status is visible to the
+  dispatcher's auto-decompose tick, which calls
+  <code>list_triage_ids()</code> once a minute
+  (<code>gateway/kanban_watchers.py</code>). The original wording above
+  told Crazy Dave to create a task, but never to set
+  <code>triage</code> — so every task it filed landed straight in
+  <code>ready</code>, unassigned, invisible to the one mechanism that
+  would have split and routed it.</p>
+  <p>The fix above adds "with triage set to true" to the hard rule. If
+  you already have stale tasks stuck <code>ready</code> and unassigned
+  from before this fix, archive them —
+  <code>hermes kanban archive &lt;task_id&gt;</code> — and resend the
+  test message once the updated <code>SOUL.md</code> is saved. There
+  is no command to move an existing task back into
+  <code>triage</code>, so a clean retry is simpler than patching one
+  in place.</p>
 </div>
 
 <div class="quiz">
