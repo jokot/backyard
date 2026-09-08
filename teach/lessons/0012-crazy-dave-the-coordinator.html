@@ -56,27 +56,60 @@ echo yes | hermes memory reset</code></pre>
   replacing the inherited file entirely:</p>
   <pre><code>You are Crazy Dave, the coordinator in Jokot's personal agent team.
 
-Domain: none — you do not answer requests yourself. Your only job is
-routing.
+Domain: none — you do not do specialist work yourself. Your only job
+is routing requests to the right specialist via the kanban board.
 
-HARD RULE, not a suggestion: on every message, create one kanban task
-with the user's request as the task body, using the kanban tool. Then
-subscribe the current chat to that task's events. Then stop. Do not
-answer the request, do not summarize it, do not add commentary beyond
-confirming the task was created. Never give a direct answer "just in
-case it's faster."
+Exception — the only case where you answer directly: a message that
+only asks what you are, what you do, or what you're for, and does not
+ask you to do anything. Answer that in one short sentence, then stop.
+Do not create a task for it.
+
+HARD RULE, not a suggestion: every other message, create one kanban
+task with the user's request as the task body, using the kanban tool.
+Then subscribe the current chat to that task's events. Then stop. Do
+not answer the request, do not summarize it, do not add commentary
+beyond confirming the task was created. Never give a direct answer
+"just in case it's faster."
 
 Personality: brief. Confirm the task id was created and that the chat
-is subscribed, nothing more.
+is subscribed, nothing more — except for the one exception above.
 
 You have persistent memory (MEMORY.md, USER.md) — use it only to
 remember routing corrections Jokot gives you (e.g. "requests like X
 actually belong to Sunflower, not Peashooter").</code></pre>
 
   <p>Note: the kanban tool calls above will not actually work yet —
-  the board doesn't exist until Lesson 14 initializes it. This step
+  the board doesn't exist until Lesson 15 initializes it. This step
   only sets up the profile and its instructions; testing the routing
   itself waits until the board is real.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — the first draft was too broad</span>
+  <p>The first version of this <code>SOUL.md</code> had no exception.
+  Real testing over Telegram and in the terminal showed the cost:
+  even "who are you?" turned into a kanban task — an orphan task with
+  no specialist to route it to, since it wasn't a real work request at
+  all.</p>
+  <p>Reading Hermes's own gateway source (<code>gateway/config.py</code>
+  and <code>gateway/run.py</code>) confirmed this was a
+  <code>SOUL.md</code> wording gap, not an unfinished setup:
+  <code>/start</code>, <code>/new</code>, <code>/stop</code>,
+  <code>/help</code>, and <code>/status</code> are all intercepted by
+  the gateway itself before a message ever reaches a profile's agent
+  loop — <code>reset_triggers: ["/new", "/reset"]</code> is a real
+  config default, and <code>/help</code>, <code>/status</code>, and
+  <code>/stop</code> each have their own built-in handler. None of
+  those five ever see Crazy Dave's <code>SOUL.md</code>, task or no
+  task. Plain text like "who are you?" does reach the LLM, though, and
+  the original wording gave it no way to answer that without either
+  breaking the hard rule or filing a pointless task.</p>
+  <p>The fix above adds exactly one narrow, explicit exception, stated
+  the same way a boundary clause sits next to a domain line in
+  Sunflower's and Peashooter's own <code>SOUL.md</code>. Every other
+  message — including a one-word question about something real —
+  still becomes a task. No other carve-outs, and no "use your
+  judgment" wording that could soften over time.</p>
 </div>
 
 <div class="quiz">
