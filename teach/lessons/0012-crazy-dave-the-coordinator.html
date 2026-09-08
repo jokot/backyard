@@ -143,6 +143,45 @@ actually belong to Sunflower, not Peashooter").</code></pre>
   in place.</p>
 </div>
 
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — the board is a second sender</span>
+  <p>Lesson 16's run finished its real work, and then the board grew
+  three tasks nobody asked for — <code>Execute kanban task
+  t_543d3b93</code>, <code>Work kanban task t_543d3b93 per user
+  instruction</code>, and <code>Handle worker protocol request for
+  t_543d3b93</code>. Crazy Dave created all three, in 90 seconds, about
+  the task it was itself assigned.</p>
+  <p>The root task's event log explains it. <code>decompose</code>
+  recorded <code>root_assignee: crazydave</code>, so when the last child
+  finished, the dispatcher promoted the root and spawned Crazy Dave as
+  its worker. The hard rule above said <em>every</em> message becomes a
+  kanban task, and nothing in it separated a dispatch from the board
+  from a Telegram message from you. Crazy Dave filed a task about the
+  work instead of doing the work. The body of one task records the
+  confusion directly: "User provided a kanban worker protocol message
+  stating task t_543d3b93 is still running."</p>
+  <p>Two lessons disagreed here. This lesson says Crazy Dave never does
+  work. <a href="0015-the-shared-kanban-board.html">Lesson 15</a> sets
+  <code>orchestrator_profile: 'crazydave'</code>, which makes Crazy Dave
+  the assignee of every root task. The gap stayed invisible until a root
+  task completed for the first time. The
+  <code>orchestrator_profile</code> setting was right — closing a root
+  task is coordinator work — so the fix goes in the wording, as a second
+  exception added above the hard rule:</p>
+  <pre><code>Exception — dispatched work: if the message is a kanban worker protocol
+message, you were spawned as a worker on a specific task id. You are not
+talking to Jokot. Do that task yourself. Never create a new kanban task in
+response to a worker protocol message. If the task is a root whose children
+are already complete, read the children's results, add a summary comment,
+and complete the task.</code></pre>
+  <p>This is the third correction to one file, and all three share a
+  shape: a hard rule written against one input channel breaks on the
+  second channel. Before writing "every message", count how many senders
+  can reach the agent. Full detail in
+  <a href="../learning-records/0009-a-coordinator-that-never-works-gets-dispatched-work.md">learning
+  record 0009</a>.</p>
+</div>
+
 <div class="quiz">
   <p class="q">Why does Crazy Dave's SOUL.md ban a direct answer even when routing feels slower — e.g. a one-word question it could clearly answer itself?</p>
   <div class="choices">
@@ -168,6 +207,7 @@ actually belong to Sunflower, not Peashooter").</code></pre>
 <div class="checklist">
   <label><input type="checkbox"> <code>crazydave</code> profile created, memory reset</label>
   <label><input type="checkbox"> <code>SOUL.md</code> written with the hard-rule routing wording</label>
+  <label><input type="checkbox"> Both exceptions present — self-identity questions, and kanban worker protocol messages</label>
 </div>
 
 <p><a href="../reference/glossary.html">→ Full glossary</a> ·
