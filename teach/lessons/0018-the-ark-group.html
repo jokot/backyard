@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 18 — The Ark Group</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 18 of the Stage 3 build</p>
+<h1>One room, three doors</h1>
+<p class="lede">Stage 2 ends with three bots in three separate private
+chats. A question that touches two domains has no single place to live.
+The reference project solves this with one room, divided into topics,
+one topic per specialist. This lesson builds the room. Lesson 19 makes
+the bots behave inside it.</p>
+
+<h2>What a topic actually is</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>A Telegram
+  <span class="term" title="A named sub-thread inside a Telegram supergroup. Telegram assigns each topic a numeric thread id. The General topic is always thread 1.">forum topic</span>
+  is a named sub-thread inside a supergroup. Telegram gives each topic a
+  numeric <code>message_thread_id</code>, and every message carries the
+  id of the topic it was posted in. That number is the whole routing
+  mechanism you will use in Lesson 19.</p>
+  <p>Two facts about the numbering matter, and both come from Hermes's
+  own Telegram adapter rather than from the Telegram interface. Telegram
+  omits <code>message_thread_id</code> for the General topic, and Hermes
+  normalizes that absence to thread <code>1</code>
+  (<code>_GENERAL_TOPIC_THREAD_ID = "1"</code>,
+  <code>plugins/platforms/telegram/adapter.py:583</code>). Topics you
+  create yourself get their own numbers, and those numbers are not
+  shown anywhere in the Telegram mobile or desktop app.</p>
+  <p>This is the layout the reference project uses. Zain Fathoni's
+  <a href="https://ark.zainf.dev/">The Ark</a> is one group with a topic
+  per specialist, not a folder of private chats. Named back in
+  <a href="0001-context-contamination-and-your-first-profile.html">Lesson
+  1</a>, adopted now.</p>
+</div>
+
+<h2>The setting that fails silently</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Every Telegram bot has a
+  <span class="term" title="A per-bot Telegram setting. When enabled, the bot receives only group messages that mention it, reply to it, or start with a command. Enabled by default.">group privacy</span>
+  setting, and it is <strong>enabled by default</strong>. A bot with
+  privacy enabled receives only group messages that name it, reply to
+  it, or begin with a slash command. Every other message never reaches
+  the bot at all.</p>
+  <p>That is fatal for the design in Lesson 19, where each bot must
+  answer plain messages in its own topic. It is also the hardest failure
+  to diagnose, because nothing reports an error. Telegram simply does
+  not deliver the message, so Hermes has nothing to log and the bot has
+  nothing to ignore. You see silence, and silence looks identical to a
+  configuration mistake.</p>
+  <p>Disable it now, before you write any configuration. Then you can
+  read a later silence as a real signal.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Create the group and enable topics.</strong> In the
+  Telegram app:</p>
+  <ul>
+    <li>Create a new group. Name it something you will recognize in a
+    list — <code>Ark</code> works.</li>
+    <li>Add all three bots: Peashooter, Sunflower, Crazy Dave.</li>
+    <li>Open group settings, then <em>Edit</em>, then enable
+    <em>Topics</em>. Telegram converts the group to a supergroup at this
+    point, and its chat id changes to one beginning
+    <code>-100</code>.</li>
+    <li>Create two topics: <code>Coding</code> and
+    <code>Planning</code>. Do not create General — it already
+    exists.</li>
+    <li>Promote each of the three bots to administrator. A
+    non-administrator bot in a supergroup can miss messages that
+    Telegram delivers only to administrators.</li>
+  </ul>
+
+  <p><strong>2. Disable group privacy for all three bots.</strong> Open
+  a chat with <code>@BotFather</code> and, for each bot in turn:</p>
+  <pre><code>/mybots
+  → choose the bot
+  → Bot Settings
+  → Group Privacy
+  → Turn off</code></pre>
+  <p>Then remove each bot from the group and add it again. Telegram can
+  keep the earlier delivery behavior for a bot that is already a member
+  when the setting changes.</p>
+
+  <p><strong>3. Read the four identifiers.</strong> The chat id and the
+  thread ids are not visible in the mobile or desktop app. Telegram Web
+  puts both in the address bar:</p>
+  <ul>
+    <li>Open <a href="https://web.telegram.org/a/">web.telegram.org/a/</a>
+    and open the group.</li>
+    <li>Open the <code>Coding</code> topic. The address ends
+    <code>#-1001234567890_3</code>. The first number is the chat id, the
+    second is the thread id.</li>
+    <li>Repeat for <code>Planning</code>.</li>
+    <li>General shows no trailing number. Its thread id is
+    <code>1</code>.</li>
+  </ul>
+  <p>Write all four numbers down. Lesson 19 puts them into three
+  configuration files, and a wrong digit produces exactly the same
+  symptom as a bot that never answers.</p>
+
+  <p><strong>4. Sanity-check what you wrote.</strong> The chat id starts
+  with <code>-100</code>. The three thread ids are all different. General
+  is <code>1</code>. If any of those three checks fails, read the
+  address bar again rather than guessing the value.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Nothing here breaks your direct messages</span>
+  <p>This lesson adds a room. It removes nothing. Each bot keeps its own
+  gateway, its own token, and its own private chat with you, exactly as
+  Stage 1 and Stage 2 left them. Lesson 19's settings apply to group
+  chats only — <code>require_mention</code> is checked on a group
+  message path that a private chat never enters.</p>
+  <p>That property is why this stage uses three gateways rather than
+  Hermes's <code>profile_routes</code> multiplexing. Multiplexing would
+  replace three working gateways with one untested configuration and put
+  the private chats at risk, to save nothing you need.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">You disable group privacy on all three bots. What does that setting control?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Whether Telegram delivers unnamed group messages to the bot at all</label>
+      <div class="reveal"><p class="feedback correct">Right. It is a delivery filter on Telegram's side, above Hermes. With it enabled, a bot never receives the message, so no Hermes setting can make it answer and no Hermes log records anything.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Whether the bot may read the group member list and admin roles</label>
+      <div class="reveal"><p class="feedback incorrect">That is administrator rights, a separate setting. Both matter here, but privacy is the one that governs message delivery.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Whether Hermes stores group chat history in the profile memory</label>
+      <div class="reveal"><p class="feedback incorrect">Storage is a Hermes concern, decided by the profile. Group privacy is a Telegram setting applied before Hermes sees anything.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Supergroup created, Topics enabled</label>
+  <label><input type="checkbox"> Topics <code>Coding</code> and <code>Planning</code> created</label>
+  <label><input type="checkbox"> All three bots added and promoted to administrator</label>
+  <label><input type="checkbox"> Group privacy turned off in BotFather for all three bots</label>
+  <label><input type="checkbox"> Each bot removed and added again after the privacy change</label>
+  <label><input type="checkbox"> Chat id and three thread ids written down</label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="https://core.telegram.org/bots/features#privacy-mode">Telegram
+Bot API — Privacy mode</a>. Read the two paragraphs on what a bot with
+privacy mode receives. It is the authoritative statement of the failure
+this lesson prevents.</p>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../../docs/superpowers/specs/2026-09-09-stage3-ark-and-fizzy-design.md">Stage
+3 spec</a></p>
+
+<p class="ask-agent">Tell me the four numbers — chat id, and the thread
+ids for General, Coding and Planning. Say whether every bot answered a
+plain message in the group before you changed anything, because that
+tells us the privacy change actually took effect. Ask me anything that
+was unclear.</p>
+
+<div class="nav">
+  <span><a href="0017-workers-report-their-own-results.html">← Lesson 17</a></span>
+  <span>Lesson 18 of Stage 3</span>
+  <span><a href="0019-one-topic-one-listener.html">Lesson 19 →</a></span>
+</div>
+
+</body>
+</html>

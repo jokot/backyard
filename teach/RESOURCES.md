@@ -26,6 +26,27 @@
   workspace, ahead of trusting any doc or memory. Use for: verifying any
   claim about Hermes behavior before it goes in a lesson.
 
+- [GitHub: basecamp/fizzy-cli](https://github.com/basecamp/fizzy-cli) —
+  the official Fizzy command line interface, in Go, MIT licensed. Ships
+  an agent skill and a read-only MCP server. Default branch is
+  `master`, not `main`. Use for: exact command shapes. `README.md` has
+  real invocations, `SURFACE.txt` lists every command and flag.
+- [GitHub: basecamp/fizzy](https://github.com/basecamp/fizzy) — the
+  Fizzy server itself, under the O'Saasy License. Use for: deciding
+  between the hosted service and self-hosting through Docker or Kamal.
+- [Fizzy webhooks help](https://help.fizzy.do/3/fizzy-help-guide/67/webhooks)
+  and [Rob Zolkos on Fizzy webhooks](https://www.zolkos.com/2025/12/02/fizzy-webhooks-what-you-need-to-know)
+  — Use for: the payload limits. A card payload carries `title` and
+  `url` only, with no description body.
+- [Telegram Bot API — Privacy mode](https://core.telegram.org/bots/features#privacy-mode)
+  — Use for: the one Telegram setting that makes a group bot silent with
+  no error and no log entry.
+- [Hermes Agent docs: Telegram](https://hermes-agent.nousresearch.com/docs/user-guide/messaging/telegram)
+  — Use for: `require_mention`, `exclusive_bot_mentions`,
+  `ignored_threads`, and running several Hermes bots in one group. Note
+  that `free_response_topics` is absent from this page and exists only
+  in the adapter source.
+
 ## Wisdom (Communities)
 
 - [OpenClaw Discord](https://discord.com/invite/clawd)

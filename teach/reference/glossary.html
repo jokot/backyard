@@ -191,6 +191,50 @@ possible definition.</p>
   profile's requests are routing instructions, not direct work.
   <span class="from">Introduced in: <a href="../lessons/0015-the-shared-kanban-board.html">Lesson 15</a></span></dd>
 
+  <dt>Forum topic</dt>
+  <dd>A named sub-thread inside a Telegram supergroup. Telegram gives
+  each topic a numeric <code>message_thread_id</code> and stamps it on
+  every message posted there. Telegram omits the id for the General
+  topic, and Hermes normalizes that absence to thread <code>1</code>
+  (<code>adapter.py:583</code>). The numbers are not shown in the
+  Telegram app — read them from the address bar in Telegram Web.
+  <span class="from">Introduced in: <a href="../lessons/0018-the-ark-group.html">Lesson 18</a></span></dd>
+
+  <dt>Group privacy (Telegram)</dt>
+  <dd>A per-bot Telegram setting, enabled by default, that delivers only
+  messages naming the bot, replying to it, or starting with a command.
+  Applied above Hermes, so an enabled setting produces silence with no
+  log entry and no error. Turned off through BotFather.
+  <span class="from">Introduced in: <a href="../lessons/0018-the-ark-group.html">Lesson 18</a></span></dd>
+
+  <dt>Mention gating</dt>
+  <dd>The <code>require_mention</code> key, which keeps a profile silent
+  in a group until a message names it. Applies to group chats only,
+  never to private chats. Its companion
+  <code>exclusive_bot_mentions</code>, on by default, makes a mention
+  exclusive: only the named bot processes the message.
+  <span class="from">Introduced in: <a href="../lessons/0019-one-topic-one-listener.html">Lesson 19</a></span></dd>
+
+  <dt>Free-response topic</dt>
+  <dd>One entry of the form
+  <code>&lt;chat_id&gt;:&lt;thread_id&gt;</code> in
+  <code>free_response_topics</code>, making a profile answer unnamed
+  messages in exactly one topic. Checked <em>before</em>
+  <code>require_mention</code>, so one topic opens without opening the
+  group. Undocumented — it exists only in the adapter source at
+  <code>adapter.py:7251</code>. Contrast <code>ignored_threads</code>,
+  which is checked before every other gate and therefore blocks mentions
+  too.
+  <span class="from">Introduced in: <a href="../lessons/0019-one-topic-one-listener.html">Lesson 19</a></span></dd>
+
+  <dt>One-way mirror</dt>
+  <dd>A copy of state that a second system displays but never feeds
+  back. Fizzy holds one card per root kanban task, written by Crazy Dave
+  and read by no agent. A drifted mirror shows a stale view rather than
+  causing a wrong action, which is the whole reason the direction is
+  enforced.
+  <span class="from">Introduced in: <a href="../lessons/0020-fizzy-the-visible-board.html">Lesson 20</a></span></dd>
+
 </dl>
 
 <p style="margin-top:3rem; font-family:-apple-system,sans-serif; font-size:0.85rem; color:var(--ink-soft);">

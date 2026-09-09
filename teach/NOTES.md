@@ -41,3 +41,30 @@
   `~/.hermes/profiles/peashooter/`, mirror them into
   `hermes-config/peashooter/` after each hands-on edit and commit that
   copy — never copy `.env` or `auth.json` (they hold live secrets).
+
+- **Stage 3 scope (decided 2026-09-09):** the Ark Telegram group plus a
+  one-way Fizzy mirror, both in one stage. Spec at
+  `../docs/superpowers/specs/2026-09-09-stage3-ark-and-fizzy-design.md`,
+  plan at `../docs/superpowers/plans/2026-09-09-stage3-ark-and-fizzy.md`.
+  Three bots keep three separate gateways. Gateway multiplexing through
+  `profile_routes` was considered and rejected, because it would replace
+  three working gateways with one untested configuration.
+- **Telegram gotcha (verified 2026-09-09 in adapter source):**
+  `ignored_threads` is checked before the mention and free-response
+  checks, so a bot that ignores a topic cannot be summoned there by
+  mention. Use `free_response_topics` instead. That key is checked
+  *before* `require_mention`, which is what gives one topic a default
+  listener while every other topic still needs a mention. It appears
+  nowhere in the Telegram documentation — only at
+  `plugins/platforms/telegram/adapter.py:7251`.
+- **Fizzy gotcha (verified 2026-09-09):** the repository
+  `basecamp/fizzy-cli` uses `master` as its default branch, so a
+  `raw.githubusercontent.com/.../main/...` URL returns 404. The JSON
+  field that addresses a new card is not documented in `README.md` or
+  `SURFACE.txt`. Lesson 20 finds it from real output rather than
+  guessing it.
+- **Link path gotcha (fixed 2026-09-09):** lessons live at
+  `teach/lessons/`, so a link to the build documents needs
+  `../../docs/superpowers/...`. Eight Stage 2 lessons used `../docs/`
+  and were broken. Verify local links resolve before committing a
+  lesson, the same way tag balance is verified.

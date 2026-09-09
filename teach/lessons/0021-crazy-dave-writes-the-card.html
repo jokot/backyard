@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 21 — Crazy Dave Writes the Card</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 21 of the Stage 3 build</p>
+<h1>A fourth rule on a file corrected three times</h1>
+<p class="lede">Crazy Dave's <code>SOUL.md</code> has been wrong three
+times, and all three failures had the same shape. This lesson adds a
+fourth rule to that file. Before writing it, look at why the first three
+broke — because the wording that avoids the pattern is not the obvious
+one.</p>
+
+<h2>The shape that keeps recurring</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Read
+  <a href="../learning-records/0009-a-coordinator-that-never-works-gets-dispatched-work.md">learning
+  record 0009</a> and the three corrections in
+  <a href="0012-crazy-dave-the-coordinator.html">Lesson 12</a>. The
+  pattern:</p>
+  <ul>
+    <li>Draft 1 said <em>every message becomes a task</em>. "Who are
+    you?" became an orphan task.</li>
+    <li>Draft 2 never said <code>triage</code>. Every task landed
+    unreachable by the dispatcher.</li>
+    <li>Draft 3 never said which sender it was answering. The kanban
+    dispatcher became a second sender, and Crazy Dave filed tasks about
+    its own dispatched work.</li>
+  </ul>
+  <p>The generalization in record 0009 is that <em>a hard rule written
+  against one input channel breaks on the second channel</em>. Each
+  draft was written while one sender existed, and each broke when a
+  second appeared.</p>
+  <p>So the mitigation for this lesson's rule is in its grammar. Each
+  new clause names <strong>the moment it applies to</strong>, not the
+  message that arrived. "On filing a root task" and "on completing a
+  root task" are moments, and a moment does not care which sender caused
+  it. "Every message" is a sender claim, and that is the phrasing that
+  has failed three times.</p>
+</div>
+
+<h2>Why the coordinator, and not the workers</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Crazy Dave already runs at exactly the two moments the mirror
+  needs, and no other profile runs at either. It files the root task
+  when you ask for something. And because
+  <a href="0015-the-shared-kanban-board.html">Lesson 15</a> set
+  <code>orchestrator_profile: 'crazydave'</code>, the dispatcher spawns
+  Crazy Dave on the root task once the children finish.</p>
+  <p>Giving Peashooter and Sunflower their own Fizzy tokens would add
+  two credentials, two failure paths, and per-child cards you do not
+  need — the specialists already report to you directly over Telegram,
+  from Lesson 17. One card per root task, written by one agent, is the
+  smaller thing that still works.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Add this block to
+  <code>~/.hermes/profiles/crazydave/SOUL.md</code>,</strong> after the
+  dispatched-work exception and before the personality line. Substitute
+  your real board id from Lesson 20, and the real
+  <code>fizzy card close</code> form you confirmed there:</p>
+  <pre><code>Fizzy mirror — you own it, and you never read it.
+
+On filing a root kanban task: after the task exists, run
+  fizzy card create --profile crazydave --board &lt;BOARD_ID&gt; --title "&lt;the user's request, one line&gt;"
+Read the card identifier from the output. Add a comment on the kanban
+task with the exact text fizzy:&lt;identifier&gt; and nothing else.
+
+On completing a root kanban task: read the fizzy:&lt;identifier&gt; comment
+from that task. Then run
+  fizzy comment create --profile crazydave --card &lt;identifier&gt; --body "&lt;your summary&gt;"
+  fizzy card close &lt;identifier&gt;
+
+Never run any other fizzy command. Never read a Fizzy card to decide
+anything. The kanban board is the only source of truth.
+
+If a fizzy command fails, say so in your reply and continue. A failed
+fizzy command never blocks the kanban task and never changes what you
+do next.</code></pre>
+
+  <p><strong>2. Check the paste landed whole.</strong></p>
+  <pre><code>grep -n 'fizzy' ~/.hermes/profiles/crazydave/SOUL.md</code></pre>
+  <p>Four command lines must appear: <code>fizzy card create</code>,
+  <code>fizzy comment create</code>, <code>fizzy card close</code>, and
+  the <code>fizzy:</code> comment text. A missing line means a truncated
+  paste, which is the most common cause of a rule that half-works.</p>
+
+  <p><strong>3. Restart Crazy Dave's gateway</strong> so the new
+  <code>SOUL.md</code> loads:</p>
+  <pre><code>hermes gateway restart -p crazydave</code></pre>
+
+  <p><strong>4. Test one moment, not both.</strong> Send a small request
+  in <code>#General</code> — something like <em>write a haiku about file
+  descriptors</em>. Then verify the filing half from real output rather
+  than from Crazy Dave's reply:</p>
+  <pre><code>hermes kanban list
+hermes kanban show &lt;task_id&gt;
+fizzy card list --profile crazydave --board &lt;BOARD_ID&gt;</code></pre>
+  <p><code>hermes kanban show</code> must contain the
+  <code>fizzy:</code> comment. <code>fizzy card list</code> must contain
+  one card with the same title. The closing half gets tested in
+  <a href="0022-the-stage3-end-to-end-check.html">Lesson 22</a>, because
+  it needs a root task with finished children.</p>
+
+  <p><strong>5. Mirror the file into the repository.</strong></p>
+  <pre><code>cp ~/.hermes/profiles/crazydave/SOUL.md hermes-config/crazydave/SOUL.md</code></pre>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Why the failure clause is there</span>
+  <p>The last four lines of the block look like defensive padding. They
+  are the most important part of it.</p>
+  <p>Without them, a Fizzy outage, an expired token, or a spent free
+  tier turns into a coordinator that will not file kanban tasks — the
+  mirror taking down the thing it was supposed to reflect. The clause
+  states the priority order explicitly, so an agent under pressure to
+  "complete the instructions" has a written answer about which half to
+  drop.</p>
+  <p>This is the same lesson as the one-way rule in
+  <a href="0020-fizzy-the-visible-board.html">Lesson 20</a>, applied to
+  time rather than to data. Keep every failure inside the display.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">The new rules say "on filing a root task" rather than "when you receive a request". Why does that phrasing matter?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">A moment holds true no matter which sender triggered it</label>
+      <div class="reveal"><p class="feedback correct">Right. Record 0009's failure was a rule written about a sender, broken when a second sender appeared. A rule keyed to an action Crazy Dave takes is unaffected by who asked.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">A shorter instruction survives prompt dilution on a cheap model</label>
+      <div class="reveal"><p class="feedback incorrect">Prompt dilution is a real risk on this profile — record 0004 covers it — but both phrasings are the same length. The difference is what they key on.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">The kanban tool rejects instructions written in the imperative mood</label>
+      <div class="reveal"><p class="feedback incorrect">The tool does not read <code>SOUL.md</code> at all. The wording only ever affects how the model behaves.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Block added to <code>SOUL.md</code>, with the real board id substituted</label>
+  <label><input type="checkbox"> All four <code>fizzy</code> lines present in the file</label>
+  <label><input type="checkbox"> Crazy Dave's gateway restarted</label>
+  <label><input type="checkbox"> One test request filed a kanban task and created one Fizzy card</label>
+  <label><input type="checkbox"> The kanban task carries a <code>fizzy:&lt;identifier&gt;</code> comment</label>
+  <label><input type="checkbox"> <code>SOUL.md</code> mirrored into <code>hermes-config/crazydave/</code></label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="../learning-records/0009-a-coordinator-that-never-works-gets-dispatched-work.md">learning
+record 0009</a>. It is three pages, it is about this exact file, and it
+is the reason this lesson is written the way it is.</p>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="0012-crazy-dave-the-coordinator.html">Lesson 12 — Crazy Dave's
+first SOUL.md</a></p>
+
+<p class="ask-agent">Send me the <code>hermes kanban show</code> output
+for the test task and the <code>fizzy card list</code> output side by
+side. If the <code>fizzy:</code> comment is missing but the card exists,
+that is a different bug from both being missing — tell me which one you
+see rather than that "it did not work".</p>
+
+<div class="nav">
+  <span><a href="0020-fizzy-the-visible-board.html">← Lesson 20</a></span>
+  <span>Lesson 21 of Stage 3</span>
+  <span><a href="0022-the-stage3-end-to-end-check.html">Lesson 22 →</a></span>
+</div>
+
+</body>
+</html>

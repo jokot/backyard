@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 19 — One Topic, One Listener</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 19 of the Stage 3 build</p>
+<h1>The gate that decides who answers</h1>
+<p class="lede">Three bots now sit in one room. Left alone they will all
+answer every message, or none of them will. This lesson picks the one
+setting that gives each bot a home topic without locking it out of the
+others — and shows why the obvious setting is the wrong one.</p>
+
+<h2>Read the gate in order</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>When a group message arrives, Hermes's Telegram adapter runs one
+  function to decide whether this profile should respond. The checks run
+  in a fixed order, and the first one that matches wins:</p>
+  <pre><code>allowed_chats        → outside the list? stop
+guest mention        → respond
+free_response_chats  → respond
+free_response_topics → respond
+require_mention      → not required? respond
+reply to the bot     → respond
+mention of the bot   → respond
+mention_patterns     → respond if matched</code></pre>
+  <p>Read the fourth and fifth lines together. <code>free_response_topics</code>
+  is checked <em>before</em> <code>require_mention</code>. That is the
+  whole trick: a topic on that list answers plain messages, and every
+  other topic still requires a mention. One setting produces both halves
+  of the behavior you want.</p>
+  <p>The list is a set of strings of the form
+  <code>&lt;chat_id&gt;:&lt;thread_id&gt;</code>
+  (<code>_telegram_free_response_topics</code>,
+  <code>plugins/platforms/telegram/adapter.py:7251</code>). Those are
+  the numbers you wrote down in
+  <a href="0018-the-ark-group.html">Lesson 18</a>.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — the obvious setting is a trap</span>
+  <p>The first draft of this design used <code>ignored_threads</code>:
+  give each bot the list of topics it should ignore, and let mentions
+  still reach it. That is wrong, and the documentation says so
+  directly. An ignored topic is skipped "before the mention and
+  free-response checks run", and "even when the group would otherwise
+  allow free responses <em>or mention-triggered replies</em>."</p>
+  <p>So <code>ignored_threads</code> is absolute. A bot that ignores
+  <code>#Planning</code> cannot be summoned into <code>#Planning</code>
+  by any means. That deletes the half of the reference design where you
+  can call any specialist into any conversation — the reason for having
+  one room instead of three.</p>
+  <p>The error was caught by reading the sentence past the part that
+  agreed with the plan. <strong>Use no <code>ignored_threads</code>
+  entry anywhere in this stage.</strong></p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">A key with no documentation</span>
+  <p><code>free_response_topics</code> appears nowhere in Hermes's
+  Telegram documentation. It exists only in the adapter source. Its
+  sibling <code>free_response_chats</code> opens a whole chat and
+  <em>is</em> documented, which is probably why the undocumented one is
+  easy to miss.</p>
+  <p>Undocumented is not the same as unsupported, but it is worth
+  knowing what you are standing on. The behavior in this lesson was
+  confirmed by reading the gate function, not by trusting a document. If
+  a future Hermes version changes it, the symptom will be every bot
+  answering at once, and the fix will be in the same function.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Find the block you are editing.</strong> Each profile's
+  <code>config.yaml</code> already has a top-level <code>telegram:</code>
+  block, and today it holds two keys:</p>
+  <pre><code>grep -A3 '^telegram:' ~/.hermes/profiles/peashooter/config.yaml</code></pre>
+  <pre><code>telegram:
+  reactions: false
+  allowed_chats: ''</code></pre>
+
+  <p><strong>2. Add four lines to each of the three files.</strong>
+  Substitute your own chat id, and each profile's own thread id.
+  Peashooter takes <code>#Coding</code>:</p>
+  <pre><code>telegram:
+  reactions: false
+  allowed_chats: ''
+  require_mention: true
+  exclusive_bot_mentions: true
+  free_response_topics:
+    - "-1001234567890:3"</code></pre>
+  <p>Sunflower takes <code>#Planning</code>, and Crazy Dave takes
+  General, which is thread <code>1</code>. Nothing else differs between
+  the three files.</p>
+  <p>Two rules about that value. <strong>Quote it.</strong> A bare
+  <code>-1001234567890:3</code> starts with a minus sign and contains a
+  colon, which is ambiguous in YAML. <strong>Leave
+  <code>allowed_chats</code> empty.</strong> A non-empty
+  <code>allowed_chats</code> becomes a second gate, checked first, that
+  the group would also have to pass.</p>
+
+  <p><strong>3. Restart the three gateways.</strong> A running gateway
+  holds its configuration in memory:</p>
+  <pre><code>for p in peashooter sunflower crazydave; do hermes gateway restart -p $p; done
+hermes gateway status</code></pre>
+
+  <p><strong>4. Run four tests, in this order.</strong> Each one
+  isolates a different check in the gate:</p>
+  <ul>
+    <li>Post <code>hello</code> in <code>#Coding</code> with no
+    mention. Only Peashooter should answer. This tests
+    <code>free_response_topics</code>.</li>
+    <li>Post <code>@your_sunflower_bot hello</code> in
+    <code>#Coding</code>. Only Sunflower should answer. This tests
+    <code>exclusive_bot_mentions</code>.</li>
+    <li>Post <code>hello</code> in <code>#Planning</code>. Only
+    Sunflower should answer, and Peashooter must stay silent. This tests
+    <code>require_mention</code>.</li>
+    <li>Send a private message to each of the three bots. Each should
+    answer exactly as it did before this lesson. This is the regression
+    check.</li>
+  </ul>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">If a test fails, read before guessing</span>
+  <p>Two failures look alike from the chat window and are told apart by
+  one command each.</p>
+  <pre><code>grep -A8 '^telegram:' ~/.hermes/profiles/peashooter/config.yaml
+hermes gateway logs -p peashooter --lines 100</code></pre>
+  <p><strong>Nobody answers an unnamed message, and the configuration is
+  correct.</strong> That is BotFather group privacy, from
+  <a href="0018-the-ark-group.html">Lesson 18</a>. Telegram never
+  delivered the message, so the log has no entry for it. An empty log is
+  the evidence.</p>
+  <p><strong>Every bot answers one unnamed message.</strong> Then
+  <code>require_mention</code> is not reaching the adapter. The first
+  command shows whether the key is really in the file and really under
+  <code>telegram:</code>, rather than indented into a neighbouring
+  block.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does this design use <code>free_response_topics</code> instead of <code>ignored_threads</code>?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">An ignored topic drops the message before the mention check can run</label>
+      <div class="reveal"><p class="feedback correct">Right. <code>ignored_threads</code> is absolute — it is applied ahead of both the free-response and the mention checks, so a bot ignoring a topic cannot be summoned there at all.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">An ignored topic list must be rewritten whenever a topic is added</label>
+      <div class="reveal"><p class="feedback incorrect">True of a denylist in general, and a real cost, but not the reason. The reason is that it also blocks mentions.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">An ignored topic setting is unsupported by the Telegram adapter code</label>
+      <div class="reveal"><p class="feedback incorrect">It is fully supported and implemented at <code>adapter.py:7331</code>. It works exactly as documented — the documented behavior is what makes it wrong here.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Four keys added to all three <code>config.yaml</code> files</label>
+  <label><input type="checkbox"> Each <code>free_response_topics</code> entry quoted, and naming that profile's own topic</label>
+  <label><input type="checkbox"> No <code>ignored_threads</code> key anywhere</label>
+  <label><input type="checkbox"> Three gateways restarted</label>
+  <label><input type="checkbox"> Test 1 — unnamed message in <code>#Coding</code> answered by Peashooter alone</label>
+  <label><input type="checkbox"> Test 2 — mention of Sunflower in <code>#Coding</code> answered by Sunflower alone</label>
+  <label><input type="checkbox"> Test 3 — unnamed message in <code>#Planning</code>, Peashooter silent</label>
+  <label><input type="checkbox"> Test 4 — all three private chats still work</label>
+  <label><input type="checkbox"> Three <code>config.yaml</code> files mirrored into <code>hermes-config/</code></label>
+</div>
+
+<p><strong>Primary source:</strong> the gate function itself, in
+<code>~/.hermes/hermes-agent/plugins/platforms/telegram/adapter.py</code>.
+Search for <code>_telegram_free_response_topics</code> and read the
+function that calls it. Hermes's
+<a href="https://hermes-agent.nousresearch.com/docs/user-guide/messaging/telegram">Telegram
+guide</a> covers the documented neighbours of these keys, and is the
+better read for <code>exclusive_bot_mentions</code>.</p>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../../docs/superpowers/specs/2026-09-09-stage3-ark-and-fizzy-design.md">Stage
+3 spec</a></p>
+
+<p class="ask-agent">Report all four tests, naming which bots replied to
+each message and what they said. If two bots answer one message, send me
+the last 100 log lines from both gateways rather than a summary — the
+cause is usually visible in the first ten.</p>
+
+<div class="nav">
+  <span><a href="0018-the-ark-group.html">← Lesson 18</a></span>
+  <span>Lesson 19 of Stage 3</span>
+  <span><a href="0020-fizzy-the-visible-board.html">Lesson 20 →</a></span>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 22 — The Stage 3 End-to-End Check</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 22 of the Stage 3 build</p>
+<h1>Five claims, five checks</h1>
+<p class="lede">Everything is built. One request now has to travel from
+a topic in the group, through the coordinator, into a Fizzy card, out to
+two specialists, back as two Telegram reports, and end with a closed
+card. This lesson runs that request and refuses to take anyone's word
+for any part of it.</p>
+
+<h2>Why a passing check is not a passing claim</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Stage 2 ended with a bot reporting a live game server. The report
+  was true. Fifteen minutes later the server returned nothing at all.
+  The cause is in
+  <a href="../learning-records/0011-a-report-that-was-true-when-it-was-sent.md">learning
+  record 0011</a>: the process had no file descriptor 1 and no
+  descriptor 2, because they closed when the agent session that started
+  it ended, and Python's <code>http.server</code> writes a log line
+  before it writes a single response byte.</p>
+  <p>The generalization is the rule for this whole lesson. <em>A worker
+  cannot test its own afterlife.</em> Some claims are not about an
+  instant. "The server is running" is a claim about every moment after
+  the check, including moments the worker cannot observe. So verify the
+  structure that keeps a claim true, not the claim. An open file
+  descriptor is checkable now and predicts later. An HTTP 200 is
+  checkable now and predicts nothing.</p>
+  <p>Applied here: do not accept "the card is closed" or "both bots
+  reported". Read the board, read Fizzy, read the messages.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Send one cross-domain request in
+  <code>#General</code>.</strong> It must genuinely need both
+  specialists, so that <code>decompose</code> produces children with
+  different assignees. The Stage 2 shape that worked: ask for a small
+  browser game, specified first and then implemented, with a test run at
+  the end. Write down the exact text you send.</p>
+
+  <p><strong>2. Check the card appeared.</strong></p>
+  <pre><code>fizzy card list --profile crazydave --board &lt;BOARD_ID&gt;</code></pre>
+  <p>Expected: one new card whose title matches your request.</p>
+
+  <p><strong>3. Check the decomposition.</strong></p>
+  <pre><code>hermes kanban list</code></pre>
+  <p>Expected: one root task assigned to <code>crazydave</code>, and two
+  or more children assigned to <code>peashooter</code> or
+  <code>sunflower</code>. If children exist but sit in
+  <code>triage</code> forever, re-read the second correction in
+  <a href="0012-crazy-dave-the-coordinator.html">Lesson 12</a>.</p>
+
+  <p><strong>4. Collect the reports verbatim.</strong> When the run
+  finishes, write down every Telegram message the bots sent, which bot
+  sent it, and which topic or chat it arrived in. Do not summarize. The
+  check is that each message came from the bot that did the work and
+  that none of them repeat —
+  <a href="0017-workers-report-their-own-results.html">Lesson 17</a>
+  removed the layer that used to get both of those wrong.</p>
+
+  <p><strong>5. Check the closing half of the mirror.</strong></p>
+  <pre><code>hermes kanban list
+fizzy card list --profile crazydave --board &lt;BOARD_ID&gt;</code></pre>
+  <p>Expected: the root task reads <code>done</code>, and the Fizzy card
+  is closed and carries a summary comment.</p>
+
+  <p><strong>6. Check any claim about something still running.</strong>
+  If a report says a server or a URL is live, check the structure, not
+  the claim:</p>
+  <pre><code>lsof -p &lt;pid&gt;</code></pre>
+  <p>Descriptors 1 and 2 must both be open, to a real file. If they are
+  missing, the service will fail the moment it tries to write a log
+  line, whatever a browser shows you right now.</p>
+</div>
+
+<h2>Score the five criteria</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — record the result</span>
+  <p>Write down a verdict for each, with the output that supports it. A
+  criterion met by a different mechanism than the spec named is recorded
+  as exactly that, not as a plain pass — Stage 2's spec says so about
+  its own criterion 4, and that honesty is what made the Stage 3 design
+  possible.</p>
+  <ol>
+    <li>An unnamed message in <code>#Coding</code> is answered by
+    Peashooter and by no other bot.</li>
+    <li>A message naming Sunflower in <code>#Coding</code> is answered
+    by Sunflower and by no other bot.</li>
+    <li>Each of the three bots answers a private message exactly as it
+    did before Stage 3.</li>
+    <li>No bot answers an unnamed message in a topic another profile
+    owns.</li>
+    <li>A cross-domain request in <code>#General</code> produces one
+    Fizzy card, two or more children, one Telegram report per child, and
+    one closed card carrying the summary.</li>
+  </ol>
+  <p>Every real defect gets a learning record — root cause, fix,
+  generalization — never a workaround. That practice is what produced
+  records 0008 through 0012 during Stage 2, and two of those five
+  describe mistakes in the teaching, not in Hermes.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">A bot reports that the deployed page is live, and you open the URL and see it. What have you verified?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">That it served one response, which predicts nothing about later ones</label>
+      <div class="reveal"><p class="feedback correct">Right — record 0011 exactly. The Stage 2 server passed this check and then died, because the descriptors it needed to log a request had closed with the session that started it.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">That the process is durable, since it answered after the agent exited</label>
+      <div class="reveal"><p class="feedback incorrect">A response proves the socket was open at that instant. Durability lives in how the process was started — detached, with stdout and stderr redirected to a real file.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">That the reporting path works, so the content of reports is trustworthy</label>
+      <div class="reveal"><p class="feedback incorrect">Two different layers. Record 0010 fixed how a message travels. Record 0011 is about content — fixing delivery does not make the message true.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Cross-domain request sent in <code>#General</code>, exact text recorded</label>
+  <label><input type="checkbox"> One Fizzy card created, title matches the request</label>
+  <label><input type="checkbox"> Root task plus two or more children, with different assignees</label>
+  <label><input type="checkbox"> Every Telegram message recorded verbatim, with its sender</label>
+  <label><input type="checkbox"> Root task <code>done</code>, Fizzy card closed with a summary comment</label>
+  <label><input type="checkbox"> Every "still running" claim checked with <code>lsof</code></label>
+  <label><input type="checkbox"> All five criteria scored, with supporting output</label>
+  <label><input type="checkbox"> A learning record written for every real defect found</label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="../learning-records/0011-a-report-that-was-true-when-it-was-sent.md">learning
+record 0011</a>, and
+<a href="../learning-records/0012-stage2-complete.md">record 0012</a>
+for the shape a stage-completion record takes.</p>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../../docs/superpowers/specs/2026-09-09-stage3-ark-and-fizzy-design.md">Stage
+3 spec</a> ·
+<a href="../../docs/superpowers/plans/2026-09-09-stage3-ark-and-fizzy.md">Stage
+3 plan</a></p>
+
+<p class="ask-agent">Send me the raw output of every command in this
+lesson, plus the Telegram messages verbatim. I will score the five
+criteria against that output, write learning records for anything that
+broke, and mark the stage complete only if the evidence supports it.</p>
+
+<div class="nav">
+  <span><a href="0021-crazy-dave-writes-the-card.html">← Lesson 21</a></span>
+  <span>Lesson 22 of Stage 3</span>
+  <span></span>
+</div>
+
+</body>
+</html>

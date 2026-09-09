@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 20 — Fizzy, the Visible Board</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 20 of the Stage 3 build</p>
+<h1>A board you can read on a phone</h1>
+<p class="lede">The Hermes kanban board is a SQLite file behind a
+command line interface. It works, and you cannot glance at it from a
+train. This lesson adds Fizzy as a second, readable view — and draws a
+hard line around what that view is allowed to do.</p>
+
+<h2>A mirror, not a second brain</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Fizzy will hold a copy of every root task. That copy is a
+  <span class="term" title="A copy of state that a second system displays but never feeds back. The copy may drift; a drifted copy shows a stale view rather than causing a wrong action.">one-way mirror</span>:
+  written by Crazy Dave, read by you, and never read back by any agent.
+  The Hermes board stays the only source of truth for routing and for
+  task state.</p>
+  <p>That constraint is the entire safety argument. A two-way
+  integration has a failure mode where the two boards disagree and an
+  agent acts on the wrong one. A one-way mirror has a failure mode where
+  the display is stale. Stale is a nuisance. Wrong is a bug you chase
+  for a day.</p>
+  <p><a href="0017-workers-report-their-own-results.html">Lesson 17</a>
+  recorded Zain Fathoni's version of the same lesson from the other
+  side: he built a homebrew task abstraction called "beads", found it
+  unreliable, and replaced it with a real task system. Our real task
+  system is already the Hermes board. Fizzy is the window on it, not a
+  competitor to it.</p>
+</div>
+
+<h2>What the spike found</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Fizzy is 37signals' kanban tracker. Two findings shaped this
+  lesson.</p>
+  <p><strong>There is an official command line interface.</strong>
+  <a href="https://github.com/basecamp/fizzy-cli">basecamp/fizzy-cli</a>
+  is Go, MIT-licensed, and ships an agent skill plus a read-only MCP
+  server. That matters because it makes the integration the same shape
+  as <code>hermes send</code> from Lesson 17: an agent already holds the
+  <code>terminal</code> tool, so a command line interface needs no new
+  plumbing at all.</p>
+  <p><strong>Two of the reference project's helper tools are now
+  obsolete.</strong> Zain wrote <code>fizzy-md</code> because "Fizzy's
+  API expects HTML, but agents naturally write Markdown" — and the
+  official skill now states that rich text fields accept Markdown or
+  HTML. He also wrote <code>fizzy-create-card.sh</code>, which the
+  official tool replaces. Copying a reference architecture is not the
+  same as copying its workarounds. Check which of them the ecosystem has
+  since absorbed.</p>
+  <p>One limit is worth knowing before you rely on Fizzy for anything
+  else: a Fizzy webhook payload carries a card's <code>title</code> and
+  <code>url</code> and <strong>no description body</strong>. Any push
+  integration would have to fetch the card to learn what it says. This
+  stage sends no webhooks, so it does not pay that cost.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Count the cost before you start.</strong> The hosted
+  free tier allows 1,000 cards. Reports state that a deleted card still
+  counts against that limit, so every test card you make is spent
+  permanently. The paid tier is 20 US dollars per month. Self-hosting
+  through Docker or Kamal is free and is its own project, deliberately
+  out of scope here.</p>
+
+  <p><strong>2. Install the command line interface.</strong></p>
+  <pre><code>brew install --cask basecamp/tap/fizzy
+fizzy --version</code></pre>
+  <p>If you have the old 3.x formula from the
+  <code>robzolkos/fizzy-cli</code> tap, unlink it first. A cask will not
+  overwrite a <code>bin/fizzy</code> symlink that a formula owns, and
+  installing over it silently skips the binary:</p>
+  <pre><code>brew tap basecamp/tap
+brew unlink fizzy-cli
+brew install --cask basecamp/tap/fizzy
+brew uninstall --formula --force fizzy-cli
+brew untap robzolkos/fizzy-cli</code></pre>
+
+  <p><strong>3. Create the account, one board, and a token.</strong> Sign
+  up at <a href="https://www.fizzy.do/">fizzy.do</a>. Create a single
+  board named <code>plants</code>. Create a personal access token in the
+  account settings.</p>
+
+  <p><strong>4. Authenticate as a named profile.</strong> Crazy Dave is
+  the only agent that will ever call this tool, so give the profile its
+  name:</p>
+  <pre><code>fizzy auth login "$FIZZY_TOKEN" --profile crazydave
+fizzy auth status</code></pre>
+  <p>If the command asks for an account, take the id from the same
+  settings page and add <code>--account &lt;id&gt;</code>.</p>
+
+  <p><strong>5. Read the board id.</strong></p>
+  <pre><code>fizzy board list --profile crazydave</code></pre>
+  <p>The output is JSON. The <code>--jq</code> flag is built into the
+  tool, so no external <code>jq</code> is needed:</p>
+  <pre><code>fizzy board list --profile crazydave --jq '.data[0].id'</code></pre>
+  <p>Write that id down. Lesson 21 puts it into Crazy Dave's
+  <code>SOUL.md</code>.</p>
+
+  <p><strong>6. Create one probe card and read the output
+  carefully.</strong> This step exists to learn something the repository
+  does not document: which field of the returned JSON later commands
+  accept as a card address.</p>
+  <pre><code>fizzy card create --profile crazydave --board &lt;BOARD_ID&gt; \
+  --title "probe: which field addresses a card" \
+  --description "Created to learn the card address field."</code></pre>
+  <p>Read the JSON. Then confirm your reading with the two commands
+  Lesson 21 actually uses:</p>
+  <pre><code>fizzy comment create --profile crazydave --card &lt;VALUE&gt; --body "probe comment"
+fizzy card close --help</code></pre>
+  <p>The second command tells you whether <code>fizzy card close</code>
+  takes the card as a positional argument or as a flag. Record the real
+  form. Do not carry a guess into a <code>SOUL.md</code>.</p>
+
+  <p><strong>7. Close the probe card</strong> using the form you just
+  confirmed, and check on the Fizzy web interface that it is closed and
+  carries your comment. That is the full write path Crazy Dave will
+  use.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why is Crazy Dave forbidden from ever reading a Fizzy card?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">A drifted mirror should show a stale view, never cause a wrong action</label>
+      <div class="reveal"><p class="feedback correct">Right. Once an agent reads Fizzy to decide something, the two boards can disagree and the agent can act on the wrong one. Write-only keeps every failure to the display.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">The read-only MCP server is the only supported way to query cards</label>
+      <div class="reveal"><p class="feedback incorrect">Reading is fully supported — <code>fizzy card list</code> and the MCP server both do it. The ban is a design decision, not a limitation.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">A webhook payload omits the description, so a read returns nothing</label>
+      <div class="reveal"><p class="feedback incorrect">That limit is real and worth knowing, but it applies to webhook payloads. A direct card read returns the full card.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> <code>fizzy --version</code> prints a version</label>
+  <label><input type="checkbox"> Account created, board <code>plants</code> exists</label>
+  <label><input type="checkbox"> <code>fizzy auth status</code> shows profile <code>crazydave</code></label>
+  <label><input type="checkbox"> Board id written down</label>
+  <label><input type="checkbox"> Probe card created, and the card address field identified from real output</label>
+  <label><input type="checkbox"> Real form of <code>fizzy card close</code> recorded</label>
+  <label><input type="checkbox"> Probe card commented and closed, confirmed in the web interface</label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="https://github.com/basecamp/fizzy-cli">basecamp/fizzy-cli</a> —
+read <code>README.md</code> for real invocations, and
+<code>SURFACE.txt</code> for the complete list of commands and flags.
+Note the default branch is <code>master</code>. For the product itself,
+<a href="https://help.fizzy.do/">help.fizzy.do</a>.</p>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../../docs/superpowers/specs/2026-09-09-stage3-ark-and-fizzy-design.md">Stage
+3 spec</a></p>
+
+<p class="ask-agent">Send me the full JSON from the probe card creation,
+and the output of <code>fizzy card close --help</code>. I will use both
+to write the exact commands into Lesson 21, so Crazy Dave never runs a
+command we have not seen work.</p>
+
+<div class="nav">
+  <span><a href="0019-one-topic-one-listener.html">← Lesson 19</a></span>
+  <span>Lesson 20 of Stage 3</span>
+  <span><a href="0021-crazy-dave-writes-the-card.html">Lesson 21 →</a></span>
+</div>
+
+</body>
+</html>
