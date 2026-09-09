@@ -44,7 +44,7 @@ second door, and the rule does not know that door exists.</p>
   <code>#General</code> with no mention required. Whether a reply from
   Peashooter or Sunflower in <code>#General</code> is a fourth door is
   not settled here. Telegram normally does not deliver one bot's
-  message to another bot. Test 3 below checks that on your own group
+  message to another bot. Test 4 below checks that on your own group
   rather than assuming it.</p>
 </div>
 
@@ -93,11 +93,17 @@ hermes kanban archive &lt;task_id&gt;</code></pre>
 acknowledges, and asks for nothing. Reply in one short sentence. Do not
 create a task.
 
-Exception — board questions: a message that asks about the state of work
-already on the board. Read the board with the kanban tool and answer
-from what you read. Do not create a task. If the message asks about work
-that is not on the board, it is a new request, and the HARD RULE
-applies.</code></pre>
+Exception — board questions: a message about the board and the tasks on
+it. This covers their status, their content, their assignees, what
+happened inside them, how they group, and which of them look wrong. Read
+the board, then answer from what you read. Give your own judgement when
+the message asks for one. Do not create a task.
+
+Two limits on this exception. The message must be about the board: a
+request to build, write, fix, or plan something new is not a board
+question, even when it mentions the board. Answering must change
+nothing: if the message asks you to archive, edit, close, assign, or run
+anything, the HARD RULE applies.</code></pre>
 
   <p><strong>3. Change one number lower down.</strong> The personality
   line ends "except for the two exceptions above". There are four now:</p>
@@ -128,14 +134,19 @@ except for the four exceptions above.</code></pre>
   message, and the model follows the transcript it can see. The
   correction below is the run that proved it.</p>
 
-  <p><strong>7. Run four tests in <code>#General</code>, in this
+  <p><strong>7. Run five tests in <code>#General</code>, in this
   order.</strong> Run <code>hermes kanban list</code> after each one:</p>
   <ul>
     <li>Post <code>thanks</code>. Expect one short reply and no new
     task. This tests the small talk clause.</li>
     <li>Post <code>what is on the board right now</code>. Expect an
-    answer that names real tasks and no new task. This tests the board
-    questions clause.</li>
+    answer that names real tasks and no new task. This tests the status
+    half of the board questions clause.</li>
+    <li>Reply to that answer with <code>which of those is not real
+    engineering work</code>. Expect a named task and a reason for the
+    call, and no new task. This tests the judgement half of the same
+    clause, and it is the test that fails when the clause says
+    <em>state</em> instead of <em>about</em>.</li>
     <li>Post <code>@your_peashooter_bot say hello back</code>, wait for
     Peashooter to reply, then wait 30 seconds. Expect no reply from
     Crazy Dave and no new task. This tests whether another bot's message
@@ -189,18 +200,47 @@ except for the four exceptions above.</code></pre>
 </div>
 
 <div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — one word made the clause too narrow</span>
+  <p>The second real run failed on a question that looks like the one in
+  test 2. The first draft of the board questions clause read "a message
+  that asks about the state of work already on the board". Two questions
+  in a row proved what that word costs.</p>
+  <pre><code>23:24  'What's on the board right now?'   → hermes kanban list, answered, no task
+23:26  'which one do you think it's a noise task' → task t_a8886bb1 created</code></pre>
+  <p>The second question was a reply to Dave's own list, so every task
+  it asked about was already on the screen. Dave filed
+  <code>Identify the noise task among board tasks and justify the
+  call</code>, gave it to Sunflower, and Sunflower completed it two
+  minutes later. The answer arrived as a finished task instead of a
+  sentence.</p>
+  <p>The word <code>state</code> is what did it. A state is a status,
+  and a judgement about which task does not belong is not a status. Dave
+  applied the clause correctly and the clause was too narrow. The
+  replacement in step 2 names the subject instead of the property: a
+  message <em>about the board and the tasks on it</em>, with two limits
+  that keep the boundary mechanical.</p>
+  <p>Note what the widening does not do. It does not tell Dave to use
+  judgement about whether to reply. It tells Dave that a judgement is a
+  legitimate thing to be asked for about a board it can read. Full
+  detail in
+  <a href="../learning-records/0014-a-clause-that-named-a-property-not-a-subject.md">learning
+  record 0014</a>.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
   <span class="box-label">The sentence that does the work</span>
-  <p>One sentence in the second clause carries the whole safety
-  argument: "If the message asks about work that is not on the board, it
-  is a new request, and the HARD RULE applies."</p>
-  <p>Without it, "did you finish the habit tracker spec?" is a board
-  question by its wording, so Dave reads the board, finds nothing, and
-  tells you so. That is a polite, correct, useless answer, and no task
-  exists. With it, the same message becomes a task, because the board
-  did not have the work. The clause routes on what Dave finds, not on
-  how you phrased the question.</p>
-  <p>Test 4 above exists for exactly this reason. If any future edit to
-  this file makes test 4 produce a chat reply instead of a task, that
+  <p>Two limits close the second clause, and they are the whole safety
+  argument. Without the first, "write a spec for the habit tracker on the
+  board" is a board question by its wording, so Dave answers in chat and
+  no task exists. Without the second, "archive the noise ones" is a board
+  question too, and Dave starts changing the board from a group chat
+  where anyone can ask.</p>
+  <p>The two limits are mechanical, which is the point. The first asks
+  what the message is about. The second asks whether answering changes
+  anything outside the chat. Neither asks Dave to judge how important a
+  request is, and neither depends on how politely you phrased it.</p>
+  <p>Test 5 above exists for exactly this reason. If any future edit to
+  this file makes test 5 produce a chat reply instead of a task, that
   edit reintroduced silent non-routing, whatever else it improved.</p>
 </div>
 
@@ -254,8 +294,9 @@ except for the four exceptions above.</code></pre>
   <label><input type="checkbox"> <code>/new</code> sent in the direct chat and in <code>#General</code>, after the restart</label>
   <label><input type="checkbox"> Test 1 — <code>thanks</code> answered, no task</label>
   <label><input type="checkbox"> Test 2 — board question answered from real tasks, no task</label>
-  <label><input type="checkbox"> Test 3 — another bot's reply produced no answer and no task</label>
-  <label><input type="checkbox"> Test 4 — a real request still became a triage task</label>
+  <label><input type="checkbox"> Test 3 — judgement question about the board answered, no task</label>
+  <label><input type="checkbox"> Test 4 — another bot's reply produced no answer and no task</label>
+  <label><input type="checkbox"> Test 5 — a real request still became a triage task</label>
   <label><input type="checkbox"> <code>SOUL.md</code> mirrored into <code>hermes-config/crazydave/</code></label>
 </div>
 
@@ -270,9 +311,9 @@ answer it gives you.</p>
 <p><a href="../reference/glossary.html">→ Full glossary</a> ·
 <a href="../../docs/superpowers/specs/2026-09-09-stage3-ark-and-fizzy-design.md">Stage 3 spec</a></p>
 
-<p class="ask-agent">Tell me what each of the four tests did, in your own
+<p class="ask-agent">Tell me what each of the five tests did, in your own
 words, and paste the <code>hermes kanban list</code> output from after
-test 4. If a request became a chat reply, say so — that is the failure
+test 5. If a request became a chat reply, say so — that is the failure
 this lesson exists to catch, and I would rather see it now than in the
 end-to-end check.</p>
 

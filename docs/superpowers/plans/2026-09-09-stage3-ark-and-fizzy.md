@@ -469,11 +469,17 @@ Exception — small talk: a message that only greets, thanks, or
 acknowledges, and asks for nothing. Reply in one short sentence. Do not
 create a task.
 
-Exception — board questions: a message that asks about the state of work
-already on the board. Read the board with the kanban tool and answer
-from what you read. Do not create a task. If the message asks about work
-that is not on the board, it is a new request, and the HARD RULE
-applies.
+Exception — board questions: a message about the board and the tasks on
+it. This covers their status, their content, their assignees, what
+happened inside them, how they group, and which of them look wrong. Read
+the board, then answer from what you read. Give your own judgement when
+the message asks for one. Do not create a task.
+
+Two limits on this exception. The message must be about the board: a
+request to build, write, fix, or plan something new is not a board
+question, even when it mentions the board. Answering must change
+nothing: if the message asks you to archive, edit, close, assign, or run
+anything, the HARD RULE applies.
 ```
 
 - [ ] **Step 3: Correct the exception count**
@@ -498,20 +504,23 @@ an exception landed below it and must move up.
 hermes gateway restart -p crazydave
 ```
 
-- [ ] **Step 6: Run four tests in #General**
+- [ ] **Step 6: Run five tests in #General**
 
 The user posts each message and runs `hermes kanban list` after each one.
 
 1. `thanks` — expect one short reply and no new task.
 2. `what is on the board right now` — expect an answer naming real tasks
-   and no new task.
-3. `@your_peashooter_bot say hello back`, then wait 30 seconds after
+   and no new task. This tests the status half of the clause.
+3. Reply to that answer with `which of those is not real engineering
+   work` — expect a named task, a reason for the call, and no new task.
+   This tests the judgement half of the clause.
+4. `@your_peashooter_bot say hello back`, then wait 30 seconds after
    Peashooter replies — expect no reply from Crazy Dave and no new task.
    This measures whether one bot's message reaches another bot.
-4. `write a one page spec for a habit tracker` — expect one new triage
+5. `write a one page spec for a habit tracker` — expect one new triage
    task and no direct answer. This is the regression check.
 
-If test 4 produces a chat reply, the edit reintroduced silent
+If test 5 produces a chat reply, the edit reintroduced silent
 non-routing. Stop and correct the wording before Task 4.
 
 - [ ] **Step 7: Write the lesson**

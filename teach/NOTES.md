@@ -93,3 +93,8 @@
   record 0004, prompt dilution. Reading `agent/system_prompt.py` ruled
   that out in two minutes and saved a rewrite that would have changed
   nothing.
+
+- A rule that names a property of its subject fires only for that
+  property. "The state of work on the board" covered status and excluded
+  judgement, so Dave filed a task for "which one is a noise task". Name
+  the subject, then add limits. Lesson 20, learning record 0014.

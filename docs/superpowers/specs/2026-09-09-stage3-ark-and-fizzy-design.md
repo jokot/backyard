@@ -201,8 +201,10 @@ correct and the mirror shows a gap.
 4. No bot answers an unnamed message in a topic that another profile
    owns.
 5. A greeting in #General gets a one sentence reply from Crazy Dave and
-   creates no kanban task. A request for work in #General creates a
-   triage task and gets no direct answer.
+   creates no kanban task. A question about the board, including a
+   question that asks for a judgement about the tasks on it, gets an
+   answer read from the board and creates no kanban task. A request for
+   work in #General creates a triage task and gets no direct answer.
 6. A cross-domain request in #General produces one Fizzy card, two or
    more kanban child tasks, one Telegram report per child, and one closed
    Fizzy card that carries the summary.
