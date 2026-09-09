@@ -98,3 +98,13 @@
   property. "The state of work on the board" covered status and excluded
   judgement, so Dave filed a task for "which one is a noise task". Name
   the subject, then add limits. Lesson 20, learning record 0014.
+
+- Draw an agent's boundary from ownership, not from the shape of the
+  operation. "Read is safe, write is not" made Crazy Dave file a task to
+  delete tasks. Crazy Dave owns the board, so board upkeep is its own
+  work. Lesson 21, learning record 0015.
+
+- For a destructive command, take the limits from the implementation, not
+  from the conversation. Reading `archive_task` found that an archived
+  parent releases its children, which turns a tidy-up request into three
+  new workers.

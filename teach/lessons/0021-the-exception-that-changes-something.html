@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 21 — The Exception That Changes Something</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 21 of the Stage 3 build</p>
+<h1>The first exception that writes</h1>
+<p class="lede">Every exception Crazy Dave has so far only reads and
+talks. This one runs a command that changes the shared board, and it
+cannot be taken back. That single difference decides how the clause has
+to be written.</p>
+
+<h2>Why this exception is a different kind</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p><a href="0020-dave-answers-the-room.html">Lesson 20</a> closed the
+  board questions exception with two limits, and the second one said
+  this: if the message asks you to archive, edit, close, assign, or run
+  anything, the HARD RULE applies. That limit worked exactly as written.
+  You listed the noise tasks, asked Crazy Dave to remove them, and got
+  task <code>t_bc7c0f90</code> — <em>Remove noise tasks</em> — filed for
+  a specialist to do later.</p>
+  <p>The limit was drawn in the wrong place. It separated reading from
+  writing, and a coordinator that cannot write to its own board is not a
+  coordinator. Archiving a task is bookkeeping about the board. It
+  produces nothing a specialist would produce, so routing it to a
+  specialist adds a task instead of removing one.</p>
+  <p>The line that matters is not read against write. It is <em>work
+  for the team</em> against <em>maintenance of the board</em>. Work goes
+  to the board. Maintenance of the board is Crazy Dave's own job,
+  because Crazy Dave owns the board.</p>
+</div>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge — what archive really does</span>
+  <p>Read these four facts before you grant the capability. All four
+  come from <code>hermes_cli/kanban_db.py</code>, in
+  <code>archive_task</code> at line 5542 and
+  <code>promote_task</code> at line 5092.</p>
+  <ol>
+    <li><strong>Archived is terminal.</strong> <code>promote</code>
+    accepts only a <code>todo</code> or a <code>blocked</code> task, and
+    it refuses everything else by status. No command returns a task from
+    <code>archived</code>. The row survives, and
+    <code>hermes kanban list --archived</code> still shows it, but the
+    task never runs again.</li>
+    <li><strong>Archive releases a running task.</strong> The update
+    clears <code>claim_lock</code>, <code>claim_expires</code> and
+    <code>worker_pid</code>, then closes the open run with outcome
+    <code>reclaimed</code> and the summary "task archived with run still
+    active". This is why archive is also the cancel command. Note what
+    it does not do: nothing in that function signals the worker process
+    that Hermes already started.</li>
+    <li><strong>Archiving a parent releases its children.</strong> The
+    comment in the source is direct: "archived parents no longer block
+    children, same as done". The function then calls
+    <code>recompute_ready</code> immediately. Archive a parent and its
+    children become <code>ready</code>, so the dispatcher spawns workers
+    for them within the minute. On this board, archive can
+    <em>start</em> work.</li>
+    <li><strong><code>--rm</code> is the destructive one.</strong>
+    <code>hermes kanban archive --rm &lt;id&gt;</code> calls
+    <code>delete_archived_task</code>, which removes the row and its
+    related rows for good.</li>
+  </ol>
+  <p>Fact 3 is the one that turns a tidy-up request into an incident.
+  "Archive the noise ones" is a safe sentence only while none of those
+  tasks is a parent.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Replace the second limit of the board questions
+  exception.</strong> In
+  <code>~/.hermes/profiles/crazydave/SOUL.md</code>, find the paragraph
+  that begins "Two limits on this exception" and replace its second
+  half. The new text:</p>
+  <pre><code>Two limits on this exception. The message must be about the board: a
+request to build, write, fix, or plan something new is not a board
+question, even when it mentions the board. Answering must change
+nothing: if the message asks you to edit, complete, assign, block, or
+unblock a task, the HARD RULE applies. Archiving is the one change you
+make yourself, and the next exception covers it.</code></pre>
+
+  <p><strong>2. Add the board maintenance exception</strong> directly
+  after the board questions exception, and still above the line that
+  begins <code>HARD RULE</code>:</p>
+  <pre><code>Exception — board maintenance: a message that asks you to remove,
+archive, or cancel tasks that are already on the board. Archive them
+yourself with the command below. Do not create a task for it.
+
+hermes kanban archive &lt;task_id&gt; &lt;task_id&gt;
+
+Four limits on this exception. Say every task id and title you are about
+to archive, then run the command, then report what changed. If the
+message does not tell you which tasks it means, ask which ones and
+archive nothing. Never run hermes kanban archive --rm, because that
+deletes a task permanently. Run hermes kanban show &lt;task_id&gt; on each
+id first: if the output has a children line, archive nothing and say so,
+because archiving a parent releases its children to run.</code></pre>
+
+  <p><strong>3. Correct the exception count.</strong> The personality
+  line now says four. Change the number to five:</p>
+  <pre><code>Personality: brief. Confirm the task id was created, nothing more —
+except for the five exceptions above.</code></pre>
+
+  <p><strong>4. Check the clause order.</strong> All five exceptions
+  belong above the hard rule:</p>
+  <pre><code>grep -n 'Exception —\|HARD RULE, not a suggestion' ~/.hermes/profiles/crazydave/SOUL.md</code></pre>
+  <p>Expect six lines, with <code>HARD RULE, not a suggestion</code>
+  last.</p>
+
+  <p><strong>5. Restart the gateway, then reset both sessions.</strong>
+  The second command is not optional, for the reason
+  <a href="../learning-records/0013-a-restart-does-not-erase-a-precedent.md">learning
+  record 0013</a> gives:</p>
+  <pre><code>hermes gateway restart -p crazydave</code></pre>
+  <p>Then send <code>/new</code> to Crazy Dave in the direct chat, and
+  again in <code>#General</code>.</p>
+
+  <p><strong>6. Run four tests, in this order.</strong> Run
+  <code>hermes kanban list</code> after each one:</p>
+  <ul>
+    <li>Ask <code>which tasks on the board are noise</code>. Expect a
+    list of ids and no new task. This repeats Lesson 20 and proves you
+    did not break it.</li>
+    <li>Reply <code>can you remove it?</code> with no id. Expect a
+    question back, and expect nothing to be archived. This tests the
+    ambiguity limit, and it is the exact message that produced
+    <code>t_bc7c0f90</code>.</li>
+    <li>Answer with two specific ids from the first list. Expect the two
+    ids and titles in the reply, both tasks gone from
+    <code>hermes kanban list</code>, and both present in
+    <code>hermes kanban list --archived</code>. Expect no new task.</li>
+    <li>Post <code>write a one page spec for a habit tracker</code>.
+    Expect one new triage task and no direct answer. This is the
+    regression check, and it is still the one that matters most.</li>
+  </ul>
+
+  <p><strong>7. Mirror the file into the repository</strong> and commit
+  it:</p>
+  <pre><code>cp ~/.hermes/profiles/crazydave/SOUL.md hermes-config/crazydave/SOUL.md</code></pre>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Why the four limits are these four</span>
+  <p>Each limit answers one fact from the second knowledge box, and no
+  limit asks Crazy Dave to judge how important a request is.</p>
+  <ul>
+    <li><strong>Say the ids, then archive, then report.</strong> Fact 1:
+    the change is terminal. You cannot review the list afterwards and
+    undo it, so the list has to appear before the command runs.</li>
+    <li><strong>Ask when no task is named.</strong> Fact 1 again. "Can
+    you remove it?" after a list of six ids has no safe reading, and a
+    question costs one message.</li>
+    <li><strong>Never <code>--rm</code>.</strong> Fact 4. Archive keeps
+    the row and the history. Purging removes both, and no chat message
+    is worth that.</li>
+    <li><strong>Check for children first.</strong> Fact 3. This is the
+    limit that stops a tidy-up from starting three workers.</li>
+  </ul>
+  <p>Compare this with the two limits in Lesson 20. Those were drawn
+  from what could go wrong in a conversation. These four are drawn from
+  what one function does to a database. A destructive verb earns the
+  second kind.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">The third widening of one file in one day</span>
+  <p>Count the changes to Crazy Dave's <code>SOUL.md</code> so far:
+  identity questions, <code>triage</code>, dispatched work, small talk,
+  board questions, judgement about the board, and now board
+  maintenance. Seven, and every single one came from a real message
+  rather than from review.</p>
+  <p>That record is not a failure of review. It is what an enumerated
+  rule costs. A rule that says "use your judgement" needs no revision
+  and gives no guarantee, and Lesson 3 already showed what that wording
+  is worth on a real model. A rule that names moments is testable, so
+  every gap in it appears as one specific message that behaved wrong.
+  The list converges through use, and the price of the guarantee is
+  paid in edits like this one.</p>
+  <p>Full detail in
+  <a href="../learning-records/0015-the-line-between-work-and-maintenance.md">learning
+  record 0015</a>.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why must Crazy Dave run <code>hermes kanban show</code> before it archives a task?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Archiving a parent makes its children ready, so the dispatcher starts them</label>
+      <div class="reveal"><p class="feedback correct">Right. <code>archive_task</code> calls <code>recompute_ready</code>, and an archived parent no longer blocks a child. A request to remove noise can spawn workers within the minute.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Archiving a task that is running leaves the board claim locked forever</label>
+      <div class="reveal"><p class="feedback incorrect">The opposite happens. The update clears the claim and closes the run with outcome <code>reclaimed</code>, which is why archive doubles as cancel.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Archiving a task that is already archived deletes the row from the board</label>
+      <div class="reveal"><p class="feedback incorrect">The update carries <code>AND status != 'archived'</code> and simply changes nothing. Only <code>--rm</code> deletes a row.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">What is the boundary this exception actually draws?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">Work for the team goes to the board, and board upkeep stays with Dave</label>
+      <div class="reveal"><p class="feedback correct">Right. Crazy Dave owns the board, so maintaining it is coordinator work. Reading against writing was the wrong line, and it filed a task to delete tasks.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">Safe commands belong to Dave, and risky commands belong to a worker</label>
+      <div class="reveal"><p class="feedback incorrect">Archive is the least safe command in this lesson, and it is the one Dave now runs. Risk sets the limits, not the owner.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">Quick requests belong to Dave, and slow requests belong to a worker</label>
+      <div class="reveal"><p class="feedback incorrect">Speed is the reasoning the hard rule bans by name. "Just in case it is faster" is how a coordinator becomes a third specialist.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Second limit of the board questions exception replaced</label>
+  <label><input type="checkbox"> Board maintenance exception added, above the <code>HARD RULE</code> line</label>
+  <label><input type="checkbox"> Personality line says five exceptions</label>
+  <label><input type="checkbox"> <code>grep</code> shows six lines, <code>HARD RULE</code> last</label>
+  <label><input type="checkbox"> Gateway restarted, and <code>/new</code> sent in both chats</label>
+  <label><input type="checkbox"> Test 1 — noise question answered, no task</label>
+  <label><input type="checkbox"> Test 2 — <code>can you remove it?</code> got a question back, nothing archived</label>
+  <label><input type="checkbox"> Test 3 — two named ids archived, ids and titles reported, no task</label>
+  <label><input type="checkbox"> Test 4 — a real request still became a triage task</label>
+  <label><input type="checkbox"> <code>SOUL.md</code> mirrored into <code>hermes-config/crazydave/</code></label>
+</div>
+
+<h2>Read this</h2>
+<p>Primary source:
+<code>~/.hermes/hermes-agent/hermes_cli/kanban_db.py</code>. Read
+<code>archive_task</code> at line 5542 and <code>promote_task</code> at
+line 5092, in that order. Twenty lines of SQL tell you more about what
+this exception risks than any document about the board does. Hermes's
+<a href="https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban">Kanban
+guide</a> covers the command surface around them.</p>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../../docs/superpowers/specs/2026-09-09-stage3-ark-and-fizzy-design.md">Stage 3 spec</a></p>
+
+<p class="ask-agent">Paste Crazy Dave's exact reply to test 2 and to
+test 3, and the <code>hermes kanban list --archived</code> output after
+test 3. If Dave archived anything during test 2, tell me immediately —
+that is the failure this lesson exists to catch.</p>
+
+<div class="nav">
+  <span><a href="0020-dave-answers-the-room.html">← Lesson 20</a></span>
+  <span>Lesson 21 of Stage 3</span>
+  <span><a href="0022-fizzy-the-visible-board.html">Lesson 22 →</a></span>
+</div>
+
+</body>
+</html>

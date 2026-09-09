@@ -88,3 +88,15 @@ kanban tool. The gateway log records `_check_kanban_mode returned False` on
 those turns, which is why Dave guessed at CLI flags and read
 `hermes kanban create --help` in the middle of a conversation. The
 `SOUL.md` says "using the kanban tool". The two do not agree yet.
+
+## Superseded in part
+
+The second limit quoted above named `archive` as a hard-rule verb. That
+part lasted one day. A request to archive noise tasks produced task
+`t_bc7c0f90` instead of an archive command, which is one more task rather
+than one fewer. Crazy Dave owns the board, so maintenance of the board is
+its own work. See
+[learning record 0015](0015-the-line-between-work-and-maintenance.md) and
+[Lesson 21](../lessons/0021-the-exception-that-changes-something.html) for
+the replacement. The first limit, and the widening this record describes,
+stand unchanged.

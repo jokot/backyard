@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 23 — The Stage 3 End-to-End Check</title>
+<title>Lesson 24 — The Stage 3 End-to-End Check</title>
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
 
-<p class="kicker">Lesson 23 of the Stage 3 build</p>
-<h1>Six claims, six checks</h1>
+<p class="kicker">Lesson 24 of the Stage 3 build</p>
+<h1>Seven claims, seven checks</h1>
 <p class="lede">Everything is built. One request now has to travel from
 a topic in the group, through the coordinator, into a Fizzy card, out to
 two specialists, back as two Telegram reports, and end with a closed
@@ -86,7 +86,7 @@ fizzy card list --profile crazydave --board &lt;BOARD_ID&gt;</code></pre>
   line, whatever a browser shows you right now.</p>
 </div>
 
-<h2>Score the six criteria</h2>
+<h2>Score the seven criteria</h2>
 
 <div class="box skill">
   <span class="box-label">Skill — record the result</span>
@@ -104,6 +104,14 @@ fizzy card list --profile crazydave --board &lt;BOARD_ID&gt;</code></pre>
     did before Stage 3.</li>
     <li>No bot answers an unnamed message in a topic another profile
     owns.</li>
+    <li>A greeting in <code>#General</code> gets a one sentence reply
+    and creates no task. A question about the board, including a
+    question that asks for a judgement, gets an answer read from the
+    board and creates no task. A request for work creates a triage task
+    and gets no direct answer.</li>
+    <li>A request that names tasks to archive archives those tasks and
+    creates no task. The same request with no task named gets a question
+    back and archives nothing.</li>
     <li>A cross-domain request in <code>#General</code> produces one
     Fizzy card, two or more children, one Telegram report per child, and
     one closed card carrying the summary.</li>
@@ -143,7 +151,7 @@ fizzy card list --profile crazydave --board &lt;BOARD_ID&gt;</code></pre>
   <label><input type="checkbox"> Every Telegram message recorded verbatim, with its sender</label>
   <label><input type="checkbox"> Root task <code>done</code>, Fizzy card closed with a summary comment</label>
   <label><input type="checkbox"> Every "still running" claim checked with <code>lsof</code></label>
-  <label><input type="checkbox"> All six criteria scored, with supporting output</label>
+  <label><input type="checkbox"> All seven criteria scored, with supporting output</label>
   <label><input type="checkbox"> A learning record written for every real defect found</label>
 </div>
 
@@ -165,8 +173,8 @@ criteria against that output, write learning records for anything that
 broke, and mark the stage complete only if the evidence supports it.</p>
 
 <div class="nav">
-  <span><a href="0022-crazy-dave-writes-the-card.html">← Lesson 22</a></span>
-  <span>Lesson 23 of Stage 3</span>
+  <span><a href="0023-crazy-dave-writes-the-card.html">← Lesson 23</a></span>
+  <span>Lesson 24 of Stage 3</span>
   <span></span>
 </div>
 

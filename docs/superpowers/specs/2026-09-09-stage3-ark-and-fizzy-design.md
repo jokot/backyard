@@ -178,16 +178,20 @@ correct and the mirror shows a gap.
    `~/.hermes/profiles/crazydave/SOUL.md`. One covers small talk. One
    covers a question about work already on the board. Filing a task
    stays the default for every other message.
-7. **Create the Fizzy account and board.** Create one hosted Fizzy
+7. **Teach Crazy Dave to maintain the board.** Add one exception that
+   lets Crazy Dave run `hermes kanban archive` on tasks the message
+   names. Carry four limits taken from `archive_task` in
+   `hermes_cli/kanban_db.py`.
+8. **Create the Fizzy account and board.** Create one hosted Fizzy
    account and one board. Install the command line interface with
    `brew install --cask basecamp/tap/fizzy`. Create a personal access
    token. Authenticate with
    `fizzy auth login "$TOKEN" --profile crazydave`.
-8. **Teach Crazy Dave the mirror.** Add the two Fizzy moments to
+9. **Teach Crazy Dave the mirror.** Add the two Fizzy moments to
    `~/.hermes/profiles/crazydave/SOUL.md`. State that Crazy Dave never
    reads Fizzy, and that a failed `fizzy` command never blocks the kanban
    task.
-9. **Run the end-to-end test.** Send one cross-domain request in
+10. **Run the end-to-end test.** Send one cross-domain request in
    #General. Verify the full route from the card to the closed task.
 
 ## Success criteria
@@ -205,7 +209,10 @@ correct and the mirror shows a gap.
    question that asks for a judgement about the tasks on it, gets an
    answer read from the board and creates no kanban task. A request for
    work in #General creates a triage task and gets no direct answer.
-6. A cross-domain request in #General produces one Fizzy card, two or
+6. A request to archive named tasks in #General archives those tasks and
+   creates no kanban task. A request to archive with no task named gets a
+   question back and archives nothing.
+7. A cross-domain request in #General produces one Fizzy card, two or
    more kanban child tasks, one Telegram report per child, and one closed
    Fizzy card that carries the summary.
 
