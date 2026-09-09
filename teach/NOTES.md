@@ -82,3 +82,14 @@
   request answered as chat leaves no record anywhere. Lesson 20 names
   this silent non-routing. When a clause could fail in either direction,
   pick the direction that leaves evidence.
+- **A `SOUL.md` change needs `/new` in every chat, not only a gateway
+  restart.** The restart rebuilds the system prompt and keeps the
+  conversation history. The model follows the transcript it can see.
+  Learning record 0013 holds the log that proves it. Add the reset step to
+  every lesson that edits a `SOUL.md` on a profile that is already talking
+  to someone.
+- **Check that the model could read the instruction before you rewrite
+  the instruction.** The greeting failure looked exactly like learning
+  record 0004, prompt dilution. Reading `agent/system_prompt.py` ruled
+  that out in two minutes and saved a rewrite that would have changed
+  nothing.

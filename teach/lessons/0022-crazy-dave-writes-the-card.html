@@ -103,7 +103,18 @@ do next.</code></pre>
   <code>SOUL.md</code> loads:</p>
   <pre><code>hermes gateway restart -p crazydave</code></pre>
 
-  <p><strong>4. Test one moment, not both.</strong> Send a small request
+  <p><strong>4. Reset the session in every chat Crazy Dave listens
+  to.</strong> Send <code>/new</code> in the direct chat and again in
+  <code>#General</code>:</p>
+  <pre><code>/new</code></pre>
+  <p>The restart alone leaves the old history in place, and the model
+  follows the transcript it can see.
+  <a href="0020-dave-answers-the-room.html">Lesson 20</a> records the run
+  that proved this, and
+  <a href="../learning-records/0013-a-restart-does-not-erase-a-precedent.md">learning
+  record 0013</a> holds the log.</p>
+
+  <p><strong>5. Test one moment, not both.</strong> Send a small request
   in <code>#General</code> — something like <em>write a haiku about file
   descriptors</em>. Then verify the filing half from real output rather
   than from Crazy Dave's reply:</p>
@@ -116,7 +127,7 @@ fizzy card list --profile crazydave --board &lt;BOARD_ID&gt;</code></pre>
   <a href="0023-the-stage3-end-to-end-check.html">Lesson 23</a>, because
   it needs a root task with finished children.</p>
 
-  <p><strong>5. Mirror the file into the repository.</strong></p>
+  <p><strong>6. Mirror the file into the repository.</strong></p>
   <pre><code>cp ~/.hermes/profiles/crazydave/SOUL.md hermes-config/crazydave/SOUL.md</code></pre>
 </div>
 
@@ -161,6 +172,7 @@ fizzy card list --profile crazydave --board &lt;BOARD_ID&gt;</code></pre>
   <label><input type="checkbox"> Block added to <code>SOUL.md</code>, with the real board id substituted</label>
   <label><input type="checkbox"> All four <code>fizzy</code> lines present in the file</label>
   <label><input type="checkbox"> Crazy Dave's gateway restarted</label>
+  <label><input type="checkbox"> <code>/new</code> sent in the direct chat and in <code>#General</code></label>
   <label><input type="checkbox"> One test request filed a kanban task and created one Fizzy card</label>
   <label><input type="checkbox"> The kanban task carries a <code>fizzy:&lt;identifier&gt;</code> comment</label>
   <label><input type="checkbox"> <code>SOUL.md</code> mirrored into <code>hermes-config/crazydave/</code></label>

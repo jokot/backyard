@@ -108,15 +108,27 @@ except for the four exceptions above.</code></pre>
   should come back, in this order:</p>
   <pre><code>grep -n 'Exception —\|HARD RULE, not a suggestion' ~/.hermes/profiles/crazydave/SOUL.md</code></pre>
   <p>If <code>HARD RULE</code> is not the last of the four, an exception
-  landed below it. Move it up. A clause after the hard rule reads as an
-  afterthought to the model, and the hard rule is the one that must
-  read as the default.</p>
+  landed inside the hard rule and split it in two. Move the exception
+  above the line that begins <code>HARD RULE</code>. This check protects
+  the hard rule from being cut in half. It says nothing about which
+  clause the model obeys, and the run recorded below shows that clause
+  order was not the deciding factor.</p>
 
   <p><strong>5. Restart Crazy Dave only.</strong> The other two profiles
   did not change:</p>
   <pre><code>hermes gateway restart -p crazydave</code></pre>
 
-  <p><strong>6. Run four tests in <code>#General</code>, in this
+  <p><strong>6. Reset the session in every chat Crazy Dave listens
+  to.</strong> Send this one word to the Crazy Dave bot in its direct
+  chat, and again in <code>#General</code>:</p>
+  <pre><code>/new</code></pre>
+  <p>Restarting the gateway is not enough. It rebuilds the system prompt
+  from the new file, and it leaves the conversation history alone. That
+  history is every earlier turn in which Crazy Dave filed a task for a
+  message, and the model follows the transcript it can see. The
+  correction below is the run that proved it.</p>
+
+  <p><strong>7. Run four tests in <code>#General</code>, in this
   order.</strong> Run <code>hermes kanban list</code> after each one:</p>
   <ul>
     <li>Post <code>thanks</code>. Expect one short reply and no new
@@ -133,9 +145,47 @@ except for the four exceptions above.</code></pre>
     regression check, and it is the one that matters most.</li>
   </ul>
 
-  <p><strong>7. Mirror the file into the repository</strong> and commit
+  <p><strong>8. Mirror the file into the repository</strong> and commit
   it, the same way every earlier profile edit was mirrored:</p>
   <pre><code>cp ~/.hermes/profiles/crazydave/SOUL.md hermes-config/crazydave/SOUL.md</code></pre>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — the edit was right and nothing changed</span>
+  <p>The first real run of this lesson failed. The two clauses were in
+  <code>~/.hermes/profiles/crazydave/SOUL.md</code>, the file was saved
+  at 22:48, and the gateway restarted at 22:52. At 22:54 the word
+  <code>hi</code> in the direct chat produced this:</p>
+  <pre><code>hermes kanban create "Respond to greeting" --triage \
+  --body "Respond appropriately to the user's greeting: hi." --json</code></pre>
+  <p>The decomposer assigned that task to Sunflower, which spent 15
+  seconds writing a friendly hello. Three such tasks reached
+  <code>done</code> before anyone noticed.</p>
+  <p>The prompt was not the problem. Hermes stores no system prompt with
+  a session. It rebuilds one per turn in
+  <code>agent/system_prompt.py</code>, so the 22:54 turn read the file
+  saved at 22:48. The clauses were in front of the model, and the model
+  filed the task anyway.</p>
+  <p>The log holds the control. At 23:04 the direct chat received
+  <code>/new</code>. The <code>#General</code> session did not. Then, in
+  38 seconds:</p>
+  <pre><code>23:05:10  #General  'heloo'          old session  2 API calls, terminal, task t_e64f9a01
+23:05:24  direct    'good night'     new session  1 API call,  no tool
+23:05:38  #General  /new
+23:05:48  #General  'good evening'   new session  1 API call,  no tool
+23:05:58  #General  'hi how are you' new session  1 API call,  no tool</code></pre>
+  <p>Same file, same model, same minute, opposite results. The only
+  difference is the conversation history. The old sessions carried turn
+  after turn of Crazy Dave filing a task for whatever arrived, and the
+  model copied its own transcript rather than the new clause above it.
+  Call this
+  <span class="term" title="A model follows the pattern of its own visible conversation history instead of a rule in the system prompt that contradicts it.">session
+  history precedent</span>.</p>
+  <p>A configuration change takes effect at the next restart. A
+  <code>SOUL.md</code> change takes effect at the next restart in a chat
+  that has no history yet. Full detail in
+  <a href="../learning-records/0013-a-restart-does-not-erase-a-precedent.md">learning
+  record 0013</a>.</p>
 </div>
 
 <div class="box" style="border-left-color:#b08a2e;">
@@ -175,11 +225,33 @@ except for the four exceptions above.</code></pre>
   </div>
 </div>
 
+<div class="quiz">
+  <p class="q">A <code>SOUL.md</code> edit is saved and the gateway is restarted, yet the old behaviour continues in one chat. What explains it?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">That chat still holds a history showing the model the behaviour it used to have</label>
+      <div class="reveal"><p class="feedback correct">Right — a restart rebuilds the prompt and keeps every earlier turn. The model reads its own transcript as evidence of what it does, so the chat needs <code>/new</code>.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">The gateway keeps the previous system prompt cached until the profile is recreated</label>
+      <div class="reveal"><p class="feedback incorrect">No cache survives a restart — Hermes stores no system prompt with a session and rebuilds one per turn.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">Telegram delivers the message to a worker process started before the edit</label>
+      <div class="reveal"><p class="feedback incorrect">Every turn starts a new agent after the restart, and the log shows the init on each inbound message.</p></div>
+    </div>
+  </div>
+</div>
+
 <h2>Checkpoint</h2>
 <div class="checklist">
   <label><input type="checkbox"> The <code>hello</code> task from Lesson 19 archived</label>
   <label><input type="checkbox"> Two exceptions added, both above the <code>HARD RULE</code> line</label>
   <label><input type="checkbox"> Personality line says four exceptions, not two</label>
+  <label><input type="checkbox"> <code>/new</code> sent in the direct chat and in <code>#General</code>, after the restart</label>
   <label><input type="checkbox"> Test 1 — <code>thanks</code> answered, no task</label>
   <label><input type="checkbox"> Test 2 — board question answered from real tasks, no task</label>
   <label><input type="checkbox"> Test 3 — another bot's reply produced no answer and no task</label>
