@@ -1,7 +1,11 @@
 # Stage 2 Design: Sunflower, Crazy Dave, and the shared kanban board
 
 **Date:** 2026-09-06
-**Status:** Approved for implementation
+**Status:** Complete (2026-09-09) — all four success criteria verified
+across two full runs (Flappy Bird and Tetris). Criterion 4 was met by a
+different mechanism than this document names. The `notify-subscribe`
+reporting path proved defective and was replaced by worker-sent reports
+through `hermes send`. See learning records 0008, 0010 and 0011.
 **Author:** jokot, with Claude Code
 
 ## Background
