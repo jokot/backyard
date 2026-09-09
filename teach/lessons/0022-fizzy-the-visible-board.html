@@ -80,10 +80,16 @@ hard line around what that view is allowed to do.</p>
   <p><strong>2. Install the command line interface.</strong></p>
   <pre><code>brew install --cask basecamp/tap/fizzy
 fizzy --version</code></pre>
-  <p>If you have the old 3.x formula from the
-  <code>robzolkos/fizzy-cli</code> tap, unlink it first. A cask will not
-  overwrite a <code>bin/fizzy</code> symlink that a formula owns, and
-  installing over it silently skips the binary:</p>
+  <p>Expect <code>fizzy version 4.0.1</code> or later. Run this check
+  before you read the next paragraph:</p>
+  <pre><code>ls -l $(which fizzy)</code></pre>
+  <p>A link into <code>Caskroom/fizzy/</code> means the cask owns the
+  binary and you are finished. Skip the rest of this step.</p>
+  <p>A link into <code>Cellar/fizzy-cli/</code> means the old 3.x
+  formula from the <code>robzolkos/fizzy-cli</code> tap owns it. Unlink
+  that formula first. A cask will not overwrite a
+  <code>bin/fizzy</code> symlink that a formula owns, and the install
+  then skips the binary without an error:</p>
   <pre><code>brew tap basecamp/tap
 brew unlink fizzy-cli
 brew install --cask basecamp/tap/fizzy
@@ -95,13 +101,20 @@ brew untap robzolkos/fizzy-cli</code></pre>
   board named <code>plants</code>. Create a personal access token in the
   account settings.</p>
 
-  <p><strong>4. Authenticate as a named profile.</strong> Crazy Dave is
-  the only agent that will ever call this tool, so give the profile its
-  name:</p>
-  <pre><code>fizzy auth login "$FIZZY_TOKEN" --profile crazydave
+  <p><strong>4. Authenticate as a named profile, and pass the account
+  yourself.</strong> A profile is a local set of credentials. An account
+  is the Fizzy organisation those credentials belong to. The two are
+  different, and <code>--account</code> is not optional. Read the
+  account first:</p>
+  <pre><code>fizzy identity show</code></pre>
+  <p>The output names one account. Take the digits of its
+  <code>slug</code> field, without the leading slash, and use them
+  below. The <code>id</code> field works too:</p>
+  <pre><code>fizzy auth login "$FIZZY_TOKEN" --profile crazydave --account &lt;slug&gt;
 fizzy auth status</code></pre>
-  <p>If the command asks for an account, take the id from the same
-  settings page and add <code>--account &lt;id&gt;</code>.</p>
+  <p>Read the <code>account</code> value in that output. It must be the
+  slug. If it is the word <code>crazydave</code>, read the correction
+  below before you continue.</p>
 
   <p><strong>5. Read the board id.</strong></p>
   <pre><code>fizzy board list --profile crazydave</code></pre>
@@ -132,6 +145,41 @@ fizzy card close --help</code></pre>
   use.</p>
 </div>
 
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — a profile is not an account</span>
+  <p>The first version of step 4 treated <code>--account</code> as
+  optional. The login then stored the profile name as the account, and
+  the next command failed:</p>
+  <pre><code>fizzy board list --profile crazydave
+Resource not found: https://app.fizzy.do/crazydave/boards.json</code></pre>
+  <p>Read the URL. Fizzy addresses every resource as
+  <code>https://app.fizzy.do/&lt;account&gt;/…</code>, so the client
+  asked for an account named <code>crazydave</code>. No such account
+  exists. The real account carries a numeric slug such as
+  <code>6280439</code>, and <code>fizzy identity show</code> prints
+  it.</p>
+  <p>Two repair paths do not work here, and the reason is precedence.
+  <code>FIZZY_ACCOUNT</code> answers with
+  <code>Warning: FIZZY_ACCOUNT is deprecated</code> and changes nothing.
+  A local <code>.fizzy.yaml</code> file changes nothing either.
+  <code>fizzy config explain</code> shows why: the winning candidate is
+  <code>source: profile crazydave</code>, and the profile beats the
+  flag, the environment, the local file and the global file. The account
+  is stored beside the token, so only a second login rewrites it:</p>
+  <pre><code>fizzy auth login "$FIZZY_TOKEN" --profile crazydave --account 6280439
+fizzy auth status</code></pre>
+  <p>One more file holds the same wrong value.
+  <code>~/.config/fizzy/config.yaml</code> carries
+  <code>account: crazydave</code> from the same mistake. The profile
+  overrides it, so it causes no failure, and it will still mislead you
+  during the next problem. Correct it or delete the line.</p>
+  <p>The general shape: the word <code>profile</code> means a different
+  thing in every tool that uses it. In Hermes it selects an agent. In
+  Fizzy it selects a set of saved credentials. Neither meaning implies
+  the other, and a name that reads correctly in both tools is the easiest
+  kind of mistake to miss.</p>
+</div>
+
 <div class="quiz">
   <p class="q">Why is Crazy Dave forbidden from ever reading a Fizzy card?</p>
   <div class="choices">
@@ -157,7 +205,8 @@ fizzy card close --help</code></pre>
 <div class="checklist">
   <label><input type="checkbox"> <code>fizzy --version</code> prints a version</label>
   <label><input type="checkbox"> Account created, board <code>plants</code> exists</label>
-  <label><input type="checkbox"> <code>fizzy auth status</code> shows profile <code>crazydave</code></label>
+  <label><input type="checkbox"> <code>fizzy auth status</code> shows profile <code>crazydave</code> and the numeric account slug</label>
+  <label><input type="checkbox"> <code>fizzy board list --profile crazydave</code> returns JSON, not a 404</label>
   <label><input type="checkbox"> Board id written down</label>
   <label><input type="checkbox"> Probe card created, and the card address field identified from real output</label>
   <label><input type="checkbox"> Real form of <code>fizzy card close</code> recorded</label>
