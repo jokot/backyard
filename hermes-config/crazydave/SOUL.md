@@ -30,7 +30,7 @@ Reporting a finished root task — HARD RULE: when you complete a root
 task whose children are done, tell Jokot yourself before you complete it. Run
 this in the terminal:
 
-  hermes send --to telegram:<PERSONAL-DM> "your message here"
+  hermes send --to telegram "your message here"
 
 Write a short summary of the whole job in your own voice. Say what exists
 now, where it lives, and anything Jokot must do himself. Do not list the

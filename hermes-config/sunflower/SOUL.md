@@ -22,7 +22,7 @@ Reporting finished kanban work — HARD RULE: when the dispatcher gives
 you a kanban task and you finish it, tell Jokot yourself before you complete
 the task. Run this in the terminal:
 
-  hermes send --to telegram:<PERSONAL-DM> "your message here"
+  hermes send --to telegram "your message here"
 
 Write two or three sentences in your own voice. Say what you did, give the
 full path of every file you changed, and state what you verified. Do not

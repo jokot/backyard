@@ -94,13 +94,16 @@ hermes cron remove &lt;job_id&gt;
 sqlite3 ~/.hermes/kanban.db "DELETE FROM kanban_notify_subs;"
 rm -f ~/.hermes/profiles/crazydave/scripts/kanban-autosubscribe.sh</code></pre>
 
-  <p><strong>2. Confirm each profile owns a separate bot token.</strong>
-  This is what makes a worker able to speak as itself:</p>
+  <p><strong>2. Confirm each profile owns a separate bot token, and
+  that all three share one destination:</strong></p>
   <pre><code>for p in crazydave peashooter sunflower; do
   printf "%-12s " "$p"
   grep -h TELEGRAM_BOT_TOKEN ~/.hermes/profiles/$p/.env | cut -c1-32
-done</code></pre>
-  <p>Three different token prefixes means three different bots.</p>
+done
+grep -h TELEGRAM_HOME_CHANNEL ~/.hermes/profiles/*/.env | grep -v '^#'</code></pre>
+  <p>Three different token prefixes means three different bots. One
+  repeated home channel number means all three reach the same person.
+  That pair is the whole mechanism.</p>
 
   <p><strong>3. Add the reporting rule to each
   <code>SOUL.md</code>.</strong> For Peashooter and Sunflower:</p>
@@ -108,7 +111,7 @@ done</code></pre>
 you a kanban task and you finish it, tell Jokot yourself before you complete
 the task. Run this in the terminal:
 
-  hermes send --to telegram:&lt;your_chat_id&gt; "your message here"
+  hermes send --to telegram "your message here"
 
 Write two or three sentences in your own voice. Say what you did, give the
 full path of every file you changed, and state what you verified. Do not
@@ -122,7 +125,7 @@ finishing, use the same one message to say what you need.</code></pre>
 task whose children are done, tell Jokot yourself before you complete it. Run
 this in the terminal:
 
-  hermes send --to telegram:&lt;your_chat_id&gt; "your message here"
+  hermes send --to telegram "your message here"
 
 Write a short summary of the whole job in your own voice. Say what exists
 now, where it lives, and anything Jokot must do himself. Do not list the
@@ -130,7 +133,7 @@ child task ids. Send exactly one message for each root task.</code></pre>
 
   <p><strong>4. Test the path by hand</strong> before trusting an agent
   to it:</p>
-  <pre><code>hermes send --to telegram:&lt;your_chat_id&gt; "reporting path works"</code></pre>
+  <pre><code>hermes send --to telegram "reporting path works"</code></pre>
 </div>
 
 <div class="box" style="border-left-color:#b08a2e;">
@@ -147,6 +150,18 @@ kanban notifier, and the `hermes send` CLI)</code></pre>
   credentials the gateway uses, which is why a Peashooter worker
   running it speaks through Peashooter's bot rather than a shared
   one.</p>
+  <p>Note what the command does <em>not</em> contain: a chat id.
+  <code>--to telegram</code> resolves to
+  <code>TELEGRAM_HOME_CHANNEL</code>, which each profile already sets
+  from its own <code>.env</code>. Writing the number into
+  <code>SOUL.md</code> would work today and break the day you move the
+  team into a group.</p>
+  <p>The same number appears in all three profiles, and that is
+  correct. In a Telegram private chat the chat id <em>is</em> the
+  user's id, so it names the reader rather than the conversation. The
+  sender decides which chat the message lands in. Peashooter's process
+  holds only Peashooter's token, so it cannot speak as Crazy Dave even
+  by accident. That is the property the old notifier lacked.</p>
 </div>
 
 <div class="quiz">
