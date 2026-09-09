@@ -145,6 +145,28 @@ sqlite3 ~/.hermes/kanban.db "UPDATE kanban_notify_subs SET notifier_profile = NU
   need notifier detail.</p>
 </div>
 
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Correction — the run passed, the reporting did not</span>
+  <p>This check passed for the first time on 2026-09-09. Six tasks, correct
+  fan-out, spec by Sunflower, three implementation tasks by Peashooter, root
+  closed by Crazy Dave. No <code>hermes kanban</code> command was typed by hand
+  during the run.</p>
+  <p>Then the same completion messages arrived every two minutes for six hours,
+  from three different bots. The cron job written to repair
+  <a href="../learning-records/0008-blocked-child-tasks-report-to-nobody.md">learning
+  record 0008</a> re-subscribed each task once a minute, and a new subscription
+  starts at cursor zero, so it replayed every past event. The gateway deleted
+  the row after send failures and the cron job replaced it. Nothing ended the
+  cycle.</p>
+  <p>Check 4 above measures whether the work finishes unattended. It does not
+  measure whether the report is legible. Both parts now have to pass.
+  <a href="0017-workers-report-their-own-results.html">Lesson 17</a> removes the
+  notifier and gives the reporting job to the worker that did the work. Run this
+  check again after that change, and read
+  <a href="../learning-records/0010-a-fix-that-amplified-the-defect.md">learning
+  record 0010</a> for the full trace.</p>
+</div>
+
 <div class="quiz">
   <p class="q">Crazy Dave's Telegram reply confirms a task id, but <code>hermes kanban list</code> shows only one task instead of two linked children. Where's the most useful place to look first?</p>
   <div class="choices">
@@ -173,6 +195,7 @@ sqlite3 ~/.hermes/kanban.db "UPDATE kanban_notify_subs SET notifier_profile = NU
   <label><input type="checkbox"> <code>hermes kanban list</code> shows two linked children, correctly assigned</label>
   <label><input type="checkbox"> Every child task subscribed by hand, with <code>notifier_profile</code> set to NULL</label>
   <label><input type="checkbox"> Both children completed with no manual <code>hermes kanban</code> command, completion messages received in the Crazy Dave chat</label>
+  <label><input type="checkbox"> Completion messages arrived once each, from the bot that did the work</label>
 </div>
 
 <p><a href="../reference/glossary.html">→ Full glossary</a> ·
@@ -187,8 +210,8 @@ real bug so far in this project got found.</p>
 
 <div class="nav">
   <span><a href="0015-the-shared-kanban-board.html">← Lesson 15</a></span>
-  <span>Lesson 16 of Stage 2 — last lesson of Stage 2</span>
-  <span></span>
+  <span>Lesson 16 of Stage 2</span>
+  <span><a href="0017-workers-report-their-own-results.html">Lesson 17 →</a></span>
 </div>
 
 </body>

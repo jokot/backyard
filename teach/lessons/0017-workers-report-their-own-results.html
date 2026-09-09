@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 17 — Workers Report Their Own Results</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 17 of the Stage 2 build</p>
+<h1>Let the worker speak</h1>
+<p class="lede">Stage 2 finished its first unattended run and then sent
+the same completion messages every two minutes for six hours, from
+three different bots. The work was correct. The reporting layer was
+not. This lesson removes that layer.</p>
+
+<h2>What the notifier actually is</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Hermes reports finished kanban work through a
+  <span class="term" title="A database table holding one row per (task, platform, chat). Each row carries a cursor naming the last event already delivered.">subscription table</span>
+  called <code>kanban_notify_subs</code>. Every gateway polls it every
+  five seconds, claims unseen events, and sends them out its own bot.
+  The design assumes one gateway. Stage 2 runs three.</p>
+  <p>Three properties of that table combined into one failure. Its
+  cursor column is declared
+  <code>last_event_id INTEGER NOT NULL DEFAULT 0</code>, so a new row
+  replays every past event on its task. Its delivery path deletes a row
+  after repeated send failures
+  (<code>gateway/kanban_watchers.py:461</code>). And every gateway sees
+  every row, because they all read one
+  <code>~/.hermes/kanban.db</code>.</p>
+  <p>Lesson 16 met the first symptom: a blocked child reported to
+  nobody, recorded in
+  <a href="../learning-records/0008-blocked-child-tasks-report-to-nobody.md">learning
+  record 0008</a>. The repair was a cron job that re-subscribed every
+  task each minute. That repair closed a loop — the gateway deleted the
+  row, the cron job replaced it at cursor zero, and the replay started
+  again. Full detail in
+  <a href="../learning-records/0010-a-fix-that-amplified-the-defect.md">learning
+  record 0010</a>.</p>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Read the format before calling it broken</span>
+  <p>The delivered line looked wrong in three ways at once:</p>
+  <pre><code>✔ [default] @peashooter Kanban t_64e9b555 done — Serve Flappy Bird</code></pre>
+  <p>The source at <code>gateway/kanban_watchers.py:336</code> explains
+  every part of it:</p>
+  <pre><code>board_tag = f"[{board_slug}] "
+who = (task.assignee if task and task.assignee else None)
+tag = f"@{who} " if who else ""
+title = (task.title if task else sub["task_id"])[:120]</code></pre>
+  <p><code>[default]</code> is the board name, not a profile.
+  <code>@peashooter</code> is the task assignee, not the sending bot.
+  The cut-off text is a 120 character limit on the title. None of that
+  is a defect. It reads as nonsense only because the wrong bot delivers
+  it, so an <code>@peashooter</code> line arrives inside Crazy Dave's
+  chat and looks like one bot tagging another.</p>
+  <p>The lesson generalizes past this file. Before you call output
+  broken, find the line that produced it. Half of what looked like
+  three bugs here was one bug plus a naming choice.</p>
+</div>
+
+<h2>The reference architecture solves it by deleting it</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Zain Fathoni's write-up of the same idea — named back in
+  <a href="0001-context-contamination-and-your-first-profile.html">Lesson
+  1</a> — records this exact lesson from the other side. He built an
+  in-house task abstraction called "beads", found it unreliable, and
+  abandoned it. His stated rule is to use a real task management system
+  rather than a homebrew abstraction.</p>
+  <p>His specialists report their own results. There is no subscription
+  table, so no cursor can reset and no second process can claim a row.
+  The agent that did the work speaks, through its own bot, in its own
+  words. That single change removes the wrong-bot problem, the template
+  format, and the replay together, because all three live in the layer
+  being deleted.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Stop the loop</strong> — remove the cron job, then
+  empty the subscription table:</p>
+  <pre><code>hermes cron list
+hermes cron remove &lt;job_id&gt;
+sqlite3 ~/.hermes/kanban.db "DELETE FROM kanban_notify_subs;"
+rm -f ~/.hermes/profiles/crazydave/scripts/kanban-autosubscribe.sh</code></pre>
+
+  <p><strong>2. Confirm each profile owns a separate bot token.</strong>
+  This is what makes a worker able to speak as itself:</p>
+  <pre><code>for p in crazydave peashooter sunflower; do
+  printf "%-12s " "$p"
+  grep -h TELEGRAM_BOT_TOKEN ~/.hermes/profiles/$p/.env | cut -c1-32
+done</code></pre>
+  <p>Three different token prefixes means three different bots.</p>
+
+  <p><strong>3. Add the reporting rule to each
+  <code>SOUL.md</code>.</strong> For Peashooter and Sunflower:</p>
+  <pre><code>Reporting finished kanban work — HARD RULE: when the dispatcher gives
+you a kanban task and you finish it, tell Jokot yourself before you complete
+the task. Run this in the terminal:
+
+  hermes send --to telegram:&lt;your_chat_id&gt; "your message here"
+
+Write two or three sentences in your own voice. Say what you did, give the
+full path of every file you changed, and state what you verified. Do not
+repeat the task id or the task title back — Jokot already knows what he
+asked for. Send exactly one message for each task. If you blocked instead of
+finishing, use the same one message to say what you need.</code></pre>
+
+  <p>Crazy Dave closes root tasks rather than doing specialist work, so
+  its wording differs:</p>
+  <pre><code>Reporting a finished root task — HARD RULE: when you complete a root
+task whose children are done, tell Jokot yourself before you complete it. Run
+this in the terminal:
+
+  hermes send --to telegram:&lt;your_chat_id&gt; "your message here"
+
+Write a short summary of the whole job in your own voice. Say what exists
+now, where it lives, and anything Jokot must do himself. Do not list the
+child task ids. Send exactly one message for each root task.</code></pre>
+
+  <p><strong>4. Test the path by hand</strong> before trusting an agent
+  to it:</p>
+  <pre><code>hermes send --to telegram:&lt;your_chat_id&gt; "reporting path works"</code></pre>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">Why <code>hermes send</code> and not a tool call</span>
+  <p>Hermes ships a <code>send_message</code> tool, and agents cannot
+  call it. It appears in no toolset list. The comment at
+  <code>toolsets.py:374</code> states the rule and names the supported
+  entry point:</p>
+  <pre><code>agents do NOT get an agent-callable send_message tool — outbound platform
+messaging is handled outside the agent loop (cron delivery, the gateway
+kanban notifier, and the `hermes send` CLI)</code></pre>
+  <p>Agents do hold the <code>terminal</code> tool, so
+  <code>hermes send</code> is reachable. It reuses the same platform
+  credentials the gateway uses, which is why a Peashooter worker
+  running it speaks through Peashooter's bot rather than a shared
+  one.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">The cron job re-subscribed every task once a minute. Why did that turn a silent failure into a repeating one?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">A new subscription starts at cursor zero, so it replays every past event</label>
+      <div class="reveal"><p class="feedback correct">Right — <code>last_event_id INTEGER NOT NULL DEFAULT 0</code>. The gateway deleted the row after send failures, the cron job replaced it at zero, and the completed event was delivered again. The loop had no exit.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Running a script every minute is always too often for a kanban board</label>
+      <div class="reveal"><p class="feedback incorrect">Frequency was not the fault. A script that re-created rows once an hour would have replayed the same events, just more slowly.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">The three gateways each wrote to their own copy of the database</label>
+      <div class="reveal"><p class="feedback incorrect">They share one <code>~/.hermes/kanban.db</code>. Sharing it is what let every gateway see every row, but the replay came from the cursor default.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Cron job removed, <code>kanban_notify_subs</code> empty</label>
+  <label><input type="checkbox"> Three separate bot tokens confirmed, one per profile</label>
+  <label><input type="checkbox"> Reporting rule added to all three <code>SOUL.md</code> files</label>
+  <label><input type="checkbox"> <code>hermes send</code> tested by hand, message received</label>
+  <label><input type="checkbox"> One full run reported by the workers themselves, no duplicate messages</label>
+</div>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../reference/kanban-notification-defects.md">Notification defects reference</a></p>
+
+<p class="ask-agent">Run the Lesson 16 test again with the new wording
+in place. Report the Telegram messages verbatim — who sent each one,
+and what it said. The check is that each message comes from the bot
+that did the work, and that none of them repeat.</p>
+
+<div class="nav">
+  <span><a href="0016-the-stage2-end-to-end-check.html">← Lesson 16</a></span>
+  <span>Lesson 17 of Stage 2</span>
+  <span></span>
+</div>
+
+</body>
+</html>
