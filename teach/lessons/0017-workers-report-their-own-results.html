@@ -94,6 +94,26 @@ hermes cron remove &lt;job_id&gt;
 sqlite3 ~/.hermes/kanban.db "DELETE FROM kanban_notify_subs;"
 rm -f ~/.hermes/profiles/crazydave/scripts/kanban-autosubscribe.sh</code></pre>
 
+  <p><strong>1b. Close the refill path.</strong> Emptying the table is
+  not enough. The setting <code>kanban.auto_subscribe_on_create</code>
+  defaults to <code>True</code> at
+  <code>hermes_cli/config.py:1503</code>, so the next task Crazy Dave
+  files writes a fresh row through
+  <code>tools/kanban_tools.py:1219</code>. Add this line under the
+  <code>kanban:</code> block of every profile's
+  <code>config.yaml</code>:</p>
+  <pre><code>kanban:
+  auto_subscribe_on_create: false</code></pre>
+  <p>Then restart the gateways, because a running gateway holds its
+  config in memory:</p>
+  <pre><code>for p in crazydave peashooter sunflower; do hermes gateway restart -p $p; done
+hermes gateway status</code></pre>
+  <p>Also delete the sentence "Then subscribe the current chat to that
+  task's events" from Crazy Dave's <code>SOUL.md</code>. That
+  instruction came from
+  <a href="0012-crazy-dave-the-coordinator.html">Lesson 12</a>, when
+  the notifier was the only way a result could reach you.</p>
+
   <p><strong>2. Confirm each profile owns a separate bot token, and
   that all three share one destination:</strong></p>
   <pre><code>for p in crazydave peashooter sunflower; do
@@ -188,6 +208,7 @@ kanban notifier, and the `hermes send` CLI)</code></pre>
 <h2>Checkpoint</h2>
 <div class="checklist">
   <label><input type="checkbox"> Cron job removed, <code>kanban_notify_subs</code> empty</label>
+  <label><input type="checkbox"> <code>auto_subscribe_on_create: false</code> in all three configs, gateways restarted</label>
   <label><input type="checkbox"> Three separate bot tokens confirmed, one per profile</label>
   <label><input type="checkbox"> Reporting rule added to all three <code>SOUL.md</code> files</label>
   <label><input type="checkbox"> <code>hermes send</code> tested by hand, message received</label>

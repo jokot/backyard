@@ -145,6 +145,7 @@ compression:
   abort_on_summary_failure: false
   codex_gpt55_autoraise: true
 kanban:
+  auto_subscribe_on_create: false
   dispatch_in_gateway: true
   dispatch_interval_seconds: 60
   failure_limit: 2
