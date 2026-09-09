@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 20 — Dave Answers the Room</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 20 of the Stage 3 build</p>
+<h1>The rule that only knew one door</h1>
+<p class="lede">Crazy Dave's hard rule was written when Dave could hear
+exactly one thing: a private message from you. Lesson 19 gave it a
+second door, and the rule does not know that door exists.</p>
+
+<h2>The task named <code>hello</code></h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Test 4 in
+  <a href="0019-one-topic-one-listener.html">Lesson 19</a> left a task on
+  the board whose entire body is the word <code>hello</code>. Nothing
+  malfunctioned. Crazy Dave obeyed the rule it has. The rule says every
+  message that is not an identity question and not a worker protocol
+  message becomes a kanban task, and a greeting in
+  <code>#General</code> is neither of those.</p>
+  <p>In a private chat that rule was safe. Every message you send to a
+  coordinator bot in its own direct chat is plausibly a request for
+  work. A group topic carries traffic no direct chat ever carries:
+  greetings, thanks, an acknowledgement, a question about something
+  already running. Each one now becomes a triage task, gets decomposed,
+  and gets dispatched to a real worker.</p>
+  <p>This is the fourth correction to one file, and
+  <a href="../learning-records/0009-a-coordinator-that-never-works-gets-dispatched-work.md">learning
+  record 0009</a> already named the shape: a hard rule written against
+  one input channel breaks on the second channel. The first draft knew
+  only work requests, so an identity question became an orphan task.
+  The second never said <code>triage</code>. The third never said which
+  sender it was answering, so the board's own dispatch became a task.
+  This one never asked what a room sounds like.</p>
+  <p>Count the doors before you write the next clause. Crazy Dave now
+  has three: your direct chat, the kanban dispatcher, and
+  <code>#General</code> with no mention required. Whether a reply from
+  Peashooter or Sunflower in <code>#General</code> is a fourth door is
+  not settled here. Telegram normally does not deliver one bot's
+  message to another bot. Test 3 below checks that on your own group
+  rather than assuming it.</p>
+</div>
+
+<h2>Why "reply when it is just conversation" is the wrong fix</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The obvious wording is to tell Dave to answer normal conversation
+  and file a task for real requests. That is the wording that already
+  failed once.
+  <a href="0012-crazy-dave-the-coordinator.html">Lesson 12</a> traced
+  Peashooter's first <code>SOUL.md</code> failure to
+  <a href="../learning-records/0004-soft-instructions-lose-to-prompt-size.md">prompt
+  dilution</a>: a rule that asks the model to judge loses to a large
+  system prompt on a cheap model. "Is this conversation or a request?"
+  is a judgment on every single message.</p>
+  <p>The two failures are not equally bad, and that decides the shape of
+  the fix. A junk task is visible. It sits on the board with a body you
+  can read, and one archive command removes it. A request that Dave
+  answers as chat instead of filing leaves no record anywhere. You
+  believe the work started. Nothing started. Call this
+  <span class="term" title="A coordinator answers a work request conversationally instead of filing it, so no task exists and no record of the request survives.">silent
+  non-routing</span>, and treat it as the failure worth paying for.</p>
+  <p>So filing stays the default, and every reply is a named exception
+  to it. Each exception names a moment, not a kind of message, which is
+  the mitigation record 0009 asked for. Two moments earn a clause.
+  Small talk stops the junk. Board questions are the capability worth
+  having, because Dave already holds the answer and no worker does.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Archive the task Lesson 19 created.</strong> Read its id
+  from the list, then archive it:</p>
+  <pre><code>hermes kanban list
+hermes kanban archive &lt;task_id&gt;</code></pre>
+
+  <p><strong>2. Open <code>~/.hermes/profiles/crazydave/SOUL.md</code>
+  and add two exceptions.</strong> They go directly after the
+  dispatched-work exception and directly before the line beginning
+  <code>HARD RULE</code>:</p>
+  <pre><code>Exception — small talk: a message that only greets, thanks, or
+acknowledges, and asks for nothing. Reply in one short sentence. Do not
+create a task.
+
+Exception — board questions: a message that asks about the state of work
+already on the board. Read the board with the kanban tool and answer
+from what you read. Do not create a task. If the message asks about work
+that is not on the board, it is a new request, and the HARD RULE
+applies.</code></pre>
+
+  <p><strong>3. Change one number lower down.</strong> The personality
+  line ends "except for the two exceptions above". There are four now:</p>
+  <pre><code>Personality: brief. Confirm the task id was created, nothing more —
+except for the four exceptions above.</code></pre>
+
+  <p><strong>4. Check the file before restarting.</strong> Four lines
+  should come back, in this order:</p>
+  <pre><code>grep -n 'Exception —\|HARD RULE, not a suggestion' ~/.hermes/profiles/crazydave/SOUL.md</code></pre>
+  <p>If <code>HARD RULE</code> is not the last of the four, an exception
+  landed below it. Move it up. A clause after the hard rule reads as an
+  afterthought to the model, and the hard rule is the one that must
+  read as the default.</p>
+
+  <p><strong>5. Restart Crazy Dave only.</strong> The other two profiles
+  did not change:</p>
+  <pre><code>hermes gateway restart -p crazydave</code></pre>
+
+  <p><strong>6. Run four tests in <code>#General</code>, in this
+  order.</strong> Run <code>hermes kanban list</code> after each one:</p>
+  <ul>
+    <li>Post <code>thanks</code>. Expect one short reply and no new
+    task. This tests the small talk clause.</li>
+    <li>Post <code>what is on the board right now</code>. Expect an
+    answer that names real tasks and no new task. This tests the board
+    questions clause.</li>
+    <li>Post <code>@your_peashooter_bot say hello back</code>, wait for
+    Peashooter to reply, then wait 30 seconds. Expect no reply from
+    Crazy Dave and no new task. This tests whether another bot's message
+    reaches Dave at all.</li>
+    <li>Post <code>write a one page spec for a habit tracker</code>.
+    Expect a new triage task and no direct answer. This is the
+    regression check, and it is the one that matters most.</li>
+  </ul>
+
+  <p><strong>7. Mirror the file into the repository</strong> and commit
+  it, the same way every earlier profile edit was mirrored:</p>
+  <pre><code>cp ~/.hermes/profiles/crazydave/SOUL.md hermes-config/crazydave/SOUL.md</code></pre>
+</div>
+
+<div class="box" style="border-left-color:#b08a2e;">
+  <span class="box-label">The sentence that does the work</span>
+  <p>One sentence in the second clause carries the whole safety
+  argument: "If the message asks about work that is not on the board, it
+  is a new request, and the HARD RULE applies."</p>
+  <p>Without it, "did you finish the habit tracker spec?" is a board
+  question by its wording, so Dave reads the board, finds nothing, and
+  tells you so. That is a polite, correct, useless answer, and no task
+  exists. With it, the same message becomes a task, because the board
+  did not have the work. The clause routes on what Dave finds, not on
+  how you phrased the question.</p>
+  <p>Test 4 above exists for exactly this reason. If any future edit to
+  this file makes test 4 produce a chat reply instead of a task, that
+  edit reintroduced silent non-routing, whatever else it improved.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why do the new clauses enumerate two named moments instead of telling Crazy Dave to reply when a message is conversational?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">A rule that asks the model to judge each message is the rule that already failed</label>
+      <div class="reveal"><p class="feedback correct">Right — Lesson 3 traced that failure to prompt dilution, and record 0009 asks each clause to name a moment rather than a kind of message. Judgment on every message is the drift the closed set prevents.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">The kanban tool cannot be read from inside a group topic without a mention</label>
+      <div class="reveal"><p class="feedback incorrect">Not a technical limit — Dave reads the board with the same tool in a topic as in a direct chat.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Telegram delivers group messages too quickly for a model to classify them</label>
+      <div class="reveal"><p class="feedback incorrect">Delivery speed plays no part — the gate runs before the model, and the model is not timed.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> The <code>hello</code> task from Lesson 19 archived</label>
+  <label><input type="checkbox"> Two exceptions added, both above the <code>HARD RULE</code> line</label>
+  <label><input type="checkbox"> Personality line says four exceptions, not two</label>
+  <label><input type="checkbox"> Test 1 — <code>thanks</code> answered, no task</label>
+  <label><input type="checkbox"> Test 2 — board question answered from real tasks, no task</label>
+  <label><input type="checkbox"> Test 3 — another bot's reply produced no answer and no task</label>
+  <label><input type="checkbox"> Test 4 — a real request still became a triage task</label>
+  <label><input type="checkbox"> <code>SOUL.md</code> mirrored into <code>hermes-config/crazydave/</code></label>
+</div>
+
+<h2>Read this</h2>
+<p>Primary source:
+<a href="https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban">Hermes
+Agent docs — Kanban</a>. The board questions clause tells Dave to read
+the board with the kanban tool. This page is what that tool exposes, and
+it is worth knowing what Dave can and cannot see before you judge an
+answer it gives you.</p>
+
+<p><a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../../docs/superpowers/specs/2026-09-09-stage3-ark-and-fizzy-design.md">Stage 3 spec</a></p>
+
+<p class="ask-agent">Tell me what each of the four tests did, in your own
+words, and paste the <code>hermes kanban list</code> output from after
+test 4. If a request became a chat reply, say so — that is the failure
+this lesson exists to catch, and I would rather see it now than in the
+end-to-end check.</p>
+
+<div class="nav">
+  <span><a href="0019-one-topic-one-listener.html">← Lesson 19</a></span>
+  <span>Lesson 20 of Stage 3</span>
+  <span><a href="0021-fizzy-the-visible-board.html">Lesson 21 →</a></span>
+</div>
+
+</body>
+</html>

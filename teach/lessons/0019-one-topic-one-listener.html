@@ -113,7 +113,7 @@ mention_patterns     → respond if matched</code></pre>
   <pre><code>for p in peashooter sunflower crazydave; do hermes gateway restart -p $p; done
 hermes gateway status</code></pre>
 
-  <p><strong>4. Run four tests, in this order.</strong> Each one
+  <p><strong>4. Run five tests, in this order.</strong> Each one
   isolates a different check in the gate:</p>
   <ul>
     <li>Post <code>hello</code> in <code>#Coding</code> with no
@@ -125,6 +125,14 @@ hermes gateway status</code></pre>
     <li>Post <code>hello</code> in <code>#Planning</code>. Only
     Sunflower should answer, and Peashooter must stay silent. This tests
     <code>require_mention</code>.</li>
+    <li>Post <code>hello</code> in <code>#General</code> with no
+    mention. Only Crazy Dave should answer, which tests the third
+    <code>free_response_topics</code> entry. Then run
+    <code>hermes kanban list</code>. Expect a new task whose body is
+    the word <code>hello</code>. That task is a defect, not a
+    success. Leave it on the board and read
+    <a href="0020-dave-answers-the-room.html">Lesson 20</a>, which
+    explains the cause and archives it.</li>
     <li>Send a private message to each of the three bots. Each should
     answer exactly as it did before this lesson. This is the regression
     check.</li>
@@ -179,7 +187,8 @@ hermes gateway logs -p peashooter --lines 100</code></pre>
   <label><input type="checkbox"> Test 1 — unnamed message in <code>#Coding</code> answered by Peashooter alone</label>
   <label><input type="checkbox"> Test 2 — mention of Sunflower in <code>#Coding</code> answered by Sunflower alone</label>
   <label><input type="checkbox"> Test 3 — unnamed message in <code>#Planning</code>, Peashooter silent</label>
-  <label><input type="checkbox"> Test 4 — all three private chats still work</label>
+  <label><input type="checkbox"> Test 4 — unnamed message in <code>#General</code> answered by Crazy Dave, and the junk task it files recorded</label>
+  <label><input type="checkbox"> Test 5 — all three private chats still work</label>
   <label><input type="checkbox"> Three <code>config.yaml</code> files mirrored into <code>hermes-config/</code></label>
 </div>
 
@@ -203,7 +212,7 @@ cause is usually visible in the first ten.</p>
 <div class="nav">
   <span><a href="0018-the-ark-group.html">← Lesson 18</a></span>
   <span>Lesson 19 of Stage 3</span>
-  <span><a href="0020-fizzy-the-visible-board.html">Lesson 20 →</a></span>
+  <span><a href="0020-dave-answers-the-room.html">Lesson 20 →</a></span>
 </div>
 
 </body>

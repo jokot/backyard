@@ -91,16 +91,18 @@ one was read during planning, not recalled.
   group: creation, topics, bot administration, privacy mode, and the
   identifiers.
 - `teach/lessons/0019-one-topic-one-listener.html` — create. The three
-  configuration edits and the four routing tests.
-- `teach/lessons/0020-fizzy-the-visible-board.html` — create. Fizzy
+  configuration edits and the five routing tests.
+- `teach/lessons/0020-dave-answers-the-room.html` — create. The two
+  `SOUL.md` exceptions that let Crazy Dave reply without filing a task.
+- `teach/lessons/0021-fizzy-the-visible-board.html` — create. Fizzy
   account, board, command line interface, and authentication.
-- `teach/lessons/0021-crazy-dave-writes-the-card.html` — create. The
+- `teach/lessons/0022-crazy-dave-writes-the-card.html` — create. The
   `SOUL.md` edit that adds the two Fizzy moments.
-- `teach/lessons/0022-the-stage3-end-to-end-check.html` — create. One
+- `teach/lessons/0023-the-stage3-end-to-end-check.html` — create. One
   cross-domain request from the group through to a closed Fizzy card.
 - `teach/lessons/0017-workers-report-their-own-results.html` — modify
   line 229. The `<span></span>` becomes a forward link to Lesson 18.
-- `teach/reference/glossary.html` — modify in Task 2. Add
+- `teach/reference/glossary.html` — modify in Task 2 and Task 3. Add
   "Forum topic", "Free-response topic", "Mention gating", and "One-way
   mirror" as `<dt>`/`<dd>` pairs, matching the 20 entries already there.
 - `teach/learning-records/0013-*.md` onward — create one per real
@@ -108,9 +110,9 @@ one was read during planning, not recalled.
 - `hermes-config/peashooter/config.yaml`,
   `hermes-config/sunflower/config.yaml`,
   `hermes-config/crazydave/config.yaml` — modify in Task 2.
-- `hermes-config/crazydave/SOUL.md` — modify in Task 4.
+- `hermes-config/crazydave/SOUL.md` — modify in Task 3 and Task 5.
 - `docs/superpowers/specs/2026-09-09-stage3-ark-and-fizzy-design.md` —
-  modify in Task 2 (risk 1 resolved) and Task 6 (status).
+  modify in Task 2 (risk 1 resolved) and Task 7 (status).
 
 ---
 
@@ -430,10 +432,132 @@ git commit -m "Add Lesson 19: one topic, one default listener"
 
 ---
 
-### Task 3: Fizzy, the visible board
+### Task 3: Crazy Dave answers the room (Lesson 20)
 
 **Files:**
-- Create: `teach/lessons/0020-fizzy-the-visible-board.html`
+- Create: `teach/lessons/0020-dave-answers-the-room.html`
+- Modify: `teach/lessons/0019-one-topic-one-listener.html` — the nav
+  forward link, and test 4
+- Modify: `teach/reference/glossary.html` — add "Silent non-routing"
+- Modify: `~/.hermes/profiles/crazydave/SOUL.md` (the user runs this)
+- Modify: `hermes-config/crazydave/SOUL.md` (the mirror)
+
+**Interfaces:**
+- Consumes: the live group from Task 1, and the three
+  `free_response_topics` entries from Task 2. Task 2 test 4 leaves one
+  kanban task whose body is the word `hello`.
+- Produces: a Crazy Dave that replies in two named moments and files a
+  task for every other message. Task 6 relies on this, because the
+  end-to-end request in #General must still become a triage task.
+
+- [ ] **Step 1: Archive the task Task 2 left on the board**
+
+The user runs both commands and reports the output.
+
+```bash
+hermes kanban list
+hermes kanban archive <task_id>
+```
+
+- [ ] **Step 2: Add two exceptions to `SOUL.md`**
+
+The user pastes this text directly after the dispatched-work exception
+and directly before the line that begins `HARD RULE`.
+
+```
+Exception — small talk: a message that only greets, thanks, or
+acknowledges, and asks for nothing. Reply in one short sentence. Do not
+create a task.
+
+Exception — board questions: a message that asks about the state of work
+already on the board. Read the board with the kanban tool and answer
+from what you read. Do not create a task. If the message asks about work
+that is not on the board, it is a new request, and the HARD RULE
+applies.
+```
+
+- [ ] **Step 3: Correct the exception count**
+
+The personality line ends "except for the two exceptions above". Change
+it to read:
+
+```
+Personality: brief. Confirm the task id was created, nothing more —
+except for the four exceptions above.
+```
+
+- [ ] **Step 4: Check clause order before restarting**
+
+Run: `grep -n 'Exception —\|HARD RULE, not a suggestion' ~/.hermes/profiles/crazydave/SOUL.md`
+Expected: four lines, with `HARD RULE` last. If `HARD RULE` is not last,
+an exception landed below it and must move up.
+
+- [ ] **Step 5: Restart the Crazy Dave gateway**
+
+```bash
+hermes gateway restart -p crazydave
+```
+
+- [ ] **Step 6: Run four tests in #General**
+
+The user posts each message and runs `hermes kanban list` after each one.
+
+1. `thanks` — expect one short reply and no new task.
+2. `what is on the board right now` — expect an answer naming real tasks
+   and no new task.
+3. `@your_peashooter_bot say hello back`, then wait 30 seconds after
+   Peashooter replies — expect no reply from Crazy Dave and no new task.
+   This measures whether one bot's message reaches another bot.
+4. `write a one page spec for a habit tracker` — expect one new triage
+   task and no direct answer. This is the regression check.
+
+If test 4 produces a chat reply, the edit reintroduced silent
+non-routing. Stop and correct the wording before Task 4.
+
+- [ ] **Step 7: Write the lesson**
+
+Create `teach/lessons/0020-dave-answers-the-room.html`. It carries two
+knowledge boxes, one skill box, one amber box, one quiz, a checkpoint,
+and the nav. The first knowledge box states that this is the fourth
+correction to one file and cites learning record 0009. The second states
+why an enumerated set of moments replaces a judgment about message kind,
+and defines silent non-routing.
+
+- [ ] **Step 8: Repoint the neighbouring navigation**
+
+`teach/lessons/0019-one-topic-one-listener.html` forward link becomes
+Lesson 20. `teach/lessons/0021-fizzy-the-visible-board.html` back link
+becomes Lesson 20.
+
+- [ ] **Step 9: Add the glossary entry**
+
+Add "Silent non-routing" to `teach/reference/glossary.html`, before the
+"One-way mirror" entry, with `Introduced in: Lesson 20`.
+
+- [ ] **Step 10: Verify tag balance and links**
+
+Run the script from Task 1 step 5 over every file in `teach/lessons/`
+and `teach/reference/glossary.html`.
+Expected: all balanced, and no missing local link.
+
+- [ ] **Step 11: Mirror and commit**
+
+```bash
+cp ~/.hermes/profiles/crazydave/SOUL.md hermes-config/crazydave/SOUL.md
+git add teach/lessons/0020-dave-answers-the-room.html \
+        teach/lessons/0019-one-topic-one-listener.html \
+        teach/lessons/0021-fizzy-the-visible-board.html \
+        teach/reference/glossary.html \
+        hermes-config/crazydave/SOUL.md
+git commit -m "Add Lesson 20: Crazy Dave answers the room"
+```
+
+---
+
+### Task 4: Fizzy, the visible board
+
+**Files:**
+- Create: `teach/lessons/0021-fizzy-the-visible-board.html`
 
 **Interfaces:**
 - Consumes: nothing from earlier tasks.
@@ -442,7 +566,7 @@ git commit -m "Add Lesson 19: one topic, one default listener"
   a new card's identifier. Task 4 writes all four into Crazy Dave's
   `SOUL.md`.
 
-- [ ] **Step 1: Write the framing section of Lesson 20.** State the job
+- [ ] **Step 1: Write the framing section of Lesson 21.** State the job
   Fizzy does and the job it does not do. Fizzy shows the board on a
   phone. Fizzy never routes work, and no agent reads Fizzy to decide
   anything. The Hermes kanban board stays the only source of truth.
@@ -452,7 +576,7 @@ git commit -m "Add Lesson 19: one topic, one default listener"
   test cards consume the limit permanently. The paid tier costs 20 US
   dollars per month.
 
-- [ ] **Step 2: Write the installation section of Lesson 20.**
+- [ ] **Step 2: Write the installation section of Lesson 21.**
 
 ```bash
 brew install --cask basecamp/tap/fizzy
@@ -472,7 +596,7 @@ brew uninstall --formula --force fizzy-cli
 brew untap robzolkos/fizzy-cli
 ```
 
-- [ ] **Step 3: Write the account section of Lesson 20.** Create a
+- [ ] **Step 3: Write the account section of Lesson 21.** Create a
   hosted account at `https://www.fizzy.do/`. Create one board named
   `plants`. Create a personal access token in the account settings.
 
@@ -522,39 +646,39 @@ fizzy card close --help
   found in step 6, and to confirm on the Fizzy web interface that the
   card is closed and carries the comment.
 
-- [ ] **Step 8: Write the findings back into Lesson 20.** Replace the
+- [ ] **Step 8: Write the findings back into Lesson 21.** Replace the
   placeholder `<BOARD_ID>` and `<VALUE>` in the lesson text with the
   real board id and the real field name. The lesson must contain the
   commands that actually ran.
 
 - [ ] **Step 9: Verify the HTML tag balance** of
-  `teach/lessons/0020-fizzy-the-visible-board.html`, using the script
+  `teach/lessons/0021-fizzy-the-visible-board.html`, using the script
   from Task 1 step 5.
 
 - [ ] **Step 10: Commit.**
 
 ```bash
-git add teach/lessons/0020-fizzy-the-visible-board.html
-git commit -m "Add Lesson 20: Fizzy, the visible board"
+git add teach/lessons/0021-fizzy-the-visible-board.html
+git commit -m "Add Lesson 21: Fizzy, the visible board"
 ```
 
 ---
 
-### Task 4: Crazy Dave writes the card
+### Task 5: Crazy Dave writes the card
 
 **Files:**
-- Create: `teach/lessons/0021-crazy-dave-writes-the-card.html`
+- Create: `teach/lessons/0022-crazy-dave-writes-the-card.html`
 - Modify: `~/.hermes/profiles/crazydave/SOUL.md`
 - Modify: `hermes-config/crazydave/SOUL.md`
 
 **Interfaces:**
 - Consumes: the board id, the card identifier field, and the real
-  `fizzy card close` form from Task 3.
+  `fizzy card close` form from Task 4.
 - Produces: a Crazy Dave that creates a Fizzy card on filing a root
   task, and closes that card on completing a root task. Task 5 tests
   both moments in one run.
 
-- [ ] **Step 1: Write the risk section of Lesson 21 first.** Learning
+- [ ] **Step 1: Write the risk section of Lesson 22 first.** Learning
   record `0009` states that a hard rule written for one input channel
   breaks on the second channel. Crazy Dave's `SOUL.md` has already been
   corrected three times for exactly that shape. This task adds a fourth
@@ -567,7 +691,7 @@ git commit -m "Add Lesson 20: Fizzy, the visible board"
 - [ ] **Step 2: Write the two new `SOUL.md` clauses.** These go after
   the dispatched-work exception that learning record `0009` added, and
   before the personality line. Replace `<BOARD_ID>` with the real board
-  id from Task 3, and replace the `fizzy card close` form with the real
+  id from Task 4, and replace the `fizzy card close` form with the real
   one:
 
 ```
@@ -633,30 +757,31 @@ cp ~/.hermes/profiles/crazydave/SOUL.md hermes-config/crazydave/SOUL.md
 ```
 
 - [ ] **Step 7: Verify the HTML tag balance** of
-  `teach/lessons/0021-crazy-dave-writes-the-card.html`, using the script
+  `teach/lessons/0022-crazy-dave-writes-the-card.html`, using the script
   from Task 1 step 5.
 
 - [ ] **Step 8: Commit.**
 
 ```bash
-git add teach/lessons/0021-crazy-dave-writes-the-card.html \
+git add teach/lessons/0022-crazy-dave-writes-the-card.html \
         hermes-config/crazydave/SOUL.md
-git commit -m "Add Lesson 21: Crazy Dave writes the Fizzy card"
+git commit -m "Add Lesson 22: Crazy Dave writes the Fizzy card"
 ```
 
 ---
 
-### Task 5: The Stage 3 end-to-end check
+### Task 6: The Stage 3 end-to-end check
 
 **Files:**
-- Create: `teach/lessons/0022-the-stage3-end-to-end-check.html`
+- Create: `teach/lessons/0023-the-stage3-end-to-end-check.html`
 
 **Interfaces:**
-- Consumes: the routing from Task 2 and the mirror from Task 4.
-- Produces: evidence for all five success criteria in the spec.
+- Consumes: the routing from Task 2, the reply moments from Task 3, and
+  the mirror from Task 5.
+- Produces: evidence for all six success criteria in the spec.
 
-- [ ] **Step 1: Write Lesson 22.** State the request the reader sends,
-  and state what each of the five criteria proves. Use a request that
+- [ ] **Step 1: Write Lesson 23.** State the request the reader sends,
+  and state what each of the six criteria proves. Use a request that
   genuinely needs both specialists, so `decompose` produces at least two
   children with different assignees. An example that worked in Stage 2
   is a small game with a written specification first, then an
@@ -710,8 +835,8 @@ lsof -p <pid>
   Expected: file descriptors 1 and 2 both open to a real file. Learning
   record `0011` records why a passing HTTP check predicts nothing.
 
-- [ ] **Step 8: Score the five criteria.** Write the result of each
-  criterion into Lesson 22, with the real output that supports it. A
+- [ ] **Step 8: Score the six criteria.** Write the result of each
+  criterion into Lesson 23, with the real output that supports it. A
   criterion met by a different mechanism than the spec names is recorded
   as such, not as a plain pass.
 
@@ -720,27 +845,27 @@ lsof -p <pid>
   record states the root cause, the fix, and the generalization.
 
 - [ ] **Step 10: Verify the HTML tag balance** of
-  `teach/lessons/0022-the-stage3-end-to-end-check.html`, using the
+  `teach/lessons/0023-the-stage3-end-to-end-check.html`, using the
   script from Task 1 step 5.
 
 - [ ] **Step 11: Commit.**
 
 ```bash
-git add teach/lessons/0022-the-stage3-end-to-end-check.html \
+git add teach/lessons/0023-the-stage3-end-to-end-check.html \
         teach/learning-records/
-git commit -m "Add Lesson 22: the Stage 3 end-to-end check"
+git commit -m "Add Lesson 23: the Stage 3 end-to-end check"
 ```
 
 ---
 
-### Task 6: Stage 3 completion record
+### Task 7: Stage 3 completion record
 
 **Files:**
 - Create: `teach/learning-records/<next number>-stage3-complete.md`
 - Modify: `docs/superpowers/specs/2026-09-09-stage3-ark-and-fizzy-design.md:3`
 
 **Interfaces:**
-- Consumes: the scored criteria from Task 5.
+- Consumes: the scored criteria from Task 6.
 - Produces: the closing record for Stage 3.
 
 - [ ] **Step 1: Write the completion record,** following the shape of
@@ -759,7 +884,7 @@ git commit -m "Add Lesson 22: the Stage 3 end-to-end check"
   `docs/superpowers/specs/2026-09-09-stage3-ark-and-fizzy-design.md`:
 
 ```markdown
-**Status:** Complete (<date>) — all five success criteria verified in one
+**Status:** Complete (<date>) — all six success criteria verified in one
 run. See learning record <number>.
 ```
 

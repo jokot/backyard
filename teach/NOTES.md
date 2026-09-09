@@ -61,10 +61,24 @@
   `basecamp/fizzy-cli` uses `master` as its default branch, so a
   `raw.githubusercontent.com/.../main/...` URL returns 404. The JSON
   field that addresses a new card is not documented in `README.md` or
-  `SURFACE.txt`. Lesson 20 finds it from real output rather than
+  `SURFACE.txt`. Lesson 21 finds it from real output rather than
   guessing it.
 - **Link path gotcha (fixed 2026-09-09):** lessons live at
   `teach/lessons/`, so a link to the build documents needs
   `../../docs/superpowers/...`. Eight Stage 2 lessons used `../docs/`
   and were broken. Verify local links resolve before committing a
   lesson, the same way tag balance is verified.
+
+- **A coordinator in a group room needs reply moments, not a reply
+  mode.** Crazy Dave's hard rule filed a kanban task for every message,
+  which was safe while a direct chat was the only way in. A free-response
+  topic makes greetings and status questions reach the same rule. The fix
+  is two named exceptions, small talk and board questions, above the hard
+  rule. Do not write "reply when the message is conversational". That
+  asks the model to judge every message, which is the failure learning
+  record 0004 already recorded.
+- **Filing is the safe default, so replies are the exception.** A junk
+  task is visible on the board and `hermes kanban archive` removes it. A
+  request answered as chat leaves no record anywhere. Lesson 20 names
+  this silent non-routing. When a clause could fail in either direction,
+  pick the direction that leaves evidence.

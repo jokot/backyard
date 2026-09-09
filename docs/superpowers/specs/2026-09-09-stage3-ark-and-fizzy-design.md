@@ -172,18 +172,22 @@ correct and the mirror shows a gap.
 4. **Configure the three profiles.** Add `require_mention`,
    `exclusive_bot_mentions`, and one `free_response_topics` entry to each
    profile. Restart the three gateways.
-5. **Test the group.** Run the four Telegram checks in the success
+5. **Test the group.** Run the five Telegram checks in the success
    criteria below.
-6. **Create the Fizzy account and board.** Create one hosted Fizzy
+6. **Teach Crazy Dave to answer the room.** Add two exceptions to
+   `~/.hermes/profiles/crazydave/SOUL.md`. One covers small talk. One
+   covers a question about work already on the board. Filing a task
+   stays the default for every other message.
+7. **Create the Fizzy account and board.** Create one hosted Fizzy
    account and one board. Install the command line interface with
    `brew install --cask basecamp/tap/fizzy`. Create a personal access
    token. Authenticate with
    `fizzy auth login "$TOKEN" --profile crazydave`.
-7. **Teach Crazy Dave the mirror.** Add the two Fizzy moments to
+8. **Teach Crazy Dave the mirror.** Add the two Fizzy moments to
    `~/.hermes/profiles/crazydave/SOUL.md`. State that Crazy Dave never
    reads Fizzy, and that a failed `fizzy` command never blocks the kanban
    task.
-8. **Run the end-to-end test.** Send one cross-domain request in
+9. **Run the end-to-end test.** Send one cross-domain request in
    #General. Verify the full route from the card to the closed task.
 
 ## Success criteria
@@ -196,7 +200,10 @@ correct and the mirror shows a gap.
    today.
 4. No bot answers an unnamed message in a topic that another profile
    owns.
-5. A cross-domain request in #General produces one Fizzy card, two or
+5. A greeting in #General gets a one sentence reply from Crazy Dave and
+   creates no kanban task. A request for work in #General creates a
+   triage task and gets no direct answer.
+6. A cross-domain request in #General produces one Fizzy card, two or
    more kanban child tasks, one Telegram report per child, and one closed
    Fizzy card that carries the summary.
 
@@ -229,7 +236,14 @@ correct and the mirror shows a gap.
 - **The Fizzy free tier counts deleted cards.** Reports state that a
   deleted card still counts against the 1,000 card limit. Test cards
   consume the limit permanently.
-- **Crazy Dave has three `SOUL.md` exceptions after step 7.** Learning
-  record 0009 states that a hard rule written for one input channel
-  breaks on the second channel. The Fizzy duty adds a fourth rule to one
-  file. Watch for the same failure shape during the end-to-end test.
+- **Crazy Dave gains three more `SOUL.md` clauses in this stage.**
+  Learning record 0009 states that a hard rule written for one input
+  channel breaks on the second channel. Step 6 adds two reply moments,
+  and step 8 adds the Fizzy duty. Every clause names the moment it
+  applies to, never the message that arrived. Watch for the same failure
+  shape during the end-to-end test.
+- **A reply moment can hide a request.** If Crazy Dave answers a work
+  request conversationally, no kanban task exists and no record of the
+  request survives. A junk task is visible on the board and one archive
+  command removes it, so filing stays the default and every reply is a
+  named exception. Success criterion 5 tests both directions.
