@@ -128,3 +128,9 @@
   specification was reported at a path that no longer exists, and the
   wrong path is now permanent inside a closed Fizzy card. Learning record
   0018.
+
+- A checklist verifies a step. It never introduces one. Lesson 19 named
+  the configuration mirror only in its checkpoint, so three repository
+  files stayed at the Stage 2 configuration for a whole stage while the
+  live machine was correct. Every checkpoint line must trace to a
+  numbered step that carries the command. Learning record 0019.

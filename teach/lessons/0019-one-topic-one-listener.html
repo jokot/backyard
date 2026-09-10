@@ -137,6 +137,17 @@ hermes gateway status</code></pre>
     answer exactly as it did before this lesson. This is the regression
     check.</li>
   </ul>
+
+  <p><strong>5. Mirror the three files into the repository.</strong>
+  The four keys you just added are the whole Stage 3 routing rule. Copy
+  each file in the session that edited it:</p>
+  <pre><code>for p in peashooter sunflower crazydave; do
+  cp ~/.hermes/profiles/$p/config.yaml hermes-config/$p/config.yaml
+done
+grep -c free_response_topics hermes-config/*/config.yaml</code></pre>
+  <p>The <code>grep</code> must print <code>1</code> for each of the
+  three files. A count of <code>0</code> means the copy never ran, and
+  the repository still holds the configuration from before Stage 3.</p>
 </div>
 
 <div class="box" style="border-left-color:#b08a2e;">
