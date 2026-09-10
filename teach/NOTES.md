@@ -108,3 +108,9 @@
   from the conversation. Reading `archive_task` found that an archived
   parent releases its children, which turns a tidy-up request into three
   new workers.
+
+- A formula in a specification is code, so run it before approving the
+  specification. Sunflower's Zuma chain rule described gap closure and
+  used a clamp that cannot close a gap. Twelve lines of `node` proved a
+  100 px gap stays at 100.00 px after 10 seconds. The spec task reported
+  `tests_run: 0`. Learning record 0016.
