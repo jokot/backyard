@@ -134,3 +134,10 @@
   files stayed at the Stage 2 configuration for a whole stage while the
   live machine was correct. Every checkpoint line must trace to a
   numbered step that carries the command. Learning record 0019.
+
+- Stage 3 found its defects in the writing, not in the code. Five of the
+  seven records name a document that instructs someone: a SOUL.md clause,
+  a boundary rule, a specification formula, a prompt split across three
+  regions, and a lesson checkpoint. No new code path failed. Read an
+  instruction the way you read a function signature. Ask what it
+  excludes, and name the second caller. Learning record 0020.

@@ -1,7 +1,7 @@
 # Stage 3 Design: the Ark group and the Fizzy mirror
 
 **Date:** 2026-09-09
-**Status:** Approved for implementation
+**Status:** Complete (2026-09-10). All seven success criteria pass. Criteria 1 to 4 use the three telegram keys this spec names, verified by the Lesson 19 topic tests. Criteria 5 and 6 passed after four corrections to Crazy Dave's SOUL.md in Lessons 20 and 21. Criterion 7 passed in the kitchen timer end-to-end run. No criterion was met by a mechanism other than the one this spec names. The Fizzy mirror needed different wording, not a different mechanism. See learning record 0020.
 **Author:** jokot, with Claude Code
 
 ## Background
