@@ -71,19 +71,23 @@ one.</p>
   <p><strong>1. Add this block to
   <code>~/.hermes/profiles/crazydave/SOUL.md</code>,</strong> after the
   dispatched-work exception and before the personality line. Substitute
-  your real board id from Lesson 22, and the real
-  <code>fizzy card close</code> form you confirmed there:</p>
+  your real board id from Lesson 22. The command forms below are the
+  ones Lesson 22 confirmed against the tool, so change nothing else:</p>
   <pre><code>Fizzy mirror — you own it, and you never read it.
 
 On filing a root kanban task: after the task exists, run
-  fizzy card create --profile crazydave --board &lt;BOARD_ID&gt; --title "&lt;the user's request, one line&gt;"
-Read the card identifier from the output. Add a comment on the kanban
-task with the exact text fizzy:&lt;identifier&gt; and nothing else.
+  fizzy card create --profile crazydave --board &lt;BOARD_ID&gt; --title "&lt;the user's request, one line&gt;" --jq '.data.number'
+That prints one integer, which is the card number. Add a comment on the
+kanban task with the exact text fizzy:&lt;number&gt; and nothing else.
 
-On completing a root kanban task: read the fizzy:&lt;identifier&gt; comment
-from that task. Then run
-  fizzy comment create --profile crazydave --card &lt;identifier&gt; --body "&lt;your summary&gt;"
-  fizzy card close &lt;identifier&gt;
+On completing a root kanban task: read the fizzy:&lt;number&gt; comment from
+that task. Then run
+  fizzy comment create --profile crazydave --card &lt;number&gt; --body "&lt;your summary&gt;"
+  fizzy card close &lt;number&gt; --profile crazydave
+
+Use the card number in both commands, never the 25 character card id.
+The number is a flag on the first command and a positional argument on
+the second.
 
 Never run any other fizzy command. Never read a Fizzy card to decide
 anything. The kanban board is the only source of truth.

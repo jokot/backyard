@@ -144,17 +144,29 @@ fizzy auth status</code></pre>
   <pre><code>fizzy card create --profile crazydave --board &lt;BOARD_ID&gt; \
   --title "probe: which field addresses a card" \
   --description "Created to learn the card address field."</code></pre>
-  <p>Read the JSON. Then confirm your reading with the two commands
-  Lesson 23 actually uses:</p>
-  <pre><code>fizzy comment create --profile crazydave --card &lt;VALUE&gt; --body "probe comment"
+  <p>Read the JSON. One card carries two addresses, and they are not
+  interchangeable:</p>
+  <pre><code>{"id":"03gu90tjii5haspil51dhkvbo","number":12,
+ "title":"probe: which field addresses a card",
+ "url":"https://app.fizzy.do/6280439/cards/12"}</code></pre>
+  <p>Ask the tool which one to use, rather than guessing:</p>
+  <pre><code>fizzy comment create --help
 fizzy card close --help</code></pre>
-  <p>The second command tells you whether <code>fizzy card close</code>
-  takes the card as a positional argument or as a flag. Record the real
-  form. Do not carry a guess into a <code>SOUL.md</code>.</p>
+  <p>The answers are exact, and they disagree in shape:</p>
+  <pre><code>comment create   --card &lt;CARD&gt;   Card number (required)
+card close       USAGE: fizzy card close CARD_NUMBER</code></pre>
+  <p>So both commands take <code>number</code>, and neither takes
+  <code>id</code>. One takes it as a flag and one takes it as a
+  positional argument. Note the whole rule before you continue: a board
+  is addressed by its 25 character id, and a card is addressed by its
+  short number. One tool, two addressing schemes.</p>
 
-  <p><strong>7. Close the probe card</strong> using the form you just
-  confirmed, and check on the Fizzy web interface that it is closed and
-  carries your comment. That is the full write path Crazy Dave will
+  <p><strong>7. Comment on the probe card, then close it.</strong>
+  Substitute your own card number:</p>
+  <pre><code>fizzy comment create --profile crazydave --card 12 --body "probe comment"
+fizzy card close 12 --profile crazydave</code></pre>
+  <p>Check on the Fizzy web interface that the card is closed and
+  carries the comment. That is the full write path Crazy Dave will
   use.</p>
 </div>
 
