@@ -82,7 +82,7 @@ hard line around what that view is allowed to do.</p>
 fizzy --version</code></pre>
   <p>Expect <code>fizzy version 4.0.1</code> or later. Run this check
   before you read the next paragraph:</p>
-  <pre><code>ls -l $(which fizzy)</code></pre>
+  <pre><code>which fizzy | xargs ls -l</code></pre>
   <p>A link into <code>Caskroom/fizzy/</code> means the cask owns the
   binary and you are finished. Skip the rest of this step.</p>
   <p>A link into <code>Cellar/fizzy-cli/</code> means the old 3.x
