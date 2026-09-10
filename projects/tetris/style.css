@@ -1,0 +1,57 @@
+/* Tetris — page shell styling. No external fonts or assets. */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: #1a1a2e;
+  color: #ffffff;
+  font-family: "Courier New", monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Keep the canvas centered with a plain border. */
+#layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+canvas#game {
+  border: 1px solid #cccccc;
+  background: #111111;
+  display: block;
+}
+
+#help {
+  text-align: left;
+  font-size: 14px;
+  user-select: none;
+}
+
+#help h2 {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+}
+
+#help ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+#help li {
+  line-height: 1.5;
+}

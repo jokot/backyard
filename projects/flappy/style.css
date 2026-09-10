@@ -1,0 +1,25 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #2b2d31;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: sans-serif;
+}
+
+canvas#game {
+  background: #70c5ce;
+  border: 3px solid #000;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  touch-action: none;         /* tap-to-flap without pan/zoom */
+  cursor: pointer;
+  max-width: 100%;
+  height: auto;
+}
