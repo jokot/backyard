@@ -1,0 +1,3 @@
+# Runtime artifacts of a deployed exercise. The logs and the process id
+# files change on every restart and describe one machine only.
+projects/*/logs/

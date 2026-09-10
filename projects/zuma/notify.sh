@@ -1,0 +1,2 @@
+#!/bin/bash
+hermes send --to telegram "Deployed the Zuma game and verified it end to end. Static server (PID 61826) serving /Users/jokot/dev/plants/zuma/index.html (632 lines) on port 8000, published via ngrok (PID 61827) at https://exporter-uninsured-manor.ngrok-free.dev — both local and public URLs return HTTP 200 with the full HTML. Logs: /Users/jokot/dev/plants/zuma/logs/web.log and /Users/jokot/dev/plants/zuma/logs/ngrok.log."

@@ -141,3 +141,11 @@
   regions, and a lesson checkpoint. No new code path failed. Read an
   instruction the way you read a function signature. Ask what it
   excludes, and name the second caller. Learning record 0020.
+
+- A move is a deployment event. Renaming the Zuma directory left the
+  running server with every descriptor open and every request at 404,
+  because `python -m http.server` resolves `os.getcwd()` once at startup
+  and stores the answer as a string. The record 0011 descriptor check
+  reported a healthy process. Ask which values a program resolved once,
+  and recheck every "it is running" claim after a rename. Learning
+  record 0021.

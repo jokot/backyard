@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kitchen Timer</title>
+<style>
+  :root {
+    --color-bg: #FAFAFA;
+    --color-text: #1B1F24;
+    --color-alert: #C62828;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0;
+  }
+  .column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    padding: 40px 24px;
+  }
+  h1 {
+    margin: 0;
+    font-size: 28px;
+    color: var(--color-text);
+  }
+  #display {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 72px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--color-text);
+  }
+  #banner {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-alert);
+    display: none;
+  }
+  .inputs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .field label {
+    font-size: 14px;
+    color: var(--color-text);
+  }
+  .field input {
+    width: 72px;
+    text-align: center;
+    font-size: 20px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    padding: 6px;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+  }
+  #error {
+    font-size: 15px;
+    color: var(--color-alert);
+    display: none;
+  }
+  .buttons {
+    display: flex;
+    gap: 12px;
+  }
+  button {
+    font-size: 20px;
+    padding: 8px 22px;
+    border: 1px solid #BBB;
+    border-radius: 6px;
+    background: #EFEFEF;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+</style>
+</head>
+<body>
+<div class="column">
+  <h1>Kitchen Timer</h1>
+  <div id="display">00:00</div>
+  <div id="banner">Time&rsquo;s up!</div>
+  <div class="inputs">
+    <div class="field">
+      <label for="minutes">Minutes</label>
+      <input id="minutes" type="number" min="0" max="99" step="1" value="0" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label for="seconds">Seconds</label>
+      <input id="seconds" type="number" min="0" max="59" step="1" value="0" inputmode="numeric">
+    </div>
+  </div>
+  <div id="error">Set a time greater than zero.</div>
+  <div class="buttons">
+    <button id="startBtn">Start</button>
+    <button id="pauseBtn" disabled>Pause</button>
+    <button id="resetBtn" disabled>Reset</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var TICK_MS = 200;
+  var MAX_MINUTES = 99;
+  var MAX_SECONDS = 59;
+
+  var displayEl = document.getElementById("display");
+  var bannerEl = document.getElementById("banner");
+  var minutesEl = document.getElementById("minutes");
+  var secondsEl = document.getElementById("seconds");
+  var errorEl = document.getElementById("error");
+  var startBtn = document.getElementById("startBtn");
+  var pauseBtn = document.getElementById("pauseBtn");
+  var resetBtn = document.getElementById("resetBtn");
+
+  var STATE_IDLE = "idle";
+  var STATE_RUNNING = "running";
+  var STATE_PAUSED = "paused";
+  var STATE_FINISHED = "finished";
+
+  var state = STATE_IDLE;
+  var target = 0;        /* epoch ms for the finish instant */
+  var remainingMs = 0;   /* frozen remaining time while paused */
+  var lastRendered = ""; /* last mm:ss string written */
+  var ticker = null;
+
+  function clamp(v, lo, hi) {
+    return Math.max(lo, Math.min(hi, v));
+  }
+
+  function fmt(n) {
+    return (n < 10 ? "0" : "") + n;
+  }
+
+  function mmss(totalSeconds) {
+    var m = Math.floor(totalSeconds / 60);
+    var s = totalSeconds % 60;
+    return fmt(m) + ":" + fmt(s);
+  }
+
+  /* Read inputs, clamp per spec, return whole-second duration. */
+  function readDuration() {
+    var rawM = parseFloat(minutesEl.value);
+    var rawS = parseFloat(secondsEl.value);
+    var m = Number.isNaN(rawM) ? 0 : Math.floor(clamp(rawM, 0, MAX_MINUTES));
+    var s = Number.isNaN(rawS) ? 0 : Math.floor(clamp(rawS, 0, MAX_SECONDS));
+    return m * 60 + s;
+  }
+
+  function setState(next) {
+    state = next;
+    switch (next) {
+      case STATE_IDLE:
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        pauseBtn.textContent = "Pause";
+        resetBtn.disabled = true;
+        minutesEl.disabled = false;
+        secondsEl.disabled = false;
+        bannerEl.style.display = "none";
+        break;
+      case STATE_RUNNING:
+        startBtn.disabled = true;
+        pauseBtn.disabled = false;
+        pauseBtn.textContent = "Pause";
+        resetBtn.disabled = false;
+        minutesEl.disabled = true;
+        secondsEl.disabled = true;
+        bannerEl.style.display = "none";
+        break;
+      case STATE_PAUSED:
+        startBtn.disabled = true;
+        pauseBtn.disabled = false;
+        pauseBtn.textContent = "Resume";
+        resetBtn.disabled = false;
+        minutesEl.disabled = true;
+        secondsEl.disabled = true;
+        bannerEl.style.display = "none";
+        break;
+      case STATE_FINISHED:
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        pauseBtn.textContent = "Pause";
+        resetBtn.disabled = false;
+        minutesEl.disabled = true;
+        secondsEl.disabled = true;
+        bannerEl.style.display = "block";
+        break;
+    }
+    syncTitle();
+  }
+
+  var displayedText = "";
+
+  function syncTitle() {
+    if (state === STATE_FINISHED) {
+      document.title = "Time's up! \u2014 Kitchen Timer";
+    } else if (state === STATE_IDLE) {
+      document.title = "Kitchen Timer";
+    } else {
+      document.title = displayedText + " \u2014 Kitchen Timer";
+    }
+  }
+
+  function render(totalSeconds, finished) {
+    var text = mmss(totalSeconds);
+    if (text !== lastRendered) {
+      displayEl.textContent = text;
+      lastRendered = text;
+    }
+    displayedText = text;
+    if (finished) {
+      displayEl.style.color = "var(--color-alert)";
+    } else {
+      displayEl.style.color = "var(--color-text)";
+    }
+    syncTitle();
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+  }
+
+  function showError() {
+    errorEl.style.display = "block";
+  }
+
+  function stopTick() {
+    if (ticker !== null) {
+      window.clearInterval(ticker);
+      ticker = null;
+    }
+  }
+
+  function tick() {
+    remainingMs = target - Date.now();
+    if (remainingMs <= 0) {
+      remainingMs = 0;
+      stopTick();
+      render(0, true);
+      setState(STATE_FINISHED);
+      return;
+    }
+    var shownSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+    render(shownSeconds, false);
+  }
+
+  function startTick() {
+    stopTick();
+    ticker = window.setInterval(tick, TICK_MS);
+    tick(); /* render immediately so there is no 200 ms blank */
+  }
+
+  /* ---- Events ---- */
+
+  startBtn.addEventListener("click", function () {
+    clearError();
+    var total = readDuration();
+    if (state === STATE_FINISHED || state === STATE_IDLE) {
+      if (total <= 0) {
+        showError();
+        return;
+      }
+      target = Date.now() + total * 1000;
+      setState(STATE_RUNNING);
+      startTick();
+    }
+  });
+
+  pauseBtn.addEventListener("click", function () {
+    if (state === STATE_RUNNING) {
+      stopTick();
+      remainingMs = Math.max(0, target - Date.now());
+      setState(STATE_PAUSED);
+    } else if (state === STATE_PAUSED) {
+      target = Date.now() + remainingMs;
+      setState(STATE_RUNNING);
+      startTick();
+    }
+  });
+
+  resetBtn.addEventListener("click", function () {
+    if (state === STATE_IDLE) return;
+    stopTick();
+    setState(STATE_IDLE);
+    clearError();
+    var total = readDuration();
+    render(total, false);
+  });
+
+  minutesEl.addEventListener("input", onInputChange);
+  secondsEl.addEventListener("input", onInputChange);
+
+  function onInputChange() {
+    clearError();
+    if (state === STATE_IDLE) {
+      render(readDuration(), false);
+    }
+  }
+
+  function init() {
+    render(0, false);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

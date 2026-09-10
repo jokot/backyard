@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zuma</title>
+<style>
+  /* ============================================================
+     LAYOUT STYLES
+     - Page background dark, canvas 800x600 centred with a plain border.
+     - The canvas is NOT CSS-scaled: offsetX/offsetY are direct
+       canvas coordinates.
+     ============================================================ */
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #10141A;
+    height: 100%;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  canvas {
+    background: #10141A;
+    border: 1px solid #3A424D;
+    cursor: crosshair;
+  }
+</style>
+</head>
+<body>
+<canvas id="game" width="800" height="600"></canvas>
+
+<!-- GAME-SCRIPT-START -->
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     CONSTANTS
+     Every named value from the layout table lives here.
+     ============================================================ */
+  const CONSTANTS = {
+    WIDTH: 800,
+    HEIGHT: 600,
+    BALL_RADIUS: 12,
+    CHAIN_SPACING: 24,
+    CHAIN_SPEED: 25,
+    PROJECTILE_SPEED: 600,
+    COLLIDE_RADIUS: 24,
+    SHOOTER_X: 400,
+    SHOOTER_Y: 520,
+    SHOOTER_RADIUS: 16,
+    HOLE_RADIUS: 18,
+    BALL_COUNT: 60,
+    COLORS: ['#E53935', '#FDD835', '#43A047', '#1E88E5'],
+    STROKES: ['#7F1610', '#9A7B00', '#1E5B24', '#114B78'],
+    PATH_POINTS: [
+      { x: -30,  y: 430 },
+      { x: 120,  y: 430 },
+      { x: 240,  y: 360 },
+      { x: 210,  y: 240 },
+      { x: 330,  y: 180 },
+      { x: 470,  y: 220 },
+      { x: 500,  y: 340 },
+      { x: 620,  y: 390 },
+      { x: 700,  y: 300 },
+      { x: 660,  y: 180 },
+      { x: 540,  y: 120 }
+    ],
+    SAMPLES_PER_SEGMENT: 24,
+    SPAWN_S: 0,
+    PROJECTILE_STEP: 8,
+    CONTIGUOUS_EPS: 0.5,
+    // Internal closure speed multiplier: a ball with a gap ahead rolls at
+    // this multiple of CHAIN_SPEED so gaps close and cascades can form
+    // (same-speed tail cannot catch a same-speed head).
+    GAP_CLOSE_MULT: 3
+  };
+
+  /* ============================================================
+     STATE
+     A single `game` object holds everything. Exported for the
+     headless test shim (guarded so a browser ignores module).
+     ============================================================ */
+  const game = {
+    state: 'ready',        // 'ready' | 'playing' | 'over'
+    win: false,
+    spawned: 0,
+    sequence: [],
+    chain: [],             // ordered hole-end first: chain[0] = closest to hole
+    loadedColor: 0,
+    projectiles: [],
+    aimAngle: 0,
+    PATH_LENGTH: 0,
+
+    // Track internals (filled by initTrack)
+    pathSamples: [],
+    arcLen: []
+  };
+
+  /* ============================================================
+     TRACK PATH
+     Catmull-Rom spline through the 11 control points. Precomputes
+     241 samples and the cumulative arc length once at init.
+     ============================================================ */
+
+  function clampedPoint(i) {
+    const P = CONSTANTS.PATH_POINTS;
+    const n = P.length;
+    if (i < 0) i = 0;
+    if (i > n - 1) i = n - 1;
+    return P[i];
+  }
+
+  // Single Catmull-Rom segment: p(t) between P1 (=P[i]) and P2 (=P[i+1]).
+  function catmullRomPoint(i, t) {
+    const P0 = clampedPoint(i - 1);
+    const P1 = clampedPoint(i);
+    const P2 = clampedPoint(i + 1);
+    const P3 = clampedPoint(i + 2);
+    const t2 = t * t;
+    const t3 = t2 * t;
+    return {
+      x: 0.5 * ((2 * P1.x) +
+                (-P0.x + P2.x) * t +
+                (2 * P0.x - 5 * P1.x + 4 * P2.x - P3.x) * t2 +
+                (-P0.x + 3 * P1.x - 3 * P2.x + P3.x) * t3),
+      y: 0.5 * ((2 * P1.y) +
+                (-P0.y + P2.y) * t +
+                (2 * P0.y - 5 * P1.y + 4 * P2.y - P3.y) * t2 +
+                (-P0.y + 3 * P1.y - 3 * P2.y + P3.y) * t3)
+    };
+  }
+
+  function initTrack() {
+    const points = CONSTANTS.PATH_POINTS;
+    const samples = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      for (let k = 0; k < CONSTANTS.SAMPLES_PER_SEGMENT; k++) {
+        samples.push(catmullRomPoint(i, k / CONSTANTS.SAMPLES_PER_SEGMENT));
+      }
+    }
+    // Append the exact endpoint (the hole).
+    samples.push({ x: points[points.length - 1].x, y: points[points.length - 1].y });
+
+    // Cumulative arc length along the samples.
+    const arcLen = [0];
+    let acc = 0;
+    for (let i = 1; i < samples.length; i++) {
+      const dx = samples[i].x - samples[i - 1].x;
+      const dy = samples[i].y - samples[i - 1].y;
+      acc += Math.sqrt(dx * dx + dy * dy);
+      arcLen.push(acc);
+    }
+    game.pathSamples = samples;
+    game.arcLen = arcLen;
+    game.PATH_LENGTH = arcLen[arcLen.length - 1];
+  }
+
+  // Map an arc position s to a canvas point.
+  function pathPoint(s) {
+    const samples = game.pathSamples;
+    const arcLen = game.arcLen;
+    if (s <= 0) return { x: samples[0].x, y: samples[0].y };
+    if (s >= game.PATH_LENGTH) return { x: samples[samples.length - 1].x, y: samples[samples.length - 1].y };
+
+    let i = 1;
+    while (i < arcLen.length && arcLen[i] < s) i++;
+    const lo = i - 1;
+    const hi = Math.min(i, arcLen.length - 1);
+    const segLen = arcLen[hi] - arcLen[lo];
+    const t = segLen > 0 ? (s - arcLen[lo]) / segLen : 0;
+    return {
+      x: samples[lo].x + (samples[hi].x - samples[lo].x) * t,
+      y: samples[lo].y + (samples[hi].y - samples[lo].y) * t
+    };
+  }
+
+  // Nearest sample index to a given point (used for insertion projection).
+  function nearestSampleIndex(x, y) {
+    const samples = game.pathSamples;
+    let best = 0;
+    let bestD = Infinity;
+    for (let i = 0; i < samples.length; i++) {
+      const dx = samples[i].x - x;
+      const dy = samples[i].y - y;
+      const d = dx * dx + dy * dy;
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    return best;
+  }
+
+  /* ============================================================
+     BALL SEQUENCE
+     Exactly 4 colours. Regenerate the 60-ball sequence until each
+     colour appears at least 3 times (always clearable).
+     ============================================================ */
+  function generateSequence() {
+    for (;;) {
+      const seq = [];
+      const counts = [0, 0, 0, 0];
+      for (let i = 0; i < CONSTANTS.BALL_COUNT; i++) {
+        const c = Math.floor(Math.random() * 4);
+        seq.push(c);
+        counts[c]++;
+      }
+      if (counts.every((n) => n >= 3)) return seq;
+    }
+  }
+
+  function newLoadedColor() {
+    return Math.floor(Math.random() * 4);
+  }
+
+  /* ============================================================
+     RESET / START / RESTART
+     ============================================================ */
+  function reset() {
+    game.state = 'ready';
+    game.win = false;
+    game.spawned = 0;
+    game.sequence = generateSequence();
+    game.chain = [];
+    game.projectiles = [];
+    game.loadedColor = newLoadedColor();
+    // Recompute the track every reset for exactness; harmless and cheap.
+    initTrack();
+  }
+
+  function start() {
+    reset();
+    game.state = 'playing';
+  }
+
+  function restart() {
+    start(); // identical reset to ready, then straight into playing
+  }
+
+  /* ============================================================
+     CHAIN MOVEMENT
+     Iterate front to back (chain[0] = hole end). chain[0] always
+     advances; every other ball rolls forward at full speed but is
+     clamped to CHAIN_SPACING behind the ball ahead — gaps close.
+     ============================================================ */
+  function moveChain(dt) {
+    const sp = CONSTANTS.CHAIN_SPACING;
+    const step = CONSTANTS.CHAIN_SPEED * dt;
+    // A gap ahead means this ball is further than CHAIN_SPACING from the
+    // ball in front. A same-speed tail would never catch a same-speed head,
+    // so on a real gap the ball rolls faster, visibly closing the gap and
+    // enabling cascades. Once touching it is clamped to exactly CHAIN_SPACING.
+    const closeStep = CONSTANTS.CHAIN_SPEED * CONSTANTS.GAP_CLOSE_MULT * dt;
+    for (let i = 0; i < game.chain.length; i++) {
+      const ball = game.chain[i];
+      if (i === 0) {
+        ball.s = ball.s + step;
+      } else {
+        const ahead = game.chain[i - 1];
+        const gap = ahead.s - ball.s;
+        const roll = (gap > sp + CONSTANTS.CONTIGUOUS_EPS) ? closeStep : step;
+        ball.s = Math.min(ball.s + roll, ahead.s - sp);
+      }
+    }
+  }
+
+  /* ============================================================
+     SPAWNING
+     While playing and fewer than BALL_COUNT spawned, spawn when the
+     chain is empty or the back (entrance-end) ball's s >= CHAIN_SPACING.
+     ============================================================ */
+  function spawn() {
+    if (game.state !== 'playing') return;
+    if (game.spawned >= CONSTANTS.BALL_COUNT) return;
+    if (game.chain.length === 0 ||
+        game.chain[game.chain.length - 1].s >= CONSTANTS.CHAIN_SPACING) {
+      game.chain.push({ colorIndex: game.sequence[game.spawned], s: CONSTANTS.SPAWN_S });
+      game.spawned++;
+    }
+  }
+
+  /* ============================================================
+     PROJECTILES
+     Move in sub-steps of at most PROJECTILE_STEP px, checking chain
+     collision after every sub-step so a big delta cannot tunnel.
+     ============================================================ */
+  function collideAt(px, py) {
+    // Returns the qualifying chain ball nearest to the projectile.
+    let best = null;
+    let bestD = Infinity;
+    for (let i = 0; i < game.chain.length; i++) {
+      const c = pathPoint(game.chain[i].s);
+      const dx = c.x - px;
+      const dy = c.y - py;
+      const d = dx * dx + dy * dy;
+      if (d < bestD) { bestD = d; best = game.chain[i]; }
+    }
+    if (best && bestD <= CONSTANTS.COLLIDE_RADIUS * CONSTANTS.COLLIDE_RADIUS) {
+      return best;
+    }
+    return null;
+  }
+
+  // Insert the projectile's ball into the chain at the impact point.
+  function insertIntoChain(proj, hit) {
+    const sP = game.arcLen[nearestSampleIndex(proj.x, proj.y)];
+    const idx = game.chain.indexOf(hit);
+    let insertAt;
+    if (sP > hit.s) {
+      // Projectile lands in front of the hit ball (toward the hole):
+      // place it at hit's current index.
+      insertAt = idx;
+    } else {
+      // Lands behind: place it after the hit ball.
+      insertAt = idx + 1;
+    }
+    game.chain.splice(insertAt, 0, { colorIndex: proj.colorIndex, s: sP });
+  }
+
+  // Spacing pass after insertion: push overlapping balls back so every
+  // touching pair is exactly CHAIN_SPACING apart.
+  function spacingPass() {
+    const sp = CONSTANTS.CHAIN_SPACING;
+    for (let i = 1; i < game.chain.length; i++) {
+      const ahead = game.chain[i - 1];
+      const ball = game.chain[i];
+      ball.s = Math.min(ball.s, ahead.s - sp);
+    }
+  }
+
+  function moveProjectiles(dt) {
+    const maxStep = CONSTANTS.PROJECTILE_STEP;
+    const remaining = CONSTANTS.PROJECTILE_SPEED * dt;
+    const survivors = [];
+    for (let p = 0; p < game.projectiles.length; p++) {
+      const proj = game.projectiles[p];
+      let dist = remaining;
+      let hitBall = null;
+      let destroyed = false;
+      while (dist > 0 && !hitBall && !destroyed) {
+        const step = Math.min(maxStep, dist);
+        proj.x += proj.vx * (step / CONSTANTS.PROJECTILE_SPEED);
+        proj.y += proj.vy * (step / CONSTANTS.PROJECTILE_SPEED);
+        dist -= step;
+        hitBall = collideAt(proj.x, proj.y);
+        // Off-canvas (20 px margin) => remove without effect.
+        if (proj.x < -20 || proj.x > CONSTANTS.WIDTH + 20 ||
+            proj.y < -20 || proj.y > CONSTANTS.HEIGHT + 20) {
+          destroyed = true;
+        }
+      }
+      if (hitBall) {
+        insertIntoChain(proj, hitBall);
+        spacingPass();
+        game.loadedColor = newLoadedColor();
+        // This projectile is consumed; it does not survive.
+      } else if (!destroyed) {
+        survivors.push(proj);
+      }
+    }
+    game.projectiles = survivors;
+  }
+
+  /* ============================================================
+     MATCH RESOLUTION
+     Scan front to back once per frame. A run = maximal consecutive
+     same-colour sequence where each consecutive pair is touching.
+     Remove every run of length >= 3 in a single pass. Cascades are
+     handled naturally by the per-frame check on following frames.
+     ============================================================ */
+  function resolveMatches() {
+    if (game.chain.length < 3) return;
+    const sp = CONSTANTS.CHAIN_SPACING + CONSTANTS.CONTIGUOUS_EPS;
+    const remove = new Array(game.chain.length).fill(false);
+    let i = 0;
+    const n = game.chain.length;
+    while (i < n) {
+      // Extend run starting at i.
+      let j = i;
+      while (j + 1 < n &&
+             game.chain[j + 1].colorIndex === game.chain[i].colorIndex &&
+             (game.chain[j].s - game.chain[j + 1].s) <= sp) {
+        j++;
+      }
+      if (j - i + 1 >= 3) {
+        for (let k = i; k <= j; k++) remove[k] = true;
+      }
+      i = j + 1;
+    }
+    if (remove.some((r) => r)) {
+      game.chain = game.chain.filter((_, idx) => !remove[idx]);
+    }
+  }
+
+  /* ============================================================
+     WIN / LOSE
+     Lose first, then win, checked after movement and match resolution.
+     ============================================================ */
+  function checkEnd() {
+    // Lose: any ball reached the hole.
+    if (game.chain.length > 0 && game.chain[0].s >= game.PATH_LENGTH) {
+      game.state = 'over';
+      game.win = false;
+      return;
+    }
+    // Win: all balls spawned and the chain is empty.
+    if (game.spawned >= CONSTANTS.BALL_COUNT && game.chain.length === 0) {
+      game.state = 'over';
+      game.win = true;
+      return;
+    }
+  }
+
+  /* ============================================================
+     UPDATE
+     One full simulation step. No DOM / canvas access.
+     Order: chain movement -> projectile movement (+insert) ->
+     match resolution -> win/lose check.
+     ============================================================ */
+  function update(dt) {
+    if (game.state !== 'playing') return;
+    moveChain(dt);
+    spawn();
+    moveProjectiles(dt);
+    resolveMatches();
+    checkEnd();
+  }
+
+  /* ============================================================
+     SHOOTER
+     Fixed position; aims at the mouse; launches the loaded ball.
+     ============================================================ */
+  function setAim(x, y) {
+    game.aimAngle = Math.atan2(y - CONSTANTS.SHOOTER_Y, x - CONSTANTS.SHOOTER_X);
+  }
+
+  function launch() {
+    if (game.state !== 'playing') return;
+    const sp = CONSTANTS.PROJECTILE_SPEED;
+    game.projectiles.push({
+      x: CONSTANTS.SHOOTER_X,
+      y: CONSTANTS.SHOOTER_Y,
+      vx: Math.cos(game.aimAngle) * sp,
+      vy: Math.sin(game.aimAngle) * sp,
+      colorIndex: game.loadedColor
+    });
+    game.loadedColor = newLoadedColor();
+  }
+
+  /* ============================================================
+     RENDER
+     Draw order: background -> track -> hole -> aim line ->
+     chain balls -> projectiles -> shooter -> loaded ball -> HUD.
+     ============================================================ */
+  function render(ctx) {
+    const W = CONSTANTS.WIDTH;
+    const H = CONSTANTS.HEIGHT;
+
+    // Background
+    ctx.fillStyle = '#10141A';
+    ctx.fillRect(0, 0, W, H);
+
+    // Track polyline (stroked through all samples)
+    ctx.strokeStyle = '#232A33';
+    ctx.lineWidth = 28;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < game.pathSamples.length; i++) {
+      const p = game.pathSamples[i];
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+
+    // Hole
+    ctx.beginPath();
+    ctx.arc(540, 120, CONSTANTS.HOLE_RADIUS, 0, Math.PI * 2);
+    ctx.fillStyle = '#05070A';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#3A424D';
+    ctx.stroke();
+
+    // Aim line
+    ctx.save();
+    ctx.setLineDash([4, 6]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(CONSTANTS.SHOOTER_X, CONSTANTS.SHOOTER_Y);
+    const dirX = Math.cos(game.aimAngle) * 2000;
+    const dirY = Math.sin(game.aimAngle) * 2000;
+    ctx.lineTo(CONSTANTS.SHOOTER_X + dirX, CONSTANTS.SHOOTER_Y + dirY);
+    ctx.stroke();
+    ctx.restore();
+
+    // Chain balls
+    for (let i = game.chain.length - 1; i >= 0; i--) {
+      drawBall(ctx, pathPoint(game.chain[i].s), game.chain[i].colorIndex);
+    }
+
+    // Projectiles
+    for (let i = 0; i < game.projectiles.length; i++) {
+      const pr = game.projectiles[i];
+      drawBall(ctx, { x: pr.x, y: pr.y }, pr.colorIndex);
+    }
+
+    // Shooter body and barrel
+    ctx.save();
+    ctx.translate(CONSTANTS.SHOOTER_X, CONSTANTS.SHOOTER_Y);
+    ctx.rotate(game.aimAngle);
+    ctx.fillStyle = '#2E3642';
+    ctx.strokeStyle = '#46505E';
+    ctx.lineWidth = 2;
+    // Barrel: rectangle 26 x 10 rotated to aimAngle (points +x direction)
+    ctx.fillRect(12, -5, 26, 10);
+    ctx.strokeRect(12, -5, 26, 10);
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(CONSTANTS.SHOOTER_X, CONSTANTS.SHOOTER_Y, CONSTANTS.SHOOTER_RADIUS, 0, Math.PI * 2);
+    ctx.fillStyle = '#2E3642';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#46505E';
+    ctx.stroke();
+
+    // Loaded ball (on top of shooter centre)
+    drawBall(ctx, { x: CONSTANTS.SHOOTER_X, y: CONSTANTS.SHOOTER_Y }, game.loadedColor);
+
+    // HUD
+    ctx.font = '16px monospace';
+    ctx.fillStyle = '#C8D0DA';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    const unspawned = Math.max(0, CONSTANTS.BALL_COUNT - game.spawned);
+    ctx.fillText('Balls: ' + (unspawned + game.chain.length), 12, 12);
+
+    // State prompts
+    if (game.state === 'ready') {
+      centeredText(ctx, 'Click to start', W, H);
+    } else if (game.state === 'over') {
+      centeredText(ctx, game.win ? 'You win!' : 'You lose', W, H, 28);
+      centeredText(ctx, 'Click to restart', W, H, 28 + 34, 16);
+    }
+  }
+
+  function centeredText(ctx, text, W, H, yOffset, size) {
+    ctx.font = (size || 24) + 'px monospace';
+    ctx.fillStyle = '#E8EEF5';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const y = (yOffset !== undefined ? yOffset : H / 2);
+    ctx.fillText(text, W / 2, y);
+  }
+
+  function drawBall(ctx, p, colorIndex) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, CONSTANTS.BALL_RADIUS, 0, Math.PI * 2);
+    ctx.fillStyle = CONSTANTS.COLORS[colorIndex];
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = CONSTANTS.STROKES[colorIndex];
+    ctx.stroke();
+    // White highlight at offset (-4, -4), 40% alpha
+    ctx.beginPath();
+    ctx.arc(p.x - 4, p.y - 4, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fill();
+  }
+
+  /* ============================================================
+     INPUT + GAME LOOP
+     Wiring happens only when a real DOM is present, so the headless
+     test shim can load the pure logic without these.
+     ============================================================ */
+  if (typeof document !== 'undefined') {
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    let last = 0;
+    function frame(ts) {
+      const dt = Math.min((ts - last) / 1000, 0.05); // clamp to 0.05s
+      last = ts;
+      update(dt);
+      render(ctx);
+      requestAnimationFrame(frame);
+    }
+
+    canvas.addEventListener('mousemove', function (e) {
+      setAim(e.offsetX, e.offsetY);
+    });
+
+    canvas.addEventListener('mousedown', function (e) {
+      if (e.button !== 0) return; // left button only
+      if (game.state === 'ready') {
+        start();
+      } else if (game.state === 'playing') {
+        launch();
+      } else if (game.state === 'over') {
+        restart();
+      }
+    });
+
+    reset();          // draw the track / shooter in `ready`
+    requestAnimationFrame(function (ts) { last = ts; requestAnimationFrame(frame); });
+  }
+
+  /* ============================================================
+     EXPORTS for the headless test shim.
+     Attach the public API onto the game object so the harness can
+     drive the simulation directly.
+     ============================================================ */
+  game.pathPoint = pathPoint;
+  game.update = update;
+  game.start = start;
+  game.launch = launch;
+  game.setAim = setAim;
+  game.restart = restart;
+  game.reset = reset;
+  game.render = render;
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { game: game, CONSTANTS: CONSTANTS };
+  }
+})();
+</script>
+<!-- GAME-SCRIPT-END -->
+</body>
+</html>
