@@ -98,9 +98,9 @@ brew untap robzolkos/fizzy-cli</code></pre>
 
   <p><strong>3. Create the account, one board, and a token.</strong> Register
   at <a href="https://www.fizzy.do/">fizzy.do</a>. Create one board and
-  write its name down, because step 5 selects the board by that name.
-  The name itself does not matter. Create a personal access token in the
-  account settings.</p>
+  name it <code>Backyard</code>. Step 5 selects the board by that name,
+  so a different name means a different selector. Create a personal
+  access token in the account settings.</p>
 
   <p><strong>4. Authenticate as a named profile, and pass the account
   yourself.</strong> A profile is a local set of credentials. An account
@@ -129,8 +129,9 @@ fizzy auth status</code></pre>
   Never address a board by position for that reason. The
   <code>--jq</code> flag is built into the tool, so no external
   <code>jq</code> is needed:</p>
-  <pre><code>fizzy board list --profile crazydave --jq '.data[] | select(.name=="&lt;YOUR_BOARD&gt;") | .id'</code></pre>
-  <p>Substitute the name you gave the board. A selector such as
+  <pre><code>fizzy board list --profile crazydave --jq '.data[] | select(.name=="Backyard") | .id'</code></pre>
+  <p>The output is one 25 character id, for example
+  <code>03gu8u5gami98obpx1fvtgzd8</code>. A selector such as
   <code>.data[0].id</code> reads correctly and returns the
   <code>Playground</code> id, which would send every mirrored card to
   the demo board.</p>
