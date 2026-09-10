@@ -742,27 +742,34 @@ brew untap robzolkos/fizzy-cli
 
 - [ ] **Step 3: Write the account section of Lesson 22.** Create a
   hosted account at `https://www.fizzy.do/`. Create one board named
-  `plants`. Create a personal access token in the account settings.
+  `Backyard`. Create a personal access token in the account settings.
 
 - [ ] **Step 4: Ask the user to authenticate and to report the output.**
 
 ```bash
-fizzy auth login "$FIZZY_TOKEN" --profile crazydave
+fizzy identity show --jq '.data.accounts[0].slug | ltrimstr("/")'
+fizzy auth login "$FIZZY_TOKEN" --profile crazydave --account <slug>
 fizzy auth status
 ```
 
-  If `fizzy auth login` reports that it needs an account, the account id
-  comes from the same settings page and the command becomes
-  `fizzy auth login "$FIZZY_TOKEN" --profile crazydave --account <id>`.
+  The `--account` flag is required. A profile names a local set of
+  credentials, and an account names the Fizzy organisation. Without the
+  flag, the login stores the profile name as the account, and every
+  later command fails with
+  `Resource not found: https://app.fizzy.do/crazydave/boards.json`.
+  Expected in `fizzy auth status`: the account field holds the numeric
+  slug, not the word `crazydave`.
 
 - [ ] **Step 5: Ask the user to report the board id.**
 
 ```bash
-fizzy board list --profile crazydave
+fizzy board list --profile crazydave --jq '.data[] | select(.name=="Backyard") | .id'
 ```
 
-  Expected: JSON that contains one board named `plants`. Record its
-  `id`. Task 5 writes that value into `SOUL.md`.
+  Expected: one 25 character id. Record it. Task 6 writes that value
+  into `SOUL.md`. Select the board by name, never by position. Fizzy
+  creates a board named `Playground` with every new account, and that
+  board sorts first, so `.data[0].id` returns the demo board.
 
 - [ ] **Step 6: Ask the user to create one probe card and to report the
   full JSON.** The exact field that holds a new card's identifier is not
@@ -775,25 +782,29 @@ fizzy card create --profile crazydave --board <BOARD_ID> \
   --description "Created to learn which JSON field addresses a card."
 ```
 
-  Read the reported JSON. Record the field that later commands accept as
-  a card address. Confirm it with the two commands that Task 5 uses:
+  Read the reported JSON. The envelope keys are `ok`, `summary`,
+  `breadcrumbs` and `data`, and the card address is `.data.number`, a
+  short integer. It is not the 25 character `id`. Confirm it with the
+  two commands that Task 6 uses:
 
 ```bash
-fizzy comment create --profile crazydave --card <VALUE> --body "probe comment"
+fizzy comment create --profile crazydave --card <number> --body "probe comment"
 fizzy card close --help
 ```
 
   The second command shows whether `fizzy card close` takes the card as
-  a positional argument or as a flag. Record the real form.
+  a positional argument or as a flag. Real form, confirmed against
+  version 4.0.1: `--card` is a flag on `fizzy comment create`, and the
+  number is a positional argument on `fizzy card close <number>`.
 
 - [ ] **Step 7: Ask the user to close the probe card** using the form
   found in step 6, and to confirm on the Fizzy web interface that the
   card is closed and carries the comment.
 
 - [ ] **Step 8: Write the findings back into Lesson 22.** Replace the
-  placeholder `<BOARD_ID>` and `<VALUE>` in the lesson text with the
-  real board id and the real field name. The lesson must contain the
-  commands that actually ran.
+  placeholder `<BOARD_ID>` in the lesson text with the real board id,
+  and replace the card placeholder with the real card number. The
+  lesson must contain the commands that actually ran.
 
 - [ ] **Step 9: Verify the HTML tag balance** of
   `teach/lessons/0022-fizzy-the-visible-board.html`, using the script
