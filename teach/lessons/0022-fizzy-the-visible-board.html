@@ -96,9 +96,10 @@ brew install --cask basecamp/tap/fizzy
 brew uninstall --formula --force fizzy-cli
 brew untap robzolkos/fizzy-cli</code></pre>
 
-  <p><strong>3. Create the account, one board, and a token.</strong> Sign
-  up at <a href="https://www.fizzy.do/">fizzy.do</a>. Create a single
-  board named <code>plants</code>. Create a personal access token in the
+  <p><strong>3. Create the account, one board, and a token.</strong> Register
+  at <a href="https://www.fizzy.do/">fizzy.do</a>. Create one board and
+  write its name down, because step 5 selects the board by that name.
+  The name itself does not matter. Create a personal access token in the
   account settings.</p>
 
   <p><strong>4. Authenticate as a named profile, and pass the account
@@ -121,11 +122,18 @@ fizzy auth status</code></pre>
   slug. If it is the word <code>crazydave</code>, read the correction
   below before you continue.</p>
 
-  <p><strong>5. Read the board id.</strong></p>
+  <p><strong>5. Read the board id, and select it by name.</strong></p>
   <pre><code>fizzy board list --profile crazydave</code></pre>
-  <p>The output is JSON. The <code>--jq</code> flag is built into the
-  tool, so no external <code>jq</code> is needed:</p>
-  <pre><code>fizzy board list --profile crazydave --jq '.data[0].id'</code></pre>
+  <p>Expect two boards, not one. Fizzy creates a board named
+  <code>Playground</code> with every new account, and it sorts first.
+  Never address a board by position for that reason. The
+  <code>--jq</code> flag is built into the tool, so no external
+  <code>jq</code> is needed:</p>
+  <pre><code>fizzy board list --profile crazydave --jq '.data[] | select(.name=="&lt;YOUR_BOARD&gt;") | .id'</code></pre>
+  <p>Substitute the name you gave the board. A selector such as
+  <code>.data[0].id</code> reads correctly and returns the
+  <code>Playground</code> id, which would send every mirrored card to
+  the demo board.</p>
   <p>Write that id down. Lesson 23 puts it into Crazy Dave's
   <code>SOUL.md</code>.</p>
 
