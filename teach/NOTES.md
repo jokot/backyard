@@ -114,3 +114,17 @@
   used a clamp that cannot close a gap. Twelve lines of `node` proved a
   100 px gap stays at 100.00 px after 10 seconds. The spec task reported
   `tests_run: 0`. Learning record 0016.
+
+- When two regions of one prompt each describe a complete procedure for
+  the same moment, the model runs one region and not the union. Crazy
+  Dave's root completion needed five actions stated in three places. One
+  run did the Fizzy half, another run did the kanban half, and the file
+  never changed. One moment, one numbered list, at the trigger, with the
+  commands. Learning record 0017.
+
+- Name a durable destination for every artifact a request asks for. An
+  unnamed destination is chosen by the scratch workspace the worker runs
+  in, and that directory is removed when the run ends. The timer
+  specification was reported at a path that no longer exists, and the
+  wrong path is now permanent inside a closed Fizzy card. Learning record
+  0018.
