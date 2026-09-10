@@ -1,3 +1,7 @@
 # Runtime artifacts of a deployed exercise. The logs and the process id
 # files change on every restart and describe one machine only.
 projects/*/logs/
+
+# A stray Hermes plan file written into this working directory. It
+# belongs to the agent, not to the course.
+.hermes/
