@@ -106,10 +106,15 @@ brew untap robzolkos/fizzy-cli</code></pre>
   is the Fizzy organisation those credentials belong to. The two are
   different, and <code>--account</code> is not optional. Read the
   account first:</p>
-  <pre><code>fizzy identity show</code></pre>
-  <p>The output names one account. Take the digits of its
-  <code>slug</code> field, without the leading slash, and use them
-  below. The <code>id</code> field works too:</p>
+  <pre><code>fizzy identity show --jq '.data.accounts[0].slug | ltrimstr("/")'</code></pre>
+  <p>That prints digits, for example <code>6280439</code>. The
+  <code>--jq</code> flag is necessary here. Plain
+  <code>fizzy identity show</code> prints
+  <code>accounts: [1 items]</code> and hides every field inside the
+  array. The raw <code>slug</code> value carries a leading slash,
+  because the field is a URL path fragment, and
+  <code>ltrimstr("/")</code> removes it. The <code>id</code> field of
+  the same account works too:</p>
   <pre><code>fizzy auth login "$FIZZY_TOKEN" --profile crazydave --account &lt;slug&gt;
 fizzy auth status</code></pre>
   <p>Read the <code>account</code> value in that output. It must be the
