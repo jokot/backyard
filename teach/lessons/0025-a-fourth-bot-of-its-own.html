@@ -111,10 +111,13 @@ two profiles wearing the same face.</p>
   that work. <code>USER.md</code> holds facts about you, which stay true
   whichever agent reads them, and a prompt writer that already knows
   your stack asks fewer questions.</p>
-  <p>Check that the file is empty:</p>
-  <pre><code>wc -c ~/.hermes/profiles/torchwood/memories/MEMORY.md</code></pre>
-  <p>Expected: <code>0</code>, or a missing file. Either answer means no
-  inherited note survives.</p>
+  <p>Check what survived:</p>
+  <pre><code>ls -l ~/.hermes/profiles/torchwood/memories/</code></pre>
+  <p>Expected: <code>USER.md</code> and no <code>MEMORY.md</code>. The
+  reset deletes the file rather than emptying it, so a missing
+  <code>MEMORY.md</code> is the pass. Do not check this with
+  <code>wc -c</code>, which reports an error for a missing file and
+  reads like a failure.</p>
 
   <p><strong>5. Choose the model.</strong></p>
   <pre><code>hermes -p torchwood config set model.default openai/gpt-5.6-luna
@@ -163,16 +166,27 @@ grep -c 'gpt-5.6-luna' hermes-config/torchwood/config.yaml</code></pre>
   <label><input type="checkbox"> New bot created, group privacy turned off</label>
   <label><input type="checkbox"> Profile <code>torchwood</code> created, wrapper script present</label>
   <label><input type="checkbox"> <code>TELEGRAM_BOT_TOKEN</code> replaced, <code>grep -c</code> printed <code>1</code></label>
-  <label><input type="checkbox"> <code>MEMORY.md</code> reset, <code>wc -c</code> printed <code>0</code></label>
+  <label><input type="checkbox"> <code>MEMORY.md</code> gone, <code>USER.md</code> kept</label>
+  <label><input type="checkbox"> Asked the bot who it is, and it answered <code>Peashooter</code></label>
   <label><input type="checkbox"> <code>config get model.default</code> printed <code>openai/gpt-5.6-luna</code></label>
   <label><input type="checkbox"> <code>hermes-config/torchwood/config.yaml</code> mirrored, <code>grep -c</code> printed <code>1</code></label>
   <label><input type="checkbox"> No <code>.env</code> and no <code>auth.json</code> copied into the repository</label>
 </div>
 
-<p>One thing the clone also carried: Peashooter's
-<code>free_response_topics</code> entry, which names thread 2. Torchwood
-would answer in <code>#Coding</code> today. Lesson 26 fixes that and
-gives Torchwood a topic of its own.</p>
+<p>Two things the clone also carried, and neither is a defect.</p>
+
+<p>The first is <code>SOUL.md</code>. Send the new bot a private message
+asking who it is, and it answers <code>Peashooter</code>, because the
+file that tells it who it is arrived byte for byte from Peashooter. The
+help text says so. A profile at the end of Lesson 25 owns a bot, a
+model, and a clean memory, and it owns no identity yet. Lesson 28
+replaces <code>SOUL.md</code> in full. Until then, read the answer as
+proof that the clone worked, not as a fault.</p>
+
+<p>The second is <code>free_response_topics</code>, which still names
+thread 2. Torchwood would answer every unnamed message in
+<code>#Coding</code> today, beside Peashooter. Do not start the gateway
+as a service until Lesson 26 gives Torchwood a topic of its own.</p>
 
 <p><strong>Primary source:</strong> run
 <code>hermes profile create --help</code> on your own machine. It is
@@ -190,7 +204,7 @@ specialist</a> ·
 <a href="../../docs/superpowers/plans/2026-09-11-stage4-torchwood.md">Stage
 4 plan</a></p>
 
-<p class="ask-agent">Send me the output of all four commands, and tell
+<p class="ask-agent">Send me the output of all six commands, and tell
 me the username you gave the new bot. I will check the mirror against
 the live file and write a learning record for anything that did not
 behave as this lesson says.</p>

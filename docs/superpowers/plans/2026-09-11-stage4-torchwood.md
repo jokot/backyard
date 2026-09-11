@@ -195,11 +195,19 @@ hermes -p torchwood memory reset --yes --target memory
   Give the check:
 
 ```bash
-wc -c ~/.hermes/profiles/torchwood/memories/MEMORY.md
+ls -l ~/.hermes/profiles/torchwood/memories/
 ```
 
-  Expected: a byte count near zero. A count in the thousands means the
-  reset never ran.
+  Expected: `USER.md` present and `MEMORY.md` absent. The reset deletes
+  the file rather than emptying it. Do not check this with `wc -c`,
+  which reports an error for a missing file and reads like a failure.
+  Learning record 0022 records that correction.
+
+  State the expected first conversation in the same lesson. The clone
+  copies `SOUL.md`, so the new bot answers `Peashooter` when asked who
+  it is. Name Lesson 28 as the lesson that replaces the file. Name
+  `free_response_topics` as the second carry-over, and tell the reader
+  not to install the gateway as a service until Lesson 26.
 
 - [ ] **Step 6: Write the model section of Lesson 25.** Give the
   command:
@@ -302,7 +310,7 @@ EOF
 
 - [ ] **Step 11: Verify the reported output.** The profile creation
   command must report a new profile and a new wrapper script. The `grep`
-  must print `1`. The `wc -c` must print a byte count near zero. The
+  must print `1`. The `ls -l` must show `USER.md` and no `MEMORY.md`. The
   `config get` must print `openai/gpt-5.6-luna`. If
   any output differs, find the cause in the Hermes source or in the
   command output before you propose a fix. Never guess.
