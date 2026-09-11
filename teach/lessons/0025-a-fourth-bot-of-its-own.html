@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 25 — A Fourth Bot of Its Own</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 25 of the Stage 4 build</p>
+<h1>The clone brings its own identity</h1>
+<p class="lede">Stage 4 adds Torchwood, the agent that writes your
+prompts. Creating it takes one command. That command also copies a live
+secret from Peashooter, and a reader who does not know this ends up with
+two profiles wearing the same face.</p>
+
+<h2>Why a prompt agent, and why first</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Two defects in this project were prompt defects, not code defects.
+  <a href="../learning-records/0016-a-specification-that-could-not-work.md">Learning
+  record 0016</a> describes a specification that passed review with
+  <code>tests_run: 0</code> and stated a formula that could not work.
+  <a href="../learning-records/0018-a-path-that-stopped-existing.md">Record
+  0018</a> describes a task that named no durable destination, so the
+  finished artifact disappeared with the scratch workspace that held
+  it.</p>
+  <p>Neither agent was wrong about code. Both were asked a question that
+  did not say where the answer had to land, or how anyone would know it
+  worked. Torchwood exists to make those two things mandatory before the
+  work starts.</p>
+  <p>It goes first because it multiplies the other three agents on your
+  list. A better brief improves whatever receives it. It is also the
+  cheapest to get wrong: Torchwood produces text and writes no file, so
+  a bad output costs you one reread.</p>
+</div>
+
+<h2>The trap inside one flag</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Run <code>hermes profile create --help</code> and read the
+  description of <code>--clone</code>:</p>
+  <blockquote>Copy config.yaml, .env, SOUL.md, and skills from active
+  profile</blockquote>
+  <p>Four things, and the second one matters. A <code>.env</code> file
+  holds live secrets. Peashooter's holds
+  <code>TELEGRAM_BOT_TOKEN</code>, which <em>is</em> the identity of the
+  Peashooter bot. A token is not a setting that points at a bot. A token
+  is the bot.</p>
+  <p>So a clone that keeps that value produces two gateway processes
+  polling Telegram for the same bot. Telegram hands each update to
+  whichever asked most recently, so replies arrive from the wrong agent
+  at random, and nothing reports an error. This is the failure shape
+  Stage 1 already met in
+  <a href="../learning-records/0006-telegram-automatic-setup-failed-in-web.md">record
+  0006</a>: a Telegram step that reports no error and leaves the wrong
+  state behind.</p>
+  <p>The lesson therefore replaces the token as its own step, with its
+  own check. A step that hides inside another step is a step that does
+  not happen, which is what
+  <a href="../learning-records/0019-a-checkpoint-with-no-step-behind-it.md">record
+  0019</a> cost this project at the end of Stage 3.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Create the bot.</strong> Open a chat with
+  <code>@BotFather</code> and send <code>/newbot</code>. Give it a
+  display name and a username ending in <code>bot</code>. Copy the
+  token it returns. It looks like <code>1234567890:AA...</code>.</p>
+  <p>Then send <code>/mybots</code>, choose the new bot, choose
+  <code>Bot Settings</code>, choose <code>Group Privacy</code>, choose
+  <code>Turn off</code>. A bot with group privacy enabled receives only
+  messages that name it, so it can never act as a default listener.
+  Lesson 18 records the same rule.</p>
+
+  <p><strong>2. Create the profile.</strong></p>
+  <pre><code>hermes profile create torchwood --clone-from peashooter</code></pre>
+  <p>Expected: a new profile and a new wrapper script at
+  <code>~/.local/bin/torchwood</code>. That wrapper runs
+  <code>hermes -p torchwood "$@"</code>, which is how every later
+  command in Stage 4 selects this profile.</p>
+
+  <p><strong>3. Replace the token.</strong> This is the step from the
+  section above. Print the path first:</p>
+  <pre><code>hermes config env-path -p torchwood</code></pre>
+  <p>Open that file. Replace the value of
+  <code>TELEGRAM_BOT_TOKEN</code> with the token from step 1. Then check
+  the file without printing any secret:</p>
+  <pre><code>grep -c '^TELEGRAM_BOT_TOKEN=' "$(hermes config env-path -p torchwood)"</code></pre>
+  <p>Expected: <code>1</code>. A count of <code>2</code> means the file
+  holds two lines for the same key. The last line wins, so delete the
+  older one.</p>
+
+  <p><strong>4. Reset the inherited memory.</strong> The help text
+  lists four things the clone copies. It copies a fifth.
+  <a href="../learning-records/0005-clone-from-carries-memory-too.md">Record
+  0005</a> found Peashooter carrying notes about an unrelated Go project
+  after a clone, because <code>--clone-from</code> also copies
+  <code>memories/MEMORY.md</code> and <code>memories/USER.md</code>.</p>
+  <pre><code>hermes -p torchwood memory reset --yes --target memory</code></pre>
+  <p>Use <code>--target memory</code> and not <code>--target all</code>.
+  <code>MEMORY.md</code> holds the working notes Peashooter wrote about
+  its own tasks, and Torchwood should not start life believing it did
+  that work. <code>USER.md</code> holds facts about you, which stay true
+  whichever agent reads them, and a prompt writer that already knows
+  your stack asks fewer questions.</p>
+  <p>Check that the file is empty:</p>
+  <pre><code>wc -c ~/.hermes/profiles/torchwood/memories/MEMORY.md</code></pre>
+  <p>Expected: <code>0</code>, or a missing file. Either answer means no
+  inherited note survives.</p>
+
+  <p><strong>5. Choose the model.</strong></p>
+  <pre><code>hermes -p torchwood config set model.default openai/gpt-5.6-luna
+hermes -p torchwood config get model.default</code></pre>
+  <p>Expected: the second command prints
+  <code>openai/gpt-5.6-luna</code>. Peashooter runs
+  <code>deepseek/deepseek-v4-flash-0731</code> and Sunflower runs
+  <code>z-ai/glm-5.3-flash</code>, so this is a deliberate step up.
+  Every failure Torchwood can have is a failure to follow an
+  instruction, such as naming a path no command confirmed. At roughly
+  five interviews a day, the stronger model costs little.</p>
+
+  <p><strong>6. Mirror the configuration into the repository.</strong>
+  Copy in the same session that made the change:</p>
+  <pre><code>mkdir -p hermes-config/torchwood
+cp ~/.hermes/profiles/torchwood/config.yaml hermes-config/torchwood/config.yaml
+grep -c 'gpt-5.6-luna' hermes-config/torchwood/config.yaml</code></pre>
+  <p>Expected: <code>1</code>. A count of <code>0</code> means the copy
+  never ran. Never copy <code>.env</code> or <code>auth.json</code> into
+  the repository. Those files hold live secrets.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">You clone Torchwood from Peashooter, start its gateway, and send it a message. Replies begin arriving from Peashooter instead. What is the cause?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Both profiles hold one token, so both gateways poll the same bot identity</label>
+      <div class="reveal"><p class="feedback correct">Right. The <code>--clone</code> flag copies <code>.env</code>, and the token in that file is the bot. Telegram delivers each update to one poller, chosen by timing rather than by intent.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Crazy Dave routed the message, because he owns the orchestrator setting</label>
+      <div class="reveal"><p class="feedback incorrect">The coordinator routes kanban work, not Telegram replies. A message in a topic reaches whichever bot the gateway gate admits, and that decision never passes through Crazy Dave.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">The gateway handed the profile a spare bot, because Hermes keeps a shared pool</label>
+      <div class="reveal"><p class="feedback incorrect">Hermes keeps no pool of bots. Every bot comes from <code>@BotFather</code>, and a profile reaches exactly the one bot whose token sits in its own <code>.env</code> file.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> New bot created, group privacy turned off</label>
+  <label><input type="checkbox"> Profile <code>torchwood</code> created, wrapper script present</label>
+  <label><input type="checkbox"> <code>TELEGRAM_BOT_TOKEN</code> replaced, <code>grep -c</code> printed <code>1</code></label>
+  <label><input type="checkbox"> <code>MEMORY.md</code> reset, <code>wc -c</code> printed <code>0</code></label>
+  <label><input type="checkbox"> <code>config get model.default</code> printed <code>openai/gpt-5.6-luna</code></label>
+  <label><input type="checkbox"> <code>hermes-config/torchwood/config.yaml</code> mirrored, <code>grep -c</code> printed <code>1</code></label>
+  <label><input type="checkbox"> No <code>.env</code> and no <code>auth.json</code> copied into the repository</label>
+</div>
+
+<p>One thing the clone also carried: Peashooter's
+<code>free_response_topics</code> entry, which names thread 2. Torchwood
+would answer in <code>#Coding</code> today. Lesson 26 fixes that and
+gives Torchwood a topic of its own.</p>
+
+<p><strong>Primary source:</strong> run
+<code>hermes profile create --help</code> on your own machine. It is
+first-party, it matches the version you are running, and it is where
+the <code>.env</code> sentence in this lesson comes from. Compare it
+against <code>hermes gateway restart --help</code>, which lists only
+<code>--system</code> and <code>--all</code> and no
+<code>--profile</code>.</p>
+
+<p><a href="../reference/adding-a-specialist.html">→ Adding a
+specialist</a> ·
+<a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../../docs/superpowers/specs/2026-09-11-stage4-torchwood-and-the-roster-pattern-design.md">Stage
+4 spec</a> ·
+<a href="../../docs/superpowers/plans/2026-09-11-stage4-torchwood.md">Stage
+4 plan</a></p>
+
+<p class="ask-agent">Send me the output of all four commands, and tell
+me the username you gave the new bot. I will check the mirror against
+the live file and write a learning record for anything that did not
+behave as this lesson says.</p>
+
+<div class="nav">
+  <span><a href="0024-the-stage3-end-to-end-check.html">← Lesson 24</a></span>
+  <span>Lesson 25 of Stage 4</span>
+  <span></span>
+</div>
+
+</body>
+</html>

@@ -194,3 +194,33 @@ blockquote {
   color: var(--ink-soft);
   text-align: center;
 }
+
+/* Reference tables: one row for each decision, readable on paper */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5em 0;
+  font-size: 0.9rem;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.6em 0.8em;
+  border-bottom: 1px solid var(--rule);
+}
+th {
+  font-family: -apple-system, "Helvetica Neue", sans-serif;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  border-bottom: 2px solid var(--rule);
+}
+tbody tr:nth-child(even) { background: var(--paper-inset); }
+td code { font-size: 0.82em; word-break: break-word; }
+
+@media print {
+  body { font-size: 11pt; padding: 0; }
+  .nav, .ask-agent { display: none; }
+  table { page-break-inside: avoid; }
+}

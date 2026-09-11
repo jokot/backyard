@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference — Adding a Specialist</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Reference</p>
+<h1>Adding a specialist</h1>
+<p class="lede">Six decisions turn a cloned profile into a specialist
+with its own voice, its own room, and its own limits. Each decision has
+exactly one home. This page records the home, the value Torchwood used,
+and the trap that the decision hides.</p>
+
+<p>This document grows one row for each lesson of Stage 4. A row appears
+only after a lesson has made that decision against a real machine. No
+row is written in advance.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Decision</th>
+      <th>Where it lives</th>
+      <th>Torchwood</th>
+      <th>Trap</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Bot credentials</td>
+      <td><code>.env</code>, key <code>TELEGRAM_BOT_TOKEN</code></td>
+      <td>A token from <code>/newbot</code>, with group privacy turned
+          off</td>
+      <td><code>--clone-from</code> copies <code>.env</code>, so the new
+          profile wears the identity of the old one. Replace the token
+          as a separate step. The same flag also copies
+          <code>memories/</code>, so run
+          <code>memory reset --target memory</code>.</td>
+    </tr>
+    <tr>
+      <td>Model</td>
+      <td><code>config.yaml</code>, key <code>model.default</code></td>
+      <td><code>openai/gpt-5.6-luna</code></td>
+      <td>A flash model is the wrong economy when every failure is a
+          failure to follow an instruction. Match the model to the
+          failure you fear, not to the volume you expect.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>The roster so far</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Plant</th>
+      <th>Domain</th>
+      <th>Model</th>
+      <th>Topic</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Crazy Dave</td>
+      <td>Coordination, never a work destination</td>
+      <td><code>openai/gpt-5.6-luna</code></td>
+      <td><code>#General</code>, thread 1</td>
+    </tr>
+    <tr>
+      <td>Peashooter</td>
+      <td>Software engineering</td>
+      <td><code>deepseek/deepseek-v4-flash-0731</code></td>
+      <td><code>#Coding</code>, thread 2</td>
+    </tr>
+    <tr>
+      <td>Sunflower</td>
+      <td>Planning, specifications, task breakdown</td>
+      <td><code>z-ai/glm-5.3-flash</code></td>
+      <td><code>#Planning</code>, thread 3</td>
+    </tr>
+    <tr>
+      <td>Torchwood</td>
+      <td>Prompt writing, never a work destination</td>
+      <td><code>openai/gpt-5.6-luna</code></td>
+      <td><code>#Prompts</code>, thread recorded in Lesson 26</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="box knowledge">
+  <span class="box-label">Why these six</span>
+  <p>A profile holds hundreds of settings. Six of them decide whether a
+  specialist behaves as a specialist. The rest arrive correct from the
+  clone and stay correct.</p>
+  <p>Three decisions give the agent a place: the bot it speaks through,
+  the topic it listens to, and whether the board may send it work. Three
+  give it a character: the model that runs it, the description the
+  decomposer reads, and the soul file that states its limits.</p>
+  <p>Miss one of the first three and the agent is unreachable, or it
+  answers in someone else's room. Miss one of the last three and it
+  answers everything, which is the contamination this whole project
+  exists to avoid.</p>
+</div>
+
+<p><a href="../lessons/0025-a-fourth-bot-of-its-own.html">Lesson 25</a>
+wrote the first two rows ·
+<a href="glossary.html">→ Full glossary</a> ·
+<a href="../../docs/superpowers/specs/2026-09-11-stage4-torchwood-and-the-roster-pattern-design.md">Stage
+4 spec</a></p>
+
+<p class="ask-agent">Ask me about any row. I can show you the command
+that set it and the output that confirmed it.</p>
+
+</body>
+</html>

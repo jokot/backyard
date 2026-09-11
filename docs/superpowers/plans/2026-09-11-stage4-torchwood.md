@@ -175,7 +175,33 @@ grep -c '^TELEGRAM_BOT_TOKEN=' "$(hermes config env-path -p torchwood)"
   same key, and the last line wins. Tell the reader to delete the older
   line.
 
-- [ ] **Step 5: Write the model section of Lesson 25.** Give the
+- [ ] **Step 5: Write the memory reset section of Lesson 25.** The help
+  text lists four things the clone copies. It copies a fifth. Learning
+  record 0005 found Peashooter carrying notes about an unrelated Go
+  project after a clone, because `--clone-from` also copies
+  `memories/MEMORY.md` and `memories/USER.md`.
+
+  Give the command:
+
+```bash
+hermes -p torchwood memory reset --yes --target memory
+```
+
+  State why the target is `memory` and not `all`. The file `MEMORY.md`
+  holds facts about the work of Peashooter, which are false for
+  Torchwood. The file `USER.md` holds facts about the user, which stay
+  true across every agent.
+
+  Give the check:
+
+```bash
+wc -c ~/.hermes/profiles/torchwood/memories/MEMORY.md
+```
+
+  Expected: a byte count near zero. A count in the thousands means the
+  reset never ran.
+
+- [ ] **Step 6: Write the model section of Lesson 25.** Give the
   command:
 
 ```bash
@@ -195,7 +221,7 @@ hermes -p torchwood config get model.default
 
   Expected: `openai/gpt-5.6-luna`.
 
-- [ ] **Step 6: Write the reference document.** Create
+- [ ] **Step 7: Write the reference document.** Create
   `teach/reference/adding-a-specialist.html`. Link
   `../assets/style.css`, and match the structure of
   `teach/reference/glossary.html`. The document holds one table with
@@ -213,8 +239,10 @@ hermes -p torchwood config get model.default
   <td>Bot credentials</td>
   <td><code>.env</code>, key <code>TELEGRAM_BOT_TOKEN</code></td>
   <td>A token from <code>/newbot</code>, with group privacy turned off</td>
-  <td><code>--clone-from</code> copies <code>.env</code>. Replace the
-      token as a separate step.</td>
+  <td><code>--clone-from</code> copies <code>.env</code>, so the new
+      profile wears the identity of the old one. Replace the token as a
+      separate step. The same flag also copies <code>memories/</code>,
+      so run <code>memory reset --target memory</code>.</td>
 </tr>
 ```
 
@@ -230,7 +258,7 @@ hermes -p torchwood config get model.default
 </tr>
 ```
 
-- [ ] **Step 7: Add the forward navigation link.** Replace the empty
+- [ ] **Step 8: Add the forward navigation link.** Replace the empty
   `<span></span>` on line 178 of
   `teach/lessons/0024-the-stage3-end-to-end-check.html`:
 
@@ -238,7 +266,7 @@ hermes -p torchwood config get model.default
   <span><a href="0025-a-fourth-bot-of-its-own.html">Lesson 25 →</a></span>
 ```
 
-- [ ] **Step 8: Verify the HTML tag balance of all three files.**
+- [ ] **Step 9: Verify the HTML tag balance of all three files.**
 
 ```bash
 python3 - <<'EOF'
@@ -269,16 +297,17 @@ EOF
 
   Expected: three lines, each ending in `balanced`.
 
-- [ ] **Step 9: Ask the user to run Lesson 25** and to report the output
-  of the four commands in steps 3, 4 and 5.
+- [ ] **Step 10: Ask the user to run Lesson 25** and to report the output
+  of the six commands in steps 3 through 6.
 
-- [ ] **Step 10: Verify the reported output.** The profile creation
+- [ ] **Step 11: Verify the reported output.** The profile creation
   command must report a new profile and a new wrapper script. The `grep`
-  must print `1`. The `config get` must print `openai/gpt-5.6-luna`. If
+  must print `1`. The `wc -c` must print a byte count near zero. The
+  `config get` must print `openai/gpt-5.6-luna`. If
   any output differs, find the cause in the Hermes source or in the
   command output before you propose a fix. Never guess.
 
-- [ ] **Step 11: Mirror the configuration file.**
+- [ ] **Step 12: Mirror the configuration file.**
 
 ```bash
 mkdir -p hermes-config/torchwood
@@ -288,7 +317,7 @@ grep -c 'gpt-5.6-luna' hermes-config/torchwood/config.yaml
 
   Expected: `1`. A count of `0` means the copy never ran.
 
-- [ ] **Step 12: Confirm the mirror holds no secret.**
+- [ ] **Step 13: Confirm the mirror holds no secret.**
 
 ```bash
 grep -nE '^[A-Z_]+=.+' hermes-config/torchwood/config.yaml || echo "no env-style assignment found"
@@ -297,7 +326,7 @@ grep -nE '^[A-Z_]+=.+' hermes-config/torchwood/config.yaml || echo "no env-style
   Expected: `no env-style assignment found`. The `.env` file must never
   reach the repository.
 
-- [ ] **Step 13: Commit.**
+- [ ] **Step 14: Commit.**
 
 ```bash
 git add teach/lessons/0025-a-fourth-bot-of-its-own.html \
