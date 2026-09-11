@@ -141,22 +141,43 @@ grep -c 'gpt-5.6-luna' hermes-config/torchwood/config.yaml</code></pre>
 </div>
 
 <div class="quiz">
-  <p class="q">You clone Torchwood from Peashooter, start its gateway, and send it a message. Replies begin arriving from Peashooter instead. What is the cause?</p>
+  <p class="q">You skip the token step and start both gateways. You send ten messages to the bot. About half receive no reply at all, and the replies that do arrive do not share one voice. What is the cause?</p>
   <div class="choices">
     <div>
       <input type="radio" name="q1" id="q1a">
-      <label for="q1a">Both profiles hold one token, so both gateways poll the same bot identity</label>
-      <div class="reveal"><p class="feedback correct">Right. The <code>--clone</code> flag copies <code>.env</code>, and the token in that file is the bot. Telegram delivers each update to one poller, chosen by timing rather than by intent.</p></div>
+      <label for="q1a">One token sits in two files, so two gateways poll a single bot</label>
+      <div class="reveal"><p class="feedback correct">Right. The <code>--clone-from</code> flag copies <code>.env</code>, and the token in that file is the bot. Telegram hands each update to one poller only, chosen by timing. Note the symptom: there is one bot account, so no reply carries a different sender. The loss and the changing voice are the evidence.</p></div>
     </div>
     <div>
       <input type="radio" name="q1" id="q1b">
-      <label for="q1b">Crazy Dave routed the message, because he owns the orchestrator setting</label>
-      <div class="reveal"><p class="feedback incorrect">The coordinator routes kanban work, not Telegram replies. A message in a topic reaches whichever bot the gateway gate admits, and that decision never passes through Crazy Dave.</p></div>
+      <label for="q1b">One clone copied <code>SOUL.md</code>, so the new profile answers to the old name</label>
+      <div class="reveal"><p class="feedback incorrect">True, and it is not this symptom. A copied <code>SOUL.md</code> changes what every reply says, and it loses no message. Half the messages vanished here, which only a second poller explains.</p></div>
     </div>
     <div>
       <input type="radio" name="q1" id="q1c">
-      <label for="q1c">The gateway handed the profile a spare bot, because Hermes keeps a shared pool</label>
+      <label for="q1c">The gateway handed the profile a spare bot from a shared pool</label>
       <div class="reveal"><p class="feedback incorrect">Hermes keeps no pool of bots. Every bot comes from <code>@BotFather</code>, and a profile reaches exactly the one bot whose token sits in its own <code>.env</code> file.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">The token is replaced, the check prints one, and the gateway runs. You ask the new bot who it is. It answers that it is Peashooter. What is the cause?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">The clone copied <code>SOUL.md</code>, the file an agent reads for its name</label>
+      <div class="reveal"><p class="feedback correct">Right, and the help text says so. Line 1 of that file names Peashooter. Lesson 28 replaces the file. Until then the answer proves the clone worked, and it reports no fault.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">The token replacement failed, so the message reached the older bot instead</label>
+      <div class="reveal"><p class="feedback incorrect">The check in step 3 prints one token line, and step 2 gave that token a separate bot. A wrong token loses messages. It does not rename a bot that answers.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">The model setting still holds the value that Peashooter uses for work</label>
+      <div class="reveal"><p class="feedback incorrect">A model is a supplier of text, and it carries no name of its own. Torchwood runs <code>openai/gpt-5.6-luna</code> and Peashooter runs a DeepSeek model, and both answer to whatever <code>SOUL.md</code> says.</p></div>
     </div>
   </div>
 </div>
