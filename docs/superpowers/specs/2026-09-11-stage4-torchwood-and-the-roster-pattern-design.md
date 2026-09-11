@@ -227,7 +227,7 @@ as a numbered step. No lesson defers a row to a later stage. Learning record
 | Lesson | Builds | Row |
 |---|---|---|
 | 0025 | The profile and its own bot. `hermes profile create torchwood --clone-from peashooter`, then replace `TELEGRAM_BOT_TOKEN`, then set `model.default`. | Bot credentials, Model |
-| 0026 | The topic and the listener. Create the `#Prompts` topic, read its thread id from the gateway log, set the three telegram keys, mirror `config.yaml`. | Topic binding |
+| 0026 | The topic and the listener. Create the `#Prompts` topic, read its thread id from the Telegram Web address bar, set the three telegram keys, mirror `config.yaml`. | Topic binding |
 | 0027 | The description that keeps work away. `hermes profile describe torchwood --text "..."`, `description_auto: false`, then test the decomposer. | Routing description, Board membership |
 | 0028 | `SOUL.md`. The four limits, the `Checked:` trailer rule, one message and one fenced block, the one-question rule. | Identity and limits |
 | 0029 | `TEMPLATE.md` and the first real prompt, end to end. | Closes the document |
