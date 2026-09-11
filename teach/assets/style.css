@@ -118,6 +118,8 @@ pre code { background: none; padding: 0; }
 }
 .box.knowledge { border-left-color: var(--accent); }
 .box.skill { border-left-color: #b08a2e; background: color-mix(in srgb, var(--paper-inset) 80%, #b08a2e 8%); }
+/* Troubleshooting: several failures that look alike from the outside */
+.box.warning { border-left-color: #a33a2a; background: color-mix(in srgb, var(--paper-inset) 80%, #a33a2a 7%); }
 .box .box-label {
   font-family: -apple-system, "Helvetica Neue", sans-serif;
   text-transform: uppercase;

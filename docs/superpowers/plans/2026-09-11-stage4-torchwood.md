@@ -443,7 +443,19 @@ telegram:
 
 ```bash
 hermes -p torchwood gateway restart
+hermes -p torchwood gateway status
 ```
+
+  Add the first-run case. A profile with no installed service reports
+  `Gateway is not running`, and `restart` has nothing to act on. The
+  install command starts the service in the same call:
+
+```bash
+hermes -p torchwood gateway install --start-now --start-on-login
+```
+
+  The other three profiles run as launchd user agents under
+  `~/Library/LaunchAgents/ai.hermes.gateway-<profile>.plist`.
 
   Add the correction, because the reader may recall a different form
   from Stage 3. The command `hermes gateway restart --profile torchwood`

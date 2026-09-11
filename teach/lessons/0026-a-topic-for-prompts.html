@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 26 — A Topic for Prompts</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 26 of the Stage 4 build</p>
+<h1>One line decides which room it hears</h1>
+<p class="lede">Torchwood runs, and it listens in the wrong room. The
+clone carried the topic binding of Peashooter, so two bots now answer
+the same unnamed message in <code>#Coding</code>. This lesson gives
+Torchwood a room of its own, and the whole change is one line.</p>
+
+<h2>The number you cannot guess</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>A supergroup topic has a thread id. Telegram derives that id from
+  the message id of the message that created the topic, not from a
+  counter of topics. The Ark group holds three topics with the ids 1, 2
+  and 3, because those topics were made early and nothing else had been
+  said. A fourth topic made today lands on whatever message id the group
+  has reached.</p>
+  <p>So do not assume the next number. Read it.</p>
+  <p>The gateway log does not hold it either. The string
+  <code>thread=</code> appears in
+  <code>~/.hermes/profiles/torchwood/logs/agent.log</code>, and it names
+  a Python thread:</p>
+  <pre><code>thread=Thread-6 (process_loop):6281949184</code></pre>
+  <p>That number is a memory address, not a topic. The Telegram Web
+  address bar is the source that answers correctly.</p>
+</div>
+
+<h2>What the binding actually does</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Three keys in <code>config.yaml</code> decide whether a bot
+  answers, and they work in this order:</p>
+  <ul>
+    <li><code>require_mention: true</code> — the bot stays silent unless
+    a message names it.</li>
+    <li><code>free_response_topics</code> — a list of exceptions. In a
+    topic on this list, the bot answers even when no message names
+    it.</li>
+    <li><code>exclusive_bot_mentions: true</code> — a message that names
+    a different bot silences this one, even inside its own topic.</li>
+  </ul>
+  <p>So the entry you are about to write does one thing. It names the
+  single room where Torchwood speaks without being asked. Everywhere
+  else it waits for its name. That is the pattern
+  <a href="0019-one-topic-one-listener.html">Lesson 19</a> established for
+  the other three bots, and Torchwood is the fourth instance of it, not
+  a new idea.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Create the topic and admit the bot.</strong> In the Ark
+  group:</p>
+  <ol>
+    <li>Open the topic list and create a topic named
+    <code>Prompts</code>.</li>
+    <li>Add the bot you created in Lesson 25 to the group.</li>
+    <li>Promote that bot to administrator.</li>
+  </ol>
+  <p>Administrator rights matter because Telegram delivers some
+  supergroup updates only to administrators. A bot without them misses
+  messages for reasons that never appear in a log.</p>
+
+  <p><strong>2. Read the thread id.</strong> Open
+  <a href="https://web.telegram.org/a/">web.telegram.org/a/</a>, open
+  the <code>Prompts</code> topic, and read the address bar. It shows:</p>
+  <pre><code>#-1004371805465_&lt;N&gt;</code></pre>
+  <p>The number after the underscore is the thread id. Write it down.
+  Step 3 needs it. Do not assume it is <code>4</code>.</p>
+
+  <p><strong>3. Replace the topic binding.</strong> Open
+  <code>~/.hermes/profiles/torchwood/config.yaml</code> and find the
+  <code>telegram</code> block near line 457. The clone left it holding
+  the topic of Peashooter:</p>
+  <pre><code>telegram:
+  reactions: false
+  allowed_chats: ''
+  require_mention: true
+  exclusive_bot_mentions: true
+  free_response_topics:
+    - '-1004371805465:2'</code></pre>
+  <p>Replace <code>2</code> with the thread id from step 2, and change
+  nothing else:</p>
+  <pre><code>  free_response_topics:
+    - '-1004371805465:&lt;N&gt;'</code></pre>
+  <p>Keep the quotation marks. A bare value that starts with a minus
+  sign and holds a colon is ambiguous in YAML. Leave
+  <code>allowed_chats</code> empty. A value there becomes a second gate
+  that the group must also pass, and a half-filled second gate is a
+  silence with no error message.</p>
+
+  <p><strong>4. Restart the gateway.</strong></p>
+  <pre><code>hermes -p torchwood gateway restart
+hermes -p torchwood gateway status</code></pre>
+  <p>If <code>status</code> reports <code>Gateway is not running</code>
+  and offers you <code>hermes gateway install</code>, then no service
+  exists for this profile yet. Install it once, and use
+  <code>restart</code> from then on:</p>
+  <pre><code>hermes -p torchwood gateway install --start-now --start-on-login</code></pre>
+  <p>Expected from <code>status</code>: a launchd plist path, and a line
+  reading <code>Gateway is supervised by launchd</code> with a process
+  id.</p>
+
+  <p><strong>5. Run four tests, one for each topic.</strong> Post
+  <code>hello</code> with no mention of any bot, and record which bots
+  answer:</p>
+  <ol>
+    <li><code>Prompts</code> — Torchwood answers, alone.</li>
+    <li><code>#Coding</code> — Peashooter answers, alone.</li>
+    <li><code>#Planning</code> — Sunflower answers, alone.</li>
+    <li><code>#General</code> — Crazy Dave answers, alone.</li>
+  </ol>
+  <p>Test 1 has a second check. The reply must come from the username
+  you created in Lesson 25. A reply from the Peashooter username means
+  the token replacement never took effect, and two gateways are polling
+  one bot.</p>
+</div>
+
+<div class="box warning">
+  <span class="box-label">Read the silence correctly</span>
+  <p>Three failures look the same from the chat window, and each has a
+  different cause.</p>
+  <ul>
+    <li><strong>No bot answers in <code>Prompts</code>.</strong> Group
+    privacy is still enabled on the new bot, so it never receives an
+    unnamed message. Return to Lesson 25 step 1.</li>
+    <li><strong>Torchwood answers in <code>Prompts</code> and in
+    <code>#Coding</code>.</strong> The edit in step 3 did not reach the
+    running process. Restart, then read the file again.</li>
+    <li><strong>Two bots answer in <code>Prompts</code>.</strong> Two
+    profiles name the same thread id. Compare all four files before you
+    state a cause.</li>
+  </ul>
+  <pre><code>for p in crazydave peashooter sunflower torchwood; do
+  echo "--- $p"
+  grep -A2 free_response_topics ~/.hermes/profiles/$p/config.yaml
+done</code></pre>
+  <p>Expected: four different thread ids, one for each profile.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">You create the fourth topic in a group that already holds topics 1, 2 and 3, and you write <code>4</code> in the configuration file without checking. Torchwood stays silent in the new topic. Why?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Telegram built the id from a message id, so the number is larger</label>
+      <div class="reveal"><p class="feedback correct">Right. A thread id is the message id of the topic creation message. The group has carried traffic since topic 3, so the fourth topic lands far above 4. The address bar holds the real number.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">The value needs quotation marks, and an unquoted entry fails to load</label>
+      <div class="reveal"><p class="feedback incorrect">Quoting matters, and it is not this. A wrong number and a right number both load. The file parses either way, and the bot then waits in a room that holds nobody.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">The gateway needs a restart before any change to the file applies</label>
+      <div class="reveal"><p class="feedback incorrect">A restart is required, and it repairs nothing here. Restart a gateway that holds the wrong thread id, and it listens to the wrong thread id faster.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Topic <code>Prompts</code> created, bot added, bot promoted to administrator</label>
+  <label><input type="checkbox"> Thread id read from the Telegram Web address bar and written down</label>
+  <label><input type="checkbox"> <code>free_response_topics</code> holds that id, quoted, and <code>2</code> is gone</label>
+  <label><input type="checkbox"> <code>gateway status</code> reports a process id under launchd</label>
+  <label><input type="checkbox"> Test 1: Torchwood answers in <code>Prompts</code>, alone, from the new username</label>
+  <label><input type="checkbox"> Tests 2, 3 and 4: the owner answers and Torchwood stays silent</label>
+  <label><input type="checkbox"> The four-profile <code>grep</code> shows four different thread ids</label>
+</div>
+
+<p>Torchwood now owns a room, and it still answers in the voice of
+Peashooter, because <code>SOUL.md</code> arrived with the clone.
+Lesson 27 deals
+with the next carry-over: the routing description that still offers
+Torchwood as a place to send engineering work.</p>
+
+<p><strong>Primary source:</strong> the Telegram Bot API page on forum
+topics, and your own
+<code>~/.hermes/profiles/torchwood/config.yaml</code>. Read the second
+one first. It is the file the running gateway actually reads, and it
+matches the version you are running.</p>
+
+<p><a href="../reference/adding-a-specialist.html">→ Adding a
+specialist</a> ·
+<a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../../docs/superpowers/specs/2026-09-11-stage4-torchwood-and-the-roster-pattern-design.md">Stage
+4 spec</a></p>
+
+<p class="ask-agent">Send me the thread id, the output of
+<code>gateway status</code>, and which bots answered in each of the four
+topics. I will compare your file against the other three profiles and
+write a learning record for anything that did not behave as this lesson
+says.</p>
+
+<div class="nav">
+  <span><a href="0025-a-fourth-bot-of-its-own.html">← Lesson 25</a></span>
+  <span>Lesson 26 of Stage 4</span>
+  <span></span>
+</div>
+
+</body>
+</html>
