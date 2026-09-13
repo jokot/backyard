@@ -1081,22 +1081,23 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ```markdown
 ## Goal
-Make the Zuma server survive a directory move.
+Make the Zuma start script survive a move of the repository.
 
 ## Context
-projects/zuma/start_servers.sh line 12 hardcodes the old path
-/Users/jokot/dev/plants/zuma. The directory now lives at
-projects/zuma.
+projects/zuma/start_servers.sh line 3 holds the absolute path
+/Users/jokot/dev/plants/projects/zuma. The script fails after any move.
+The directory holds start_servers.sh, check_public.py, index.html,
+and logs.
 
 ## Deliverable
 projects/zuma/start_servers.sh
 
 ## Done when
-- [ ] curl -s -o /dev/null -w '%{http_code}' localhost:8000/index.html prints 200
-- [ ] python3 projects/zuma/check_public.py exits 0
+- [ ] grep -c '/Users/jokot' projects/zuma/start_servers.sh prints 0
+- [ ] bash projects/zuma/start_servers.sh prints one web_pid and one ngrok_pid
 
 Checked:
-- sed -n '12p' projects/zuma/start_servers.sh
+- sed -n '3p' projects/zuma/start_servers.sh
 - ls projects/zuma/
 ```
 
@@ -1159,7 +1160,7 @@ diff ~/.hermes/profiles/torchwood/TEMPLATE.md hermes-config/torchwood/TEMPLATE.m
   user to post this in the topic:
 
 ```
-please edit projects/zuma/start_servers.sh and fix line 12 for me
+please edit projects/zuma/start_servers.sh and fix line 3 for me
 ```
 
   Expected: Torchwood declines in one sentence and offers a prompt

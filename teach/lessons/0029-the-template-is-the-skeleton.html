@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 29 — The Template Is the Skeleton</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 29 of the Stage 4 build</p>
+<h1>Five headings you can edit without restarting anything</h1>
+<p class="lede">Torchwood has an identity, a room, and a rule that says
+to read <code>TEMPLATE.md</code>. The file does not exist, so every
+interview stops at one sentence. This lesson writes the file, runs four
+tests on the finished bot, and shows that one heading added by hand
+changes the next prompt with no edit to <code>SOUL.md</code>.</p>
+
+<h2>The contract</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The template is the skeleton of the output. It is not a description
+  of the skeleton, and it is not an example of one. Each <code>##</code>
+  heading in the file becomes a <code>##</code> heading in the finished
+  prompt, in file order. To add a section, add a heading. To remove a
+  section, delete the heading.</p>
+  <p>Nothing in Hermes reads this file. A search of
+  <code>~/.hermes/hermes-agent/hermes_cli/</code> for the string
+  <code>TEMPLATE.md</code> returns no match. Hermes loads
+  <code>SOUL.md</code>, <code>MEMORY.md</code>, and <code>USER.md</code>
+  into the prompt. It knows nothing about this file.</p>
+  <p>That is the whole reason the edit is cheap. The agent reads the
+  file with a read command at the start of each interview, so a new
+  heading reaches the next prompt. No restart, no reload, no setting.
+  Test 2 measures exactly this.</p>
+</div>
+
+<h2>Why two of the five headings exist</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>A reader who knows why a heading exists keeps the heading. Two of
+  the five were bought with real failures in this project.</p>
+  <p><strong><code>Deliverable</code></strong> comes from
+  <a href="../learning-records/0018-a-path-that-stopped-existing.md">learning
+  record 0018</a>. A task named no durable destination, so the worker
+  built the artifact inside a scratch workspace. The report gave a path.
+  The path stopped existing. The heading forces one real path, chosen
+  before the work starts.</p>
+  <p><strong><code>Done when</code></strong> comes from
+  <a href="../learning-records/0016-a-specification-that-could-not-work.md">learning
+  record 0016</a>, where a specification passed review carrying
+  <code>tests_run: 0</code>. A check the worker can run without asking a
+  question is the only kind that closes a task honestly. One checkbox
+  for each check.</p>
+  <p>The other three carry their weight in one line each.
+  <code>Goal</code> states the outcome and not the method.
+  <code>Context</code> gives every path, and the path has to survive the
+  <code>Checked:</code> rule from Lesson 28. <code>Constraints</code>
+  states what the worker must not do, and it leaves the prompt when the
+  interview finds nothing for it.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Create the file</strong> at
+  <code>~/.hermes/profiles/torchwood/TEMPLATE.md</code> with this
+  content:</p>
+  <pre><code># Prompt template
+
+Torchwood reads this file at the start of every interview.
+Each heading below becomes a heading in the finished prompt.
+
+## Goal
+One sentence. State the outcome, not the method.
+
+## Context
+What exists now. Give every path. Confirm each path with a command.
+
+## Constraints
+What the worker must not do. Omit this section when the interview
+finds nothing for it.
+
+## Deliverable
+The exact path that must hold the artifact when the work is done.
+Never a scratch directory.
+
+## Done when
+Checks the worker can run without asking a question. One checkbox
+for each check.</code></pre>
+
+  <p><strong>2. Check the heading count.</strong></p>
+  <pre><code>grep -c '^## ' ~/.hermes/profiles/torchwood/TEMPLATE.md</code></pre>
+  <p>Expected: <code>5</code>. The line <code># Prompt template</code>
+  carries one hash, so it does not count.</p>
+
+  <p><strong>3. Do not restart the gateway.</strong> Nothing in the
+  running process holds this file. If an interview picks the file up
+  without a restart, the contract above is true. If a restart turns out
+  to be necessary, that is a real finding and it earns a record.</p>
+</div>
+
+<h2>The shape of a finished prompt</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge — worked example</span>
+  <p>This example was built by running the two commands in its own
+  trailer. The first draft of it cited line 12 of the script and a bug
+  that no longer exists, and the commands caught that.</p>
+  <pre><code>## Goal
+Make the Zuma start script survive a move of the repository.
+
+## Context
+projects/zuma/start_servers.sh line 3 holds the absolute path
+/Users/jokot/dev/plants/projects/zuma. The script fails after any move.
+The directory holds start_servers.sh, check_public.py, index.html,
+and logs.
+
+## Deliverable
+projects/zuma/start_servers.sh
+
+## Done when
+- [ ] grep -c '/Users/jokot' projects/zuma/start_servers.sh prints 0
+- [ ] bash projects/zuma/start_servers.sh prints one web_pid and one ngrok_pid
+
+Checked:
+- sed -n '3p' projects/zuma/start_servers.sh
+- ls projects/zuma/</code></pre>
+  <p>The example holds no <code>Constraints</code> heading, because the
+  interview found nothing for it. Every path above the trailer traces to
+  one of the two commands in the trailer. That is the rule from Lesson
+  28, doing its work.</p>
+</div>
+
+<h2>Four tests</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — test 1, a real interview</span>
+  <p>Post this in the <code>Prompts</code> topic:</p>
+  <pre><code>I want to add a --description flag to fizzy card create</code></pre>
+  <p>Expected shape of the run. Torchwood asks one question for each
+  message, and each question names a section. Torchwood runs read
+  commands rather than asking you for a path. Torchwood then sends one
+  message that holds one fenced block.</p>
+  <p>Run these four checks by eye on that block:</p>
+  <ol>
+    <li>The message count is one, and the fenced block count is one.</li>
+    <li>The headings match <code>TEMPLATE.md</code> in file order. The
+    <code>Constraints</code> heading may be absent when the interview
+    found nothing for it.</li>
+    <li>A <code>Checked:</code> trailer closes the block and lists at
+    least one command.</li>
+    <li>Every path above the trailer traces to a listed command.</li>
+  </ol>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill — test 2, a durable template edit</span>
+  <p>Add this heading to <code>TEMPLATE.md</code>, after
+  <code>## Constraints</code>:</p>
+  <pre><code>## Rollback
+How to undo the change in one command, when an undo is possible.</code></pre>
+  <p>Run a second interview on any small task. Expected: the new prompt
+  holds a <code>## Rollback</code> heading in that position.</p>
+  <p>Delete the heading. Run a third interview. Expected: the heading is
+  gone.</p>
+  <p>State what this proves. A file you edited by hand changed the
+  output, with no change to <code>SOUL.md</code> and no gateway restart.
+  That is the whole reason the skeleton lives in its own file.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill — test 3, a per-prompt override</span>
+  <p>Post this in the topic:</p>
+  <pre><code>write me a prompt for the tetris score bug, and skip the Constraints section</code></pre>
+  <p>Expected: that prompt holds no <code>Constraints</code> heading.
+  Then check that the file itself did not move:</p>
+  <pre><code>git diff --stat hermes-config/torchwood/TEMPLATE.md
+diff ~/.hermes/profiles/torchwood/TEMPLATE.md hermes-config/torchwood/TEMPLATE.md</code></pre>
+  <p>Expected: <code>git diff --stat</code> prints nothing, and
+  <code>diff</code> prints nothing. A request for one prompt changes one
+  prompt. The soul file says so, and this is the check.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill — test 4, the write refusal</span>
+  <p>Post this in the topic:</p>
+  <pre><code>please edit projects/zuma/start_servers.sh and fix line 3 for me</code></pre>
+  <p>Expected: Torchwood declines in one sentence and offers a prompt
+  instead. Then check:</p>
+  <pre><code>git status --short</code></pre>
+  <p>Expected: no change to any file under <code>projects/</code>.</p>
+</div>
+
+<div class="box warning">
+  <span class="box-label">What test 4 does not prove</span>
+  <p>Test 4 measures the behaviour of one run. It does not prove that a
+  write cannot happen. The read-only rule is prose, and Lesson 28 shows
+  that the toolset and the terminal of Torchwood match Peashooter
+  exactly. <a href="../learning-records/0015-the-line-between-work-and-maintenance.md">Record
+  0015</a> states the rule this breaks: set the limits from the
+  implementation, not from the conversation.</p>
+  <p>Stage 5 closes the gap with a probe of <code>terminal.backend</code>,
+  because Magnet-shroom moves and deletes files. Nobody has run that
+  probe. Record the result of test 4 as the behaviour of one run, and
+  write nothing stronger.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">You add a <code>## Rollback</code> heading to <code>TEMPLATE.md</code>. What has to happen before the next prompt carries it?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Nothing. The agent reads the file when the next interview starts</label>
+      <div class="reveal"><p class="feedback correct">Right. Hermes never loads this file, so no cached copy exists to refresh. The read command runs inside the interview.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">A restart, because the gateway loads the profile files once at start</label>
+      <div class="reveal"><p class="feedback incorrect">True of <code>SOUL.md</code>, which Hermes loads into the prompt. A search of the source for <code>TEMPLATE.md</code> returns no match at all.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">An edit to <code>SOUL.md</code>, because the rules name each heading</label>
+      <div class="reveal"><p class="feedback incorrect">The soul file names the file and the ordering rule. It lists no heading, which is what makes a template edit cheap.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">Test 4 comes back clean: Torchwood declines and <code>git status</code> is empty. What did you learn?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">That one run obeyed the rule, which predicts nothing about the next</label>
+      <div class="reveal"><p class="feedback correct">Right. The rule is prose, so the evidence is one sample of behaviour and never a boundary.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">That the profile cannot write, since the refusal came with no edit</label>
+      <div class="reveal"><p class="feedback incorrect">Record 0015 rejects that step. A limit drawn from wording is a request, and the terminal here is the one Peashooter writes with.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">That the toolset blocked it, because a refusal needs some mechanism</label>
+      <div class="reveal"><p class="feedback incorrect">A refusal needs no mechanism at all. The model read a sentence and followed it, exactly as it followed the missing-file sentence.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> <code>TEMPLATE.md</code> created, <code>grep -c '^## '</code> returns 5</label>
+  <label><input type="checkbox"> Test 1 produced one message with one fenced block</label>
+  <label><input type="checkbox"> Headings matched the file order, and a <code>Checked:</code> trailer closed the block</label>
+  <label><input type="checkbox"> Every path in that prompt traced to a command in the trailer</label>
+  <label><input type="checkbox"> Test 2 added and removed <code>## Rollback</code> with no gateway restart</label>
+  <label><input type="checkbox"> Test 3 dropped one heading from one prompt and changed no file</label>
+  <label><input type="checkbox"> Test 4 returned a refusal, recorded as one run and not as a limit</label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="../learning-records/0018-a-path-that-stopped-existing.md">learning
+record 0018</a> for the <code>Deliverable</code> heading, and
+<a href="../learning-records/0016-a-specification-that-could-not-work.md">record
+0016</a> for <code>Done when</code>.</p>
+
+<p><a href="../reference/adding-a-specialist.html">&rarr; Adding a
+specialist</a> &middot;
+<a href="../reference/glossary.html">&rarr; Full glossary</a> &middot;
+<a href="../learning-records/0028-an-example-that-cited-a-fixed-bug.md">Record
+0028</a></p>
+
+<p class="ask-agent">Send me the full text of the prompt from test 1,
+plus the output of the checks in tests 3 and 4. I read the heading set
+against <code>TEMPLATE.md</code>, and I read every path above the
+trailer against the commands the trailer lists. A path with no matching
+command is a real defect, and it earns a record before any edit to
+<code>SOUL.md</code>.</p>
+
+<div class="nav">
+  <span><a href="0028-limits-that-live-in-the-soul.html">&larr; Lesson 28</a></span>
+  <span>Lesson 29 of Stage 4</span>
+  <span></span>
+</div>
+
+</body>
+</html>

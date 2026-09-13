@@ -144,12 +144,29 @@ row is written in advance.</p>
   exists to avoid.</p>
 </div>
 
+<h2>The order that matters</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge — three rules of sequence</span>
+  <ul>
+    <li>Create the bot before the profile. The token replacement is a
+    separate step, because <code>--clone-from</code> copies
+    <code>.env</code>.</li>
+    <li>Read the thread id. Never assume the next number. Torchwood owns
+    thread 157, and it is the fourth topic in the group.</li>
+    <li>Test the routing description with one decompose run. Never
+    assert it.</li>
+  </ul>
+</div>
+
 <p><a href="../lessons/0025-a-fourth-bot-of-its-own.html">Lesson 25</a>
 wrote rows 1 and 2 ·
 <a href="../lessons/0026-a-topic-for-prompts.html">Lesson 26</a>
 wrote row 3 ·
 <a href="../lessons/0027-a-description-that-refuses-work.html">Lesson 27</a>
 wrote rows 4 and 5 ·
+<a href="../lessons/0028-limits-that-live-in-the-soul.html">Lesson 28</a>
+wrote row 6 ·
 <a href="glossary.html">→ Full glossary</a> ·
 <a href="../../docs/superpowers/specs/2026-09-11-stage4-torchwood-and-the-roster-pattern-design.md">Stage
 4 spec</a></p>
