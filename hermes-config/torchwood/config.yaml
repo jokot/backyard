@@ -460,7 +460,7 @@ telegram:
   require_mention: true
   exclusive_bot_mentions: true
   free_response_topics:
-    - '-1004371805465:2'
+    - '-1004371805465:157'
 mattermost:
   require_mention: true
   free_response_channels: ''

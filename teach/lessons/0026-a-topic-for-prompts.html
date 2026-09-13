@@ -25,7 +25,9 @@ Torchwood a room of its own, and the whole change is one line.</p>
   and 3, because those topics were made early and nothing else had been
   said. A fourth topic made today lands on whatever message id the group
   has reached.</p>
-  <p>So do not assume the next number. Read it.</p>
+  <p>So do not assume the next number. Read it. The
+  <code>Prompts</code> topic in this build took the id <code>157</code>,
+  because 153 messages passed in the group after topic 3 was made.</p>
   <p>The gateway log does not hold it either. The string
   <code>thread=</code> appears in
   <code>~/.hermes/profiles/torchwood/logs/agent.log</code>, and it names
@@ -80,7 +82,9 @@ Torchwood a room of its own, and the whole change is one line.</p>
   the <code>Prompts</code> topic, and read the address bar. It shows:</p>
   <pre><code>#-1004371805465_&lt;N&gt;</code></pre>
   <p>The number after the underscore is the thread id. Write it down.
-  Step 3 needs it. Do not assume it is <code>4</code>.</p>
+  Step 3 needs it. Do not assume it is <code>4</code>. The id in this
+  build was <code>157</code>, and your own group holds a different
+  number.</p>
 
   <p><strong>3. Replace the topic binding.</strong> Open
   <code>~/.hermes/profiles/torchwood/config.yaml</code> and find the
