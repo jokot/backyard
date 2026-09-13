@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 27 — A Description That Refuses Work</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 27 of the Stage 4 build</p>
+<h1>The sentence the router reads</h1>
+<p class="lede">Torchwood now owns a room, and the board can already
+send it work. One command puts a sentence in front of the decomposer
+that turns it away. This lesson writes that sentence, and then tests it
+instead of believing it.</p>
+
+<h2>Torchwood is already a valid destination</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Run <code>hermes kanban assignees</code> today and the new profile
+  is on the list:</p>
+  <pre><code>NAME                  ON DISK   COUNTS
+crazydave             yes       done=8
+default               yes       (idle)
+peashooter            yes       done=20
+sunflower             yes       done=12
+torchwood             yes       (idle)</code></pre>
+  <p>Creating a profile makes it assignable. Nothing else is required.
+  Three profiles run <code>auto_decompose: true</code> with
+  <code>auto_decompose_per_tick: 3</code> and
+  <code>dispatch_interval_seconds: 60</code>, so a parent task breaks
+  into children without anyone asking, once a minute.</p>
+  <p>The decomposer chooses an assignee by reading the
+  <code>description</code> field in each profile. An empty description
+  is not a refusal. It is an absence of evidence, and a model that must
+  choose will choose on whatever else it has, which is the profile
+  name.</p>
+</div>
+
+<h2>The precedent you already own</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Crazy Dave carries this, in
+  <code>~/.hermes/profiles/crazydave/profile.yaml</code>:</p>
+  <pre><code>description: "Template only — never a work destination. Do not assign kanban
+  tasks here."
+description_auto: false</code></pre>
+  <p>That line is the Stage 2 fix that stopped work from reaching the
+  coordinator. It has two halves, and both do a job. The first half says
+  what the profile is. The second half says what to do about it, in the
+  words the decomposer uses for its own task, which is assignment.</p>
+  <p>Torchwood needs the same shape, because it has the same problem.
+  It is a plausible destination for any task with the word prompt in
+  it.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Write the description.</strong> One command does the
+  whole job:</p>
+  <pre><code>hermes profile describe torchwood --text "Interactive prompt writing in the Prompts topic. Never a work destination. Do not assign kanban tasks here."</code></pre>
+  <p>Expected: <code>Description updated for 'torchwood'.</code></p>
+
+  <p><strong>2. Check both fields.</strong></p>
+  <pre><code>cat ~/.hermes/profiles/torchwood/profile.yaml</code></pre>
+  <p>Expected: the <code>description</code> you wrote, and
+  <code>description_auto: false</code> under it. You did not set the
+  second field. The <code>--text</code> path writes it for you, and the
+  next section explains why that matters.</p>
+
+  <p><strong>3. Create a task built to attract the mistake.</strong>
+  The word prompt appears twice, and the task is genuinely engineering
+  work:</p>
+  <pre><code>hermes kanban create "write a prompt for the flappy refactor, then apply the prompt"
+hermes kanban list</code></pre>
+  <p>Read the task id from the second command.</p>
+
+  <p><strong>4. Decompose it by hand.</strong> Do not wait for the
+  60 second tick. A test you trigger is a test you can repeat:</p>
+  <pre><code>hermes kanban decompose &lt;task_id&gt;
+hermes kanban show &lt;task_id&gt;</code></pre>
+  <p>Expected: every child task names <code>peashooter</code> or
+  <code>sunflower</code>. A child that names <code>torchwood</code>
+  fails this test.</p>
+
+  <p><strong>5. Archive the test task.</strong> The board is real, and a
+  test task left on a real board becomes work that somebody does:</p>
+  <pre><code>hermes kanban archive &lt;task_id&gt;</code></pre>
+</div>
+
+<h2>Why one command is the whole job</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge — read from the source</span>
+  <p>Two files hold profile settings, and they are not
+  interchangeable.</p>
+  <ul>
+    <li><code>config.yaml</code> holds the runtime configuration, and
+    <code>hermes config set</code> writes it.</li>
+    <li><code>profile.yaml</code> holds the two routing fields,
+    <code>description</code> and <code>description_auto</code>, and
+    <code>hermes profile describe</code> writes it.</li>
+  </ul>
+  <p>So <code>hermes config set description_auto false</code> writes a
+  key into the wrong file. The command reports success, because
+  <code>config set</code> accepts any key. Nothing then reads that key.
+  The lesson draft for this page carried that exact command until a read
+  of <code>hermes_cli/main.py</code> line 11751 showed the
+  <code>--text</code> path already writing the field:</p>
+  <pre><code>_profiles_mod.write_profile_meta(
+    profile_dir,
+    description=text_value,
+    description_auto=False,
+)</code></pre>
+  <p>The field is worth understanding rather than copying.
+  <code>description_auto</code> records who wrote the sentence. A
+  machine-written description carries <code>true</code>, and a
+  human-written one carries <code>false</code>.
+  <code>hermes_cli/profile_describer.py</code> line 191 then reads it:</p>
+  <pre><code>if existing.get("description") and not existing.get("description_auto") and not overwrite:
+    return DescribeOutcome(canon, False, "profile already has a user-authored description")</code></pre>
+  <p>So a later sweep with <code>hermes profile describe --auto --all</code>
+  skips your sentence and cannot replace it. Only an explicit
+  <code>--auto --overwrite</code> on this profile replaces it. Your
+  wording is safe by default, and it is not safe from a deliberate
+  command.</p>
+</div>
+
+<div class="box warning">
+  <span class="box-label">When a child reaches Torchwood</span>
+  <p>Do not weaken the test. The test task is deliberately worded to
+  invite the mistake, and making it easier proves nothing.</p>
+  <ol>
+    <li>Record the description the decomposer read and the child it
+    produced. Both go in a learning record, because the next three
+    specialists face the same problem.</li>
+    <li>Change the description so that it names no work verb. Compare
+    "interactive prompt writing" against "writes prompts". The second
+    reads as a service the board can request.</li>
+    <li>Run step 3 and step 4 again, unchanged.</li>
+  </ol>
+  <p>Record the wording that failed beside the wording that passed. The
+  difference between those two sentences is the reusable part of this
+  lesson.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">You set the description, and a week later somebody runs <code>hermes profile describe --auto --all</code> to fill in the profiles that have none. What happens to your sentence?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">It survives, because a human wrote it and the sweep skips those</label>
+      <div class="reveal"><p class="feedback correct">Right. The <code>--text</code> path recorded <code>description_auto: false</code>, and the describer skips a profile that carries a description a human wrote. Only <code>--auto --overwrite</code> replaces it.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">It is replaced, unless you also ran <code>config set description_auto</code></label>
+      <div class="reveal"><p class="feedback incorrect">That command writes a key into <code>config.yaml</code>, and the router reads <code>profile.yaml</code>. It reports success and changes nothing. One command already did the whole job.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">It is replaced, because a sweep by design rewrites every profile</label>
+      <div class="reveal"><p class="feedback incorrect">The flag <code>--all</code> means every profile that is missing a description. The function that builds the list drops any profile that already holds a description a human wrote.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">A decompose run sends one child to Torchwood. Which response keeps the evidence that the next three specialists need?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">Record both wordings, change the description, run the same test again</label>
+      <div class="reveal"><p class="feedback correct">Right. The pair of sentences is the finding. A rule that says which words attract work is reusable, and a description that happens to work today is not.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">Reword the test task until no child reaches Torchwood, then continue</label>
+      <div class="reveal"><p class="feedback incorrect">That moves the test until it passes. The task is worded to invite the mistake on purpose, because a real request one day carries the same words and nobody rewords that one.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">Reassign the child by hand and treat the routing as acceptable</label>
+      <div class="reveal"><p class="feedback incorrect">A repair by hand fixes one task and leaves the cause. The board dispatches once every 60 seconds, and nobody watches every tick.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> <code>profile describe --text</code> reported <code>Description updated</code></label>
+  <label><input type="checkbox"> <code>profile.yaml</code> holds the description and <code>description_auto: false</code></label>
+  <label><input type="checkbox"> Test task created with the word prompt in it, task id written down</label>
+  <label><input type="checkbox"> <code>decompose</code> ran by hand, not by the 60 second tick</label>
+  <label><input type="checkbox"> Every child names <code>peashooter</code> or <code>sunflower</code></label>
+  <label><input type="checkbox"> Test task archived</label>
+  <label><input type="checkbox"> A failed routing produced a learning record, not a reworded test</label>
+</div>
+
+<p>Torchwood now refuses work in the one place a router looks. It still
+answers in the voice of Peashooter, because <code>SOUL.md</code> arrived
+with the clone. Lesson 28 replaces that file, and it states the same
+limit a second time. Two statements of one limit is not duplication
+here. The description guards the board, and the soul guards the
+conversation.</p>
+
+<p><strong>Primary source:</strong>
+<code>~/.hermes/hermes-agent/hermes_cli/profile_describer.py</code>, line
+191, and <code>hermes_cli/main.py</code>, line 11751. Both ship on your
+machine, and both match the version you are running.</p>
+
+<p><a href="../reference/adding-a-specialist.html">→ Adding a
+specialist</a> ·
+<a href="../reference/glossary.html">→ Full glossary</a> ·
+<a href="../learning-records/0023-a-setting-written-to-the-wrong-file.md">Record
+0023</a></p>
+
+<p class="ask-agent">Send me the content of <code>profile.yaml</code>
+and the full output of <code>hermes kanban show</code>. I will read the
+assignee of every child. If one names Torchwood, I write the record
+before I touch the wording.</p>
+
+<div class="nav">
+  <span><a href="0026-a-topic-for-prompts.html">← Lesson 26</a></span>
+  <span>Lesson 27 of Stage 4</span>
+  <span></span>
+</div>
+
+</body>
+</html>

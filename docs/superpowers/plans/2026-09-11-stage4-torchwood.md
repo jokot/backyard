@@ -612,13 +612,19 @@ Template only — never a work destination. Do not assign kanban tasks here.
 
 ```bash
 hermes profile describe torchwood --text "Interactive prompt writing in the Prompts topic. Never a work destination. Do not assign kanban tasks here."
-hermes -p torchwood config set description_auto false
 ```
 
-  State the reason for the second command in one sentence. With
-  `description_auto` left at its default, a later `hermes profile
-  describe --auto --all` sweep can replace the text with a generated
-  line.
+  One command does the whole job. Do not add
+  `hermes config set description_auto false`. That command writes a key
+  into `config.yaml`, and the router reads `profile.yaml`. Learning
+  record 0023 holds the correction.
+
+  State the real rule instead. `hermes_cli/main.py` line 11751 shows the
+  `--text` path writing `description_auto=False` in the same call.
+  `hermes_cli/profile_describer.py` line 191 then skips any profile that
+  holds a description with `description_auto: false`. So
+  `hermes profile describe --auto --all` cannot replace the text, and
+  `--auto --overwrite` on that profile can.
 
   Give the check:
 
