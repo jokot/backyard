@@ -58,6 +58,10 @@ edit a file, decline in one sentence and give him the prompt instead.
 You never create, claim, comment on, or close a kanban task. You never
 run fizzy. You are not a work destination.
 
+Exception — a message that only greets, thanks, or asks who you are.
+Answer it in one or two sentences. Do not read TEMPLATE.md, and do not
+start an interview. An interview starts when Jokot names a task.
+
 Read TEMPLATE.md at the start of every interview. The file sits in your
 working directory, at ~/.hermes/profiles/torchwood/TEMPLATE.md. Each ##
 heading in that file becomes a ## heading in your finished prompt, in
@@ -103,15 +107,24 @@ grep -c 'Checked:' ~/.hermes/profiles/torchwood/SOUL.md</code></pre>
   the old file in memory.</p>
   <pre><code>hermes -p torchwood gateway restart</code></pre>
 
-  <p><strong>5. Read the next box, then send one message.</strong> Post
-  <code>hi</code> in the <code>Prompts</code> topic.</p>
+  <p><strong>5. Read the next box, then send two messages.</strong>
+  Post <code>who are you</code> in the <code>Prompts</code> topic, then
+  post <code>write me a prompt</code>.</p>
 </div>
 
 <div class="box warning">
   <span class="box-label">Read before the smoke test</span>
-  <p><code>TEMPLATE.md</code> does not exist yet. Lesson 29 writes it.
-  The soul file you just pasted covers that case in one sentence, so the
-  reply has a defined shape:</p>
+  <p>The two messages test two different branches, and both branches
+  exist because a real run found them.</p>
+  <p><code>who are you</code> asks about the agent, not about a task.
+  Expected: one or two sentences that name Torchwood and its domain, no
+  read of <code>TEMPLATE.md</code>, and no interview. A reply that opens
+  an interview instead is the defect in
+  <a href="../learning-records/0027-an-interview-that-started-too-early.md">record
+  0027</a>, found on the first run of this lesson.</p>
+  <p><code>write me a prompt</code> names a task, so the interview
+  starts. <code>TEMPLATE.md</code> does not exist until Lesson 29, and
+  the soul file covers that case in one sentence. Expected:</p>
   <ul>
     <li>One message, which says that <code>TEMPLATE.md</code> is
     missing.</li>
@@ -222,8 +235,9 @@ grep -A3 '^terminal:' ~/.hermes/profiles/torchwood/config.yaml</code></pre>
   <label><input type="checkbox"> Whole file replaced, first line names Torchwood</label>
   <label><input type="checkbox"> <code>grep -c 'Checked:'</code> returns 1 or more</label>
   <label><input type="checkbox"> Gateway restarted after the edit, not before it</label>
-  <label><input type="checkbox"> <code>hi</code> in <code>Prompts</code> returned one message that names the missing template and asks one question</label>
-  <label><input type="checkbox"> No fenced code block arrived with that reply</label>
+  <label><input type="checkbox"> <code>who are you</code> returned one or two sentences and started no interview</label>
+  <label><input type="checkbox"> <code>write me a prompt</code> returned one message that names the missing template and asks one question</label>
+  <label><input type="checkbox"> No fenced code block arrived with either reply</label>
   <label><input type="checkbox"> You can name which of the four limits has no mechanism behind it</label>
 </div>
 
@@ -239,10 +253,10 @@ specialist</a> ·
 <a href="../learning-records/0026-an-instruction-to-read-a-missing-file.md">Record
 0026</a></p>
 
-<p class="ask-agent">Send me the reply Torchwood gave to <code>hi</code>,
-verbatim, and the output of the two <code>grep</code> commands in the
-honest-gap box. I will check the reply against the three conditions in
-the warning box. If a finished prompt arrived instead, I write the
+<p class="ask-agent">Send me both replies verbatim, and the output of
+the two <code>grep</code> commands in the honest-gap box. I will check
+the first reply against the identity exception, and the second against
+the three conditions in the warning box. If a finished prompt arrived instead, I write the
 record before I touch the file.</p>
 
 <div class="nav">
