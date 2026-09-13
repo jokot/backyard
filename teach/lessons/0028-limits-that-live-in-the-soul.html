@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 28 — Limits That Live in the Soul</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 28 of the Stage 4 build</p>
+<h1>Four limits, and one of them is only a sentence</h1>
+<p class="lede">Torchwood owns a bot, a room, and a description that
+turns work away. It still answers to the name Peashooter, because
+<code>--clone-from</code> copied the whole <code>SOUL.md</code>. This
+lesson replaces that file with the identity and the four limits of a
+prompt specialist. It also names the one limit that nothing enforces.</p>
+
+<h2>What the clone still says</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Lesson 25 created the profile and warned that two things carry
+  over. The token was replaced in that lesson. The soul file was not.
+  Run this and read the first line:</p>
+  <pre><code>head -2 ~/.hermes/profiles/torchwood/SOUL.md</code></pre>
+  <p>It reads <code>You are Peashooter, the engineering and coding
+  specialist in Jokot's personal agent team.</code> Every rule below that
+  line belongs to a worker that writes code, claims kanban tasks, and
+  reports results. Torchwood does none of those things, so the whole file
+  changes, not one line of it.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Confirm the clone still holds the wrong identity.</strong></p>
+  <pre><code>head -2 ~/.hermes/profiles/torchwood/SOUL.md</code></pre>
+  <p>Expected: the name <code>Peashooter</code>. If the file already
+  names Torchwood, somebody edited it, and the rest of this lesson
+  overwrites that edit.</p>
+
+  <p><strong>2. Replace the whole file.</strong> Open
+  <code>~/.hermes/profiles/torchwood/SOUL.md</code> in an editor, delete
+  every line, and paste this:</p>
+  <pre><code>You are Torchwood, the prompt specialist in Jokot's personal agent team.
+
+Domain: you interview Jokot about a task, then you write one finished
+prompt that another agent or another tool can run.
+
+You produce text. You write no file, you move no file, and you delete no
+file. You may read. Permitted commands include ls, cat, sed -n, grep,
+find, head, tail, git log, git status, and git diff. If Jokot asks you to
+edit a file, decline in one sentence and give him the prompt instead.
+
+You never create, claim, comment on, or close a kanban task. You never
+run fizzy. You are not a work destination.
+
+Read TEMPLATE.md at the start of every interview. The file sits in your
+working directory, at ~/.hermes/profiles/torchwood/TEMPLATE.md. Each ##
+heading in that file becomes a ## heading in your finished prompt, in
+file order. Jokot may ask you to skip a heading or to add one for a
+single prompt. Obey that request for that prompt only, and never edit
+TEMPLATE.md. If TEMPLATE.md does not exist, say so in one sentence, then
+ask for the goal and wait.
+
+Run a read command whenever a read command answers your question. Never
+ask Jokot for a path that you can list yourself.
+
+Ask one question in each message. Name the section that the question
+serves, as in "Constraints — does any file still reference the old zuma
+path?". Stop asking when you can fill every required heading. Then send
+the prompt. Do not ask for permission to send it.
+
+Send exactly one message. That message holds exactly one fenced code
+block, and the whole prompt sits inside that block.
+
+End every prompt with a Checked: trailer inside the same block. List the
+commands that you actually ran. Every path that appears in the prompt
+must trace to one of those commands. If you never confirmed a path, say
+so in the prompt rather than listing a command you did not run.
+
+Do not use the brainstorming skill. It ends by writing a design document
+and by invoking another skill, and you write no file. You may use the
+ste-writing skill, which changes prose only.
+
+Personality: direct and economical, no filler. Admit uncertainty plainly
+rather than guessing. Always respond in English, even if Jokot writes in
+another language.
+
+You have persistent memory (MEMORY.md, USER.md). Record the conventions
+of Jokot's stack, so that a later interview asks fewer questions.</code></pre>
+
+  <p><strong>3. Check the replacement.</strong></p>
+  <pre><code>head -1 ~/.hermes/profiles/torchwood/SOUL.md
+grep -c 'Checked:' ~/.hermes/profiles/torchwood/SOUL.md</code></pre>
+  <p>Expected: the first line names Torchwood, and the count is
+  <code>1</code> or more.</p>
+
+  <p><strong>4. Restart the gateway.</strong> The running process holds
+  the old file in memory.</p>
+  <pre><code>hermes -p torchwood gateway restart</code></pre>
+
+  <p><strong>5. Read the next box, then send one message.</strong> Post
+  <code>hi</code> in the <code>Prompts</code> topic.</p>
+</div>
+
+<div class="box warning">
+  <span class="box-label">Read before the smoke test</span>
+  <p><code>TEMPLATE.md</code> does not exist yet. Lesson 29 writes it.
+  The soul file you just pasted covers that case in one sentence, so the
+  reply has a defined shape:</p>
+  <ul>
+    <li>One message, which says that <code>TEMPLATE.md</code> is
+    missing.</li>
+    <li>One question, which asks for the goal.</li>
+    <li>No fenced code block, because no prompt is finished.</li>
+  </ul>
+  <p>A reply that greets you and asks nothing means the interview rules
+  did not reach the model. Restart the gateway again and check the first
+  line of the file. A reply that invents headings and sends a finished
+  prompt is a real defect, and it earns a learning record before any
+  edit to <code>SOUL.md</code>.</p>
+</div>
+
+<h2>Why those two rules sit where they sit</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Copy the file and you get a working Torchwood. Copy the reasons and
+  you can write the next one, for Magnet-shroom, without asking.</p>
+  <p><strong>The <code>Checked:</code> rule lives in
+  <code>SOUL.md</code>, not in <code>TEMPLATE.md</code>.</strong> The
+  template is the file you edit. A heading you add appears in the next
+  prompt, which is the point of Lesson 29. A rule parked in an edited
+  file can leave in the same edit that adds a heading, and nothing
+  reports the loss. The verification rule has to survive every template
+  edit, so it lives in the file nobody edits between interviews.</p>
+  <p><strong>The one-message rule exists for the clipboard.</strong>
+  Telegram renders a triple-backtick block with a copy control, so one
+  block reaches the clipboard with one tap. A prompt split across three
+  messages needs manual selection on a phone. The rule is about the
+  reader, not about tidiness.</p>
+</div>
+
+<h2>One limit has no mechanism</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge — the honest gap</span>
+  <p>Three of the four limits hold because something outside the prose
+  holds them. The topic binding is a list in <code>config.yaml</code>.
+  The routing refusal is a sentence the decomposer reads before it picks
+  an assignee, and Lesson 27 tested it on a live board. The bot identity
+  is a token.</p>
+  <p>The read-only limit is different. It is prose and nothing else.
+  Torchwood carries <code>toolsets: [hermes-cli]</code> and a local
+  terminal, exactly as Peashooter does:</p>
+  <pre><code>grep -A2 '^toolsets:' ~/.hermes/profiles/torchwood/config.yaml
+grep -A3 '^terminal:' ~/.hermes/profiles/torchwood/config.yaml</code></pre>
+  <p>Nothing rejects a write. <a
+  href="../learning-records/0015-the-line-between-work-and-maintenance.md">Learning
+  record 0015</a> states the rule that this breaks: set the limits from
+  the implementation, not from the conversation. That record drew Crazy
+  Dave's four kanban limits out of twenty lines of SQL, because a
+  destructive verb earns a limit the wording cannot give.</p>
+  <p>So state the gap rather than hide it. Stage 4 does two things about
+  it. Lesson 29 sends a direct request to edit a file and records what
+  comes back, which measures the behaviour of one run and proves nothing
+  about the next one. Stage 5 probes <code>terminal.backend</code> for a
+  real boundary, because Magnet-shroom moves and deletes files, and a
+  sentence is not enough for a delete. Nobody has run that probe, so
+  this lesson claims no result for it.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">You move the <code>Checked:</code> trailer rule out of <code>SOUL.md</code> and into <code>TEMPLATE.md</code>. What does that change?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">One edit of the template can now drop the verification rule silently</label>
+      <div class="reveal"><p class="feedback correct">Right. The template is the file you edit between interviews, and nothing reports a rule that leaves during an edit.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Nothing at all, because the model reads both files on every interview</label>
+      <div class="reveal"><p class="feedback incorrect">Both files do reach the model. The difference is durability, not delivery — one file is edited by hand between interviews and one is not.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">The trailer moves below the fenced block, because the template ends there</label>
+      <div class="reveal"><p class="feedback incorrect">Position in the output comes from the rule text, which says the trailer sits inside the same block. Moving the rule moves nothing in the prompt.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">Torchwood's <code>SOUL.md</code> says it writes no file. What stops a write?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">Nothing does. The toolsets list and the terminal match Peashooter exactly</label>
+      <div class="reveal"><p class="feedback correct">Right, and record 0015 names the failure: a limit drawn from wording is a request, and a limit drawn from the implementation is a wall.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">The toolsets list, because a read-only profile carries no shell command</label>
+      <div class="reveal"><p class="feedback incorrect">The list reads <code>toolsets: [hermes-cli]</code> for this profile and for Peashooter. One value, two profiles, no difference between them.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">The routing rule, because the board sends this profile no task to run</label>
+      <div class="reveal"><p class="feedback incorrect">That rule keeps the board away. It says nothing about a file you ask for yourself, in the topic, in a direct message.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> <code>head -2</code> showed the Peashooter identity before the edit</label>
+  <label><input type="checkbox"> Whole file replaced, first line names Torchwood</label>
+  <label><input type="checkbox"> <code>grep -c 'Checked:'</code> returns 1 or more</label>
+  <label><input type="checkbox"> Gateway restarted after the edit, not before it</label>
+  <label><input type="checkbox"> <code>hi</code> in <code>Prompts</code> returned one message that names the missing template and asks one question</label>
+  <label><input type="checkbox"> No fenced code block arrived with that reply</label>
+  <label><input type="checkbox"> You can name which of the four limits has no mechanism behind it</label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="../learning-records/0015-the-line-between-work-and-maintenance.md">learning
+record 0015</a>, which draws four limits out of the implementation, and
+<a href="../learning-records/0022-a-clone-that-answered-to-the-wrong-name.md">record
+0022</a>, which is why this lesson exists at all.</p>
+
+<p><a href="../reference/adding-a-specialist.html">→ Adding a
+specialist</a> ·
+<a href="../reference/glossary.html">→ Full glossary</a> &middot;
+<a href="../learning-records/0026-an-instruction-to-read-a-missing-file.md">Record
+0026</a></p>
+
+<p class="ask-agent">Send me the reply Torchwood gave to <code>hi</code>,
+verbatim, and the output of the two <code>grep</code> commands in the
+honest-gap box. I will check the reply against the three conditions in
+the warning box. If a finished prompt arrived instead, I write the
+record before I touch the file.</p>
+
+<div class="nav">
+  <span><a href="0027-a-description-that-refuses-work.html">← Lesson 27</a></span>
+  <span>Lesson 28 of Stage 4</span>
+  <span></span>
+</div>
+
+</body>
+</html>

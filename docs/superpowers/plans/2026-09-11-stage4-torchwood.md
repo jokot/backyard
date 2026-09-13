@@ -834,10 +834,13 @@ edit a file, decline in one sentence and give him the prompt instead.
 You never create, claim, comment on, or close a kanban task. You never
 run fizzy. You are not a work destination.
 
-Read TEMPLATE.md at the start of every interview. Each `##` heading in
-that file becomes a `##` heading in your finished prompt, in file order.
-Jokot may ask you to skip a heading or to add one for a single prompt.
-Obey that request for that prompt only, and never edit TEMPLATE.md.
+Read TEMPLATE.md at the start of every interview. The file sits in your
+working directory, at ~/.hermes/profiles/torchwood/TEMPLATE.md. Each `##`
+heading in that file becomes a `##` heading in your finished prompt, in
+file order. Jokot may ask you to skip a heading or to add one for a
+single prompt. Obey that request for that prompt only, and never edit
+TEMPLATE.md. If TEMPLATE.md does not exist, say so in one sentence, then
+ask for the goal and wait.
 
 Run a read command whenever a read command answers your question. Never
 ask Jokot for a path that you can list yourself.
@@ -955,9 +958,16 @@ hermes -p torchwood gateway restart
 ```
 
 - [ ] **Step 8: Ask the user for one smoke test.** Post `hi` in the
-  `Prompts` topic. Expected: Torchwood asks one question, and that
-  question names a section. A reply that answers `hi` with a greeting
-  and no question means the interview rule did not take effect.
+  `Prompts` topic. `TEMPLATE.md` does not exist until Task 5, so the
+  soul file covers the missing file in one sentence, and the expected
+  reply has three parts. One message says that `TEMPLATE.md` is missing.
+  One question asks for the goal. No fenced code block arrives, because
+  no prompt is finished.
+
+  A reply that greets the user and asks nothing means the interview
+  rules did not reach the model. A reply that invents headings and sends
+  a finished prompt is a real defect, and it earns a learning record
+  before any edit to `SOUL.md`.
 
 - [ ] **Step 9: Mirror the soul file.**
 
