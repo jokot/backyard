@@ -76,10 +76,12 @@ description_auto: false</code></pre>
 
   <p><strong>3. Create a task built to attract the mistake.</strong>
   The word prompt appears twice, and the task is genuinely engineering
-  work:</p>
-  <pre><code>hermes kanban create "write a prompt for the flappy refactor, then apply the prompt"
+  work. The <code>--triage</code> flag is required, and the next box
+  explains why:</p>
+  <pre><code>hermes kanban create --triage "write a prompt for the flappy refactor, then apply the prompt"
 hermes kanban list</code></pre>
-  <p>Read the task id from the second command.</p>
+  <p>Read the task id from the second command. Check that the status
+  reads <code>triage</code> and not <code>ready</code>.</p>
 
   <p><strong>4. Decompose it by hand.</strong> Do not wait for the
   60 second tick. A test you trigger is a test you can repeat:</p>
@@ -130,6 +132,49 @@ hermes kanban show &lt;task_id&gt;</code></pre>
   <code>--auto --overwrite</code> on this profile replaces it. Your
   wording is safe by default, and it is not safe from a deliberate
   command.</p>
+</div>
+
+<h2>Why the task must start in triage</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge — read from the source</span>
+  <p>A task created without <code>--triage</code> lands in
+  <code>ready</code>, and <code>decompose</code> refuses it.
+  <code>hermes_cli/kanban_decompose.py</code> line 288:</p>
+  <pre><code>if task.status != "triage":
+    return DecomposeOutcome(
+        task_id, False, f"task is not in triage (status={task.status!r})"
+    )</code></pre>
+  <p>The command then prints one line to standard error and exits:</p>
+  <pre><code>kanban: decompose t_b98be7e9: task is not in triage (status='ready')</code></pre>
+  <p>Read that message carefully, because the board that follows looks
+  almost right. The task exists, it holds the title you wrote, and it
+  has no assignee. Nothing announces that the test never ran. The
+  evidence is the event list. A task that was decomposed carries more
+  than one event.</p>
+  <p>Triage is where work from Telegram arrives, which is why Stage 3
+  never needed this flag. Crazy Dave parks a request in triage, and the
+  decomposer takes it from there. A task typed at the terminal skips
+  that step unless you ask for it.</p>
+</div>
+
+<h2>What the decomposer actually reads</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge — read from the source</span>
+  <p>The decomposer builds a roster from every profile and puts it in
+  the prompt. <code>kanban_decompose.py</code> line 231 builds each
+  entry, and line 247 formats it:</p>
+  <pre><code>"description": desc or f"(no description; profile named {p.name!r})"
+...
+tag = "" if entry["has_description"] else " ⚠ undescribed"
+lines.append(f"  - {entry['name']}{tag}: {entry['description']}")</code></pre>
+  <p>So an undescribed Torchwood reaches the model as this line:</p>
+  <pre><code>  - torchwood ⚠ undescribed: (no description; profile named 'torchwood')</code></pre>
+  <p>That is the claim from the first section, shown rather than
+  asserted. An empty description does not remove a profile from the
+  roster. It puts the profile name in the description slot, and the
+  name of this one is a word that appears in prompt-shaped tasks.</p>
 </div>
 
 <div class="box warning">
@@ -196,8 +241,10 @@ hermes kanban show &lt;task_id&gt;</code></pre>
 <div class="checklist">
   <label><input type="checkbox"> <code>profile describe --text</code> reported <code>Description updated</code></label>
   <label><input type="checkbox"> <code>profile.yaml</code> holds the description and <code>description_auto: false</code></label>
-  <label><input type="checkbox"> Test task created with the word prompt in it, task id written down</label>
-  <label><input type="checkbox"> <code>decompose</code> ran by hand, not by the 60 second tick</label>
+  <label><input type="checkbox"> Test task created with <code>--triage</code>, status reads <code>triage</code></label>
+  <label><input type="checkbox"> Test task holds the word prompt twice, task id written down</label>
+  <label><input type="checkbox"> <code>decompose</code> printed a children line, not a triage error</label>
+  <label><input type="checkbox"> <code>show</code> lists more than one event</label>
   <label><input type="checkbox"> Every child names <code>peashooter</code> or <code>sunflower</code></label>
   <label><input type="checkbox"> Test task archived</label>
   <label><input type="checkbox"> A failed routing produced a learning record, not a reworded test</label>
@@ -211,15 +258,19 @@ here. The description guards the board, and the soul guards the
 conversation.</p>
 
 <p><strong>Primary source:</strong>
-<code>~/.hermes/hermes-agent/hermes_cli/profile_describer.py</code>, line
-191, and <code>hermes_cli/main.py</code>, line 11751. Both ship on your
-machine, and both match the version you are running.</p>
+<code>~/.hermes/hermes-agent/hermes_cli/kanban_decompose.py</code>, lines
+231, 247 and 288, plus
+<code>hermes_cli/profile_describer.py</code> line 191 and
+<code>hermes_cli/main.py</code> line 11751. All three files ship on your
+machine, and all three match the version you are running.</p>
 
 <p><a href="../reference/adding-a-specialist.html">→ Adding a
 specialist</a> ·
 <a href="../reference/glossary.html">→ Full glossary</a> ·
 <a href="../learning-records/0023-a-setting-written-to-the-wrong-file.md">Record
-0023</a></p>
+0023</a> ·
+<a href="../learning-records/0024-a-test-that-never-ran.md">Record
+0024</a></p>
 
 <p class="ask-agent">Send me the content of <code>profile.yaml</code>
 and the full output of <code>hermes kanban show</code>. I will read the

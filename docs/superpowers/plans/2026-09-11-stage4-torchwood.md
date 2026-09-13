@@ -642,20 +642,29 @@ cat ~/.hermes/profiles/torchwood/profile.yaml
   Give the test:
 
 ```bash
-hermes kanban create "write a prompt for the flappy refactor"
+hermes kanban create --triage "write a prompt for the flappy refactor, then apply the prompt"
 hermes kanban list
 ```
 
-  Read the task id from the second command. Then decompose it by hand
-  rather than waiting for a tick:
+  The flag `--triage` is required. A task created without it lands in
+  `ready`, and `hermes_cli/kanban_decompose.py` line 288 refuses every
+  status except `triage`. Learning record 0024 holds that correction.
+
+  Read the task id from the second command, and confirm the status reads
+  `triage`. Then decompose it by hand rather than waiting for a tick:
 
 ```bash
 hermes kanban decompose <task_id>
 hermes kanban show <task_id>
 ```
 
-  Expected: every child task carries `peashooter` or `sunflower` as the
-  assignee. A child assigned to `torchwood` fails the test.
+  Expected: a line reading `Decomposed <task_id> → N children`, and
+  every child task carries `peashooter` or `sunflower` as the assignee.
+  A child assigned to `torchwood` fails the test.
+
+  Check that the test ran at all. `hermes kanban show` must list more
+  than one event. One event means the task was created and nothing
+  else happened, which is what a refused decompose looks like.
 
   Give the cleanup, so the board does not keep a test task:
 
