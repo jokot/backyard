@@ -651,12 +651,20 @@ hermes kanban list
   status except `triage`. Learning record 0024 holds that correction.
 
   Read the task id from the second command, and confirm the status reads
-  `triage`. Then decompose it by hand rather than waiting for a tick:
+  `triage`. Do not decompose by hand. Every profile runs
+  `auto_decompose: true` with `dispatch_interval_seconds: 60`, so the
+  board decomposes the task within one minute and starts a child.
+  Learning record 0025 holds that correction.
+
+  Read what the board did:
 
 ```bash
-hermes kanban decompose <task_id>
 hermes kanban show <task_id>
+hermes kanban list
 ```
+
+  Keep `hermes kanban decompose <task_id>` as the branch for a full
+  minute with one event and no children.
 
   Expected: a line reading `Decomposed <task_id> → N children`, and
   every child task carries `peashooter` or `sunflower` as the assignee.
@@ -666,11 +674,23 @@ hermes kanban show <task_id>
   than one event. One event means the task was created and nothing
   else happened, which is what a refused decompose looks like.
 
-  Give the cleanup, so the board does not keep a test task:
+  Give the stop procedure, in this order. The second child is a live
+  instruction to change files in a real project:
 
 ```bash
-hermes kanban archive <task_id>
+hermes kanban block <child_id> "Lesson 27 routing test, not real work"
+hermes kanban reclaim <running_child_id>
+hermes kanban archive <root_id> <child_id> <child_id>
+hermes kanban list
 ```
+
+  State the reason for the order. Archiving a task that a worker holds
+  leaves the worker running against a task that is no longer on the
+  board.
+
+  Tell the reader to read the stop procedure before creating the task.
+  The board is the production board of three working agents, and a task
+  in triage is a work order.
 
 - [ ] **Step 4: Write the failure branch of Lesson 27.** State what to
   do when a child reaches `torchwood`. Do not weaken the test. Change

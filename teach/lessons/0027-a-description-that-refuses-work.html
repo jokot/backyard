@@ -74,26 +74,42 @@ description_auto: false</code></pre>
   second field. The <code>--text</code> path writes it for you, and the
   next section explains why that matters.</p>
 
-  <p><strong>3. Create a task built to attract the mistake.</strong>
-  The word prompt appears twice, and the task is genuinely engineering
-  work. The <code>--triage</code> flag is required, and the next box
-  explains why:</p>
+  <p><strong>3. Read the next box before you create anything.</strong>
+  This test puts a real task on a real board, and three gateways are
+  watching it. Know how you will stop the work before you start
+  it.</p>
+
+  <p><strong>4. Create the task, then watch the clock.</strong> The
+  word prompt appears twice, and the task is genuinely engineering
+  work:</p>
   <pre><code>hermes kanban create --triage "write a prompt for the flappy refactor, then apply the prompt"
 hermes kanban list</code></pre>
-  <p>Read the task id from the second command. Check that the status
-  reads <code>triage</code> and not <code>ready</code>.</p>
+  <p>Read the task id, and check that the status reads
+  <code>triage</code>. You have about 60 seconds.</p>
 
-  <p><strong>4. Decompose it by hand.</strong> Do not wait for the
-  60 second tick. A test you trigger is a test you can repeat:</p>
-  <pre><code>hermes kanban decompose &lt;task_id&gt;
-hermes kanban show &lt;task_id&gt;</code></pre>
-  <p>Expected: every child task names <code>peashooter</code> or
-  <code>sunflower</code>. A child that names <code>torchwood</code>
-  fails this test.</p>
+  <p><strong>5. Read the result.</strong> Within one tick the board
+  decomposes the task without you:</p>
+  <pre><code>hermes kanban show &lt;task_id&gt;
+hermes kanban list</code></pre>
+  <p>Expected in <code>show</code>: two events, the second reading
+  <code>decomposed</code>, and a comment signed
+  <code>auto-decomposer</code>. Expected in <code>list</code>: child
+  tasks that name <code>peashooter</code> or <code>sunflower</code>. A
+  child that names <code>torchwood</code> fails this test.</p>
+  <p>If a full minute passes with one event and no children, run the
+  decomposer yourself:</p>
+  <pre><code>hermes kanban decompose &lt;task_id&gt;</code></pre>
 
-  <p><strong>5. Archive the test task.</strong> The board is real, and a
-  test task left on a real board becomes work that somebody does:</p>
-  <pre><code>hermes kanban archive &lt;task_id&gt;</code></pre>
+  <p><strong>6. Stop the work, in this order.</strong> A child is
+  probably running already. Block the children that have not started,
+  release the one that has, then archive all three:</p>
+  <pre><code>hermes kanban block &lt;child_id&gt; "Lesson 27 routing test, not real work"
+hermes kanban reclaim &lt;running_child_id&gt;
+hermes kanban archive &lt;root_id&gt; &lt;child_id&gt; &lt;child_id&gt;
+hermes kanban list</code></pre>
+  <p>Block first and archive second. Archiving a task that a worker
+  holds leaves the worker running against a task that no longer exists
+  on the board.</p>
 </div>
 
 <h2>Why one command is the whole job</h2>
@@ -132,6 +148,27 @@ hermes kanban show &lt;task_id&gt;</code></pre>
   <code>--auto --overwrite</code> on this profile replaces it. Your
   wording is safe by default, and it is not safe from a deliberate
   command.</p>
+</div>
+
+<div class="box warning">
+  <span class="box-label">This test dispatches real agents</span>
+  <p>The board in this course is the board your three agents work
+  from. Every profile runs <code>auto_decompose: true</code> with
+  <code>auto_decompose_per_tick: 3</code> and
+  <code>dispatch_interval_seconds: 60</code>. A task parked in triage is
+  therefore decomposed inside one minute by the tick, and a child is
+  claimed and started shortly after.</p>
+  <p>That happened on the first run of this lesson. The reader never
+  typed <code>decompose</code>. Sixty seconds after the create command,
+  the board held this:</p>
+  <pre><code>t_2c9f7149  todo      crazydave    write a prompt for the flappy refactor, then appy the prompt
+t_db020b96  running   sunflower    Write the refactor prompt for the flappy codebase
+t_7ae96c4d  todo      peashooter   Apply the flappy refactor prompt to the codebase</code></pre>
+  <p>The routing was correct, and the second child was a live
+  instruction to change the code in <code>projects/flappy</code>. Read
+  the titles of the children as soon as they appear. A child that only
+  writes text is safe to finish. A child that changes files is not, and
+  step 6 stops it.</p>
 </div>
 
 <h2>Why the task must start in triage</h2>
@@ -243,10 +280,11 @@ lines.append(f"  - {entry['name']}{tag}: {entry['description']}")</code></pre>
   <label><input type="checkbox"> <code>profile.yaml</code> holds the description and <code>description_auto: false</code></label>
   <label><input type="checkbox"> Test task created with <code>--triage</code>, status reads <code>triage</code></label>
   <label><input type="checkbox"> Test task holds the word prompt twice, task id written down</label>
-  <label><input type="checkbox"> <code>decompose</code> printed a children line, not a triage error</label>
-  <label><input type="checkbox"> <code>show</code> lists more than one event</label>
+  <label><input type="checkbox"> <code>show</code> lists two events, the second reading <code>decomposed</code></label>
+  <label><input type="checkbox"> Children read from <code>list</code> within one 60 second tick</label>
   <label><input type="checkbox"> Every child names <code>peashooter</code> or <code>sunflower</code></label>
-  <label><input type="checkbox"> Test task archived</label>
+  <label><input type="checkbox"> Unstarted children blocked, running child reclaimed</label>
+  <label><input type="checkbox"> Root and every child archived, board clean</label>
   <label><input type="checkbox"> A failed routing produced a learning record, not a reworded test</label>
 </div>
 
@@ -270,7 +308,9 @@ specialist</a> ·
 <a href="../learning-records/0023-a-setting-written-to-the-wrong-file.md">Record
 0023</a> ·
 <a href="../learning-records/0024-a-test-that-never-ran.md">Record
-0024</a></p>
+0024</a> ·
+<a href="../learning-records/0025-a-test-that-dispatched-real-work.md">Record
+0025</a></p>
 
 <p class="ask-agent">Send me the content of <code>profile.yaml</code>
 and the full output of <code>hermes kanban show</code>. I will read the
