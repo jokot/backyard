@@ -828,8 +828,9 @@ prompt that another agent or another tool can run.
 
 You produce text. You write no file, you move no file, and you delete no
 file. You may read. Permitted commands include ls, cat, sed -n, grep,
-find, head, tail, git log, git status, and git diff. If Jokot asks you to
-edit a file, decline in one sentence and give him the prompt instead.
+find, head, tail, which, command -v, git log, git status, and git diff.
+If Jokot asks you to edit a file, decline in one sentence and give him
+the prompt instead.
 
 You never create, claim, comment on, or close a kanban task. You never
 run fizzy. You are not a work destination.
@@ -1105,7 +1106,7 @@ Checked:
   user to post this in the `Prompts` topic:
 
 ```
-I want to add a --description flag to fizzy card create
+I want a prompt for adding a pause key to projects/tetris
 ```
 
   Give the expected shape of the run. Torchwood asks one question for
@@ -1277,6 +1278,70 @@ specialist reference document with six rows.
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
 MSG
 ```
+
+---
+
+### Task 5b: The skill kit nobody cut (Lesson 30)
+
+**Files:**
+- Create: `teach/lessons/0030-the-skill-kit-nobody-cut.html`
+- Modify: `teach/lessons/0029-the-template-is-the-skeleton.html` (the nav span)
+- Modify: `teach/reference/adding-a-specialist.html` (a seventh row)
+- Create: `teach/learning-records/0029-a-clone-that-kept-the-skills-of-its-parent.md`
+- Modify (by the user): `~/.hermes/profiles/torchwood/skills/`
+
+**Interfaces:**
+- Consumes: the real reply recorded in record 0029.
+- Produces: one skill on disk for Torchwood, and the seventh decision of
+  the roster pattern.
+
+- [ ] **Step 1: Record the count before the cut.**
+
+```bash
+hermes skills list -p torchwood --enabled-only | tail -1
+```
+
+  Expected: `24 enabled shown`.
+
+- [ ] **Step 2: Delete twenty one directories and keep one.**
+
+```bash
+cd ~/.hermes/profiles/torchwood/skills
+rm -rf brainstorming code-review codebase-design devops domain-modeling \
+       github improve-codebase-architecture resolving-merge-conflicts \
+       software-development
+rm -rf apple autonomous-ai-agents creative data-science email media \
+       mlops note-taking productivity research smart-home social-media
+```
+
+- [ ] **Step 3: Check the count after the cut.**
+
+```bash
+ls ~/.hermes/profiles/torchwood/skills/
+hermes skills list -p torchwood --enabled-only | tail -1
+```
+
+  Expected: one directory named `ste-writing`, and `1 enabled shown`.
+
+- [ ] **Step 4: Restart the gateway.** The skill list reaches the model
+  through the prompt.
+
+```bash
+hermes -p torchwood gateway restart
+```
+
+- [ ] **Step 5: Repeat one request and read the first three lines.**
+  Expected: no line that reads `Reading skill kanban-worker`, and none
+  for `brainstorming`.
+
+- [ ] **Step 6: Verify the reference document holds seven rows.**
+
+```bash
+grep -c '<tr>' teach/reference/adding-a-specialist.html
+```
+
+  Expected: `13`. Seven rows plus one heading row in the decision table,
+  and four plants plus one heading row in the roster table.
 
 ---
 

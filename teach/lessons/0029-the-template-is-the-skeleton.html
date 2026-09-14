@@ -141,7 +141,12 @@ Checked:
 <div class="box skill">
   <span class="box-label">Skill — test 1, a real interview</span>
   <p>Post this in the <code>Prompts</code> topic:</p>
-  <pre><code>I want to add a --description flag to fizzy card create</code></pre>
+  <pre><code>I want a prompt for adding a pause key to projects/tetris</code></pre>
+  <p>The task names code that exists on this machine.
+  <code>projects/tetris/</code> holds <code>game.js</code>,
+  <code>index.html</code>, <code>style.css</code>, <code>test.js</code>,
+  and <code>SPEC.md</code>, so every question has an answer a read
+  command can reach. Read the next box for the reason that matters.</p>
   <p>Expected shape of the run. Torchwood asks one question for each
   message, and each question names a section. Torchwood runs read
   commands rather than asking you for a path. Torchwood then sends one
@@ -156,6 +161,26 @@ Checked:
     least one command.</li>
     <li>Every path above the trailer traces to a listed command.</li>
   </ol>
+</div>
+
+<div class="box warning">
+  <span class="box-label">Why the first version of this test failed</span>
+  <p>Test 1 first read <code>I want to add a --description flag to fizzy
+  card create</code>. Torchwood answered with a question:
+  <code>Context — which repository contains the fizzy CLI?</code></p>
+  <p>The question is correct, and the task is the defect.
+  <code>fizzy</code> resolves to <code>/opt/homebrew/bin/fizzy</code>,
+  which links to
+  <code>/opt/homebrew/Caskroom/fizzy/4.0.1/fizzy</code>. The binary
+  comes from a Homebrew cask, and no fizzy source lives on this machine.
+  A prompt for that task cannot name a <code>Deliverable</code> path,
+  because no file here holds the code to change.</p>
+  <p>Keep the rule. An interview ends in a prompt only when the work has
+  a destination. A task whose code is absent produces a question, and
+  the question is the honest output.
+  <a href="../learning-records/0029-a-clone-that-kept-the-skills-of-its-parent.md">Record
+  0029</a> holds the full reply, including a second defect it
+  exposed.</p>
 </div>
 
 <div class="box skill">
@@ -285,7 +310,7 @@ command is a real defect, and it earns a record before any edit to
 <div class="nav">
   <span><a href="0028-limits-that-live-in-the-soul.html">&larr; Lesson 28</a></span>
   <span>Lesson 29 of Stage 4</span>
-  <span></span>
+  <span><a href="0030-the-skill-kit-nobody-cut.html">Lesson 30 &rarr;</a></span>
 </div>
 
 </body>

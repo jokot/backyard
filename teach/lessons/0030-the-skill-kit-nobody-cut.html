@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 30 — The Skill Kit Nobody Cut</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 30 of the Stage 4 build</p>
+<h1>A banned skill that is still installed is a ban in prose</h1>
+<p class="lede">Torchwood carries twenty five skills. One of them is
+<code>kanban-worker</code>, for the job its soul file forbids. Another is
+<code>brainstorming</code>, which its soul file bans by name. Both sit on
+disk, because <code>--clone-from</code> copied the skill kit of
+Peashooter and no lesson cut it. This lesson cuts it, and adds the
+seventh decision to the roster pattern.</p>
+
+<h2>How the gap opened</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Every earlier profile had this step.
+  <a href="0009-sunflowers-skill-kit.html">Lesson 9</a> cut the kit for
+  Peashooter and Sunflower. <a href="0013-crazy-daves-skill-kit.html">Lesson
+  13</a> cut it for Crazy Dave, and removed
+  <code>devops/kanban-worker</code> by name, because a coordinator never
+  runs a task itself.</p>
+  <p>Stage 4 cloned a profile that had already been cut, so the kit
+  looked finished. It was finished for a worker that writes code. Count
+  the difference:</p>
+  <pre><code>hermes skills list -p crazydave --enabled-only
+hermes skills list -p torchwood --enabled-only</code></pre>
+  <p>Crazy Dave reports <code>0 enabled</code>. Torchwood reports
+  <code>24 enabled</code>, and a twenty fifth skill hides behind
+  <code>environments: [kanban]</code>, which is why
+  <code>kanban-worker</code> never appears in that list and still
+  loads.</p>
+  <p>This is the seventh decision of the roster pattern. The six in the
+  reference document all set what a profile is. This one sets what a
+  profile knows how to do, and a clone inherits it whole.</p>
+</div>
+
+<h2>Why prose is not enough here</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The soul file of Torchwood already carries this sentence:</p>
+  <pre><code>Do not use the brainstorming skill. It ends by writing a design document
+and by invoking another skill, and you write no file.</code></pre>
+  <p>The skill is still installed, and the list above reports it as
+  <code>enabled</code>. <a href="../learning-records/0015-the-line-between-work-and-maintenance.md">Record
+  0015</a> states the rule: set the limits from the implementation, not
+  from the conversation. A deleted directory is a limit. A sentence
+  about a directory is a request.</p>
+  <p>This one is cheap to convert, which makes it different from the
+  read-only limit of Lesson 28. Nothing in Hermes stops a write, so that
+  gap stays open until Stage 5. A skill kit is a set of directories, and
+  <code>rm -rf</code> closes it today.</p>
+  <p>A second cost is measurable. Every enabled skill puts a name and a
+  description in the prompt, and a model that sees a relevant name reads
+  the file. That is one turn spent on instructions the profile must not
+  follow. You already watched it happen once.</p>
+</div>
+
+<h2>Do this now</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+
+  <p><strong>1. Record the count before the cut.</strong></p>
+  <pre><code>hermes skills list -p torchwood --enabled-only | tail -1</code></pre>
+  <p>Expected: <code>24 enabled shown</code>. Write the number down. The
+  check after the cut compares against it.</p>
+
+  <p><strong>2. Delete every category except one.</strong> Torchwood
+  keeps <code>ste-writing</code>, because its soul file permits that one
+  skill and no other.</p>
+  <pre><code>cd ~/.hermes/profiles/torchwood/skills
+
+# Kits for a profile that writes files
+rm -rf brainstorming code-review codebase-design devops domain-modeling \
+       github improve-codebase-architecture resolving-merge-conflicts \
+       software-development
+
+# Category directories the Peashooter cleanup left empty
+rm -rf apple autonomous-ai-agents creative data-science email media \
+       mlops note-taking productivity research smart-home social-media</code></pre>
+
+  <p><strong>3. Check what survived.</strong></p>
+  <pre><code>ls ~/.hermes/profiles/torchwood/skills/
+hermes skills list -p torchwood --enabled-only | tail -1</code></pre>
+  <p>Expected: one directory named <code>ste-writing</code>, plus the
+  dot files that track the kit, and <code>1 enabled shown</code>.</p>
+
+  <p><strong>4. Restart the gateway.</strong> The skill list reaches the
+  model through the prompt, so the running process still offers the old
+  one.</p>
+  <pre><code>hermes -p torchwood gateway restart</code></pre>
+
+  <p><strong>5. Repeat the request that exposed this.</strong> Post a
+  task in the <code>Prompts</code> topic and watch the first lines of
+  the reply. Expected: no <code>Reading skill</code> line for
+  <code>kanban-worker</code> and none for <code>brainstorming</code>.</p>
+</div>
+
+<div class="box warning">
+  <span class="box-label">Before you run step 2</span>
+  <p>These directories are copies. The bundled kits live in
+  <code>~/.hermes/skills/</code>, and the local kits, including
+  <code>ste-writing</code> and <code>brainstorming</code>, still exist
+  under <code>~/.hermes/profiles/peashooter/skills/</code>. Check that
+  before you delete:</p>
+  <pre><code>ls ~/.hermes/skills/
+ls ~/.hermes/profiles/peashooter/skills/</code></pre>
+  <p>A restore is one <code>cp -r</code> from either path. Run the two
+  listings first, so the claim in this box is a fact you saw and not a
+  sentence you trusted.</p>
+</div>
+
+<h2>The seventh decision</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The reference document now holds seven rows. The new one reads:</p>
+  <table>
+    <thead>
+      <tr><th>Decision</th><th>Where it lives</th><th>Torchwood</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Skill kit</td>
+        <td>The <code>skills/</code> directory of the profile</td>
+        <td><code>ste-writing</code> only, everything else deleted</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>The trap is specific to cloning. A clone of a cut profile looks
+  cut. The kit that survived the earlier cut is the kit of the earlier
+  role, so check the count and not the appearance.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Torchwood's soul file bans the brainstorming skill, and the skill is still installed. What have you built?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">A request, because the model decides whether the sentence wins</label>
+      <div class="reveal"><p class="feedback correct">Right. Record 0015 draws the line there: a limit that the implementation does not carry is a limit the model may miss.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">A limit, because the sentence reaches the model on each turn</label>
+      <div class="reveal"><p class="feedback incorrect">Delivery is not enforcement. The read-only rule of Lesson 28 reaches the model on every turn too, and Lesson 29 states plainly that it proves nothing.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">A default, because a named skill needs an explicit call</label>
+      <div class="reveal"><p class="feedback incorrect">An installed skill is offered in the prompt by name and description. The model reads one whenever the name matches the request.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does <code>kanban-worker</code> stay absent from <code>--enabled-only</code> and still load?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">It declares <code>environments: [kanban]</code>, so the listing hides it</label>
+      <div class="reveal"><p class="feedback correct">Right, and Lesson 13 hit the same thing with <code>kanban-orchestrator</code>, which is why Crazy Dave reports zero enabled skills and still coordinates.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">It arrived through the clone, and a clone marks a skill unlisted</label>
+      <div class="reveal"><p class="feedback incorrect">The clone copies files and sets no flag. Every other copied skill in that same kit reports itself as enabled.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">The listing shows local skills only, and this one is builtin</label>
+      <div class="reveal"><p class="feedback incorrect">The listing counts thirteen builtin skills for this profile. Source is not what hides it.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Count before the cut recorded as <code>24 enabled shown</code></label>
+  <label><input type="checkbox"> Both restore paths listed before any deletion</label>
+  <label><input type="checkbox"> Only <code>ste-writing</code> survives in the skills directory</label>
+  <label><input type="checkbox"> <code>hermes skills list -p torchwood --enabled-only</code> reports <code>1 enabled shown</code></label>
+  <label><input type="checkbox"> Gateway restarted after the cut</label>
+  <label><input type="checkbox"> A new request loaded no skill named <code>kanban-worker</code></label>
+  <label><input type="checkbox"> The reference document holds seven rows</label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="0013-crazy-daves-skill-kit.html">Lesson 13</a>, which cut the
+same two skills for a profile with the opposite job, and
+<a href="../learning-records/0015-the-line-between-work-and-maintenance.md">learning
+record 0015</a>.</p>
+
+<p><a href="../reference/adding-a-specialist.html">&rarr; Adding a
+specialist</a> &middot;
+<a href="../reference/glossary.html">&rarr; Full glossary</a> &middot;
+<a href="../learning-records/0029-a-clone-that-kept-the-skills-of-its-parent.md">Record
+0029</a></p>
+
+<p class="ask-agent">Send me the two counts, before and after, and the
+first three lines of the reply to your next request in
+<code>Prompts</code>. I check the count against 1 and the reply against
+the skill names. A skill that still loads after the cut is a real
+finding, and it earns a record before any further deletion.</p>
+
+<div class="nav">
+  <span><a href="0029-the-template-is-the-skeleton.html">&larr; Lesson 29</a></span>
+  <span>Lesson 30 of Stage 4</span>
+  <span></span>
+</div>
+
+</body>
+</html>
