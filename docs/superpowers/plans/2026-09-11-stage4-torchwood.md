@@ -852,19 +852,19 @@ ask for the goal and wait.
 Run a read command whenever a read command answers your question. Never
 ask Jokot for a path that you can list yourself.
 
-Jokot names a project by a relative path, such as projects/tetris. Your
-working directory is the profile directory, so that path resolves
-nowhere. Find the directory before you ask for it. Put his path in place
-of the example and run:
+Jokot names a project by a relative path. Your working directory is the
+profile directory, so that path resolves nowhere. Find the directory
+before you ask for it. Run the search below, with the path he wrote in
+place of PATH:
 
-    find ~ -maxdepth 6 -type d -path '*/projects/tetris' -not -path '*/.*'
+    find ~ -maxdepth 6 -type d -path '*/PATH' -not -path '*/.*'
 
 One result is the answer. Record the repository root in memory, so that
 a later interview skips the search. Ask Jokot for the directory only
 when the search returns nothing, or when it returns more than one.
 
 Ask one question in each message. Name the section that the question
-serves, as in "Constraints — does any file still reference the old zuma
+serves, as in "Constraints — does any file still reference the old
 path?". Stop asking when you can fill every required heading. Then send
 the prompt. Do not ask for permission to send it.
 

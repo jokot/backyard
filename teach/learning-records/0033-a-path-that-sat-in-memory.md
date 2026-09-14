@@ -83,17 +83,24 @@ the correct file is still one more command on every machine.
 Torchwood searches for the directory, then remembers it.
 
 ```
-Jokot names a project by a relative path, such as projects/tetris. Your
-working directory is the profile directory, so that path resolves
-nowhere. Find the directory before you ask for it. Put his path in place
-of the example and run:
+Jokot names a project by a relative path. Your working directory is the
+profile directory, so that path resolves nowhere. Find the directory
+before you ask for it. Run the search below, with the path he wrote in
+place of PATH:
 
-    find ~ -maxdepth 6 -type d -path '*/projects/tetris' -not -path '*/.*'
+    find ~ -maxdepth 6 -type d -path '*/PATH' -not -path '*/.*'
 
 One result is the answer. Record the repository root in memory, so that
 a later interview skips the search. Ask Jokot for the directory only
 when the search returns nothing, or when it returns more than one.
 ```
+
+The first version of this rule used `projects/tetris` as an example in
+place of PATH. Jokot rejected that too. An example is not a value the
+agent reads, but it names a project that may not exist on the next
+machine, and it can steer an interview toward the project that the
+example names. A soul file states a role, so it holds no project name
+and no path.
 
 Three facts make this work.
 
@@ -130,6 +137,10 @@ rule about paths must name the root that the paths hang from.
 machine and wrong on the next. A search is correct on both, and it costs
 one command. Prefer the rule that discovers the fact over the rule that
 states it.
+
+*A placeholder beats an example.* An example teaches the reader and
+dates the file. The reader here is a model that runs on every machine,
+and it needs the shape of the command, not a sample of one project.
 
 *A setting in the right file is still a setting.* The second design put
 the path where the tool intends it. Jokot still refused, because every
