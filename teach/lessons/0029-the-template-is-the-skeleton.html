@@ -175,8 +175,22 @@ Checked:
     found nothing for it.</li>
     <li>A <code>Checked:</code> trailer closes the block and lists at
     least one command.</li>
-    <li>Every path above the trailer traces to a listed command.</li>
+    <li>Every path above the trailer traces to a listed command. Do not
+    read this one by eye. Copy each path into <code>ls</code> and run it.
+    A wrong path reads as a right path until a command rejects it.</li>
   </ol>
+  <p>Test 1 ran against this machine on 14 September 2026. Checks 1, 2
+  and 3 passed. Check 4 failed. The prompt held nine paths, five correct
+  and four short of the <code>projects/</code> segment, so the
+  <code>Deliverable</code> named a file that does not exist.
+  <a href="../learning-records/0034-a-path-that-lost-a-segment.md">Record
+  0034</a> holds the table of nine paths and the fix.</p>
+  <p>The task also named work that the repository already holds.
+  <code>game.js</code> line 458 maps <code>P</code> to
+  <code>togglePause()</code>. Torchwood read the code, found the feature,
+  and asked which change you meant. That question is a pass, not a
+  failure. An interview that reads the code before it writes the prompt
+  is the whole point of the profile.</p>
 </div>
 
 <div class="box warning">
