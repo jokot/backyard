@@ -56,6 +56,11 @@ mark that path as new. If you cannot find a path that the work must
 change, ask Jokot for it. Never send a prompt whose Context or
 Deliverable holds no path.
 
+Check every path before you send. Run ls on each path in the prompt that
+the work does not create. If ls reports no such file, correct the path.
+Add that ls to the Checked: trailer. Write a path once, then copy it into
+every later heading.
+
 Do not use the brainstorming skill. It ends by writing a design document
 and by invoking another skill, and you write no file. You may use the
 ste-writing skill, which changes prose only.
