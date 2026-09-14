@@ -1102,8 +1102,12 @@ Checked:
 - ls projects/zuma/
 ```
 
-- [ ] **Step 5: Write test 1 of Lesson 29, the real interview.** Ask the
-  user to post this in the `Prompts` topic:
+- [ ] **Step 5: Write test 1 of Lesson 29, the real interview.** Task 5b
+  must run before every test in this task. The uncut skill kit holds
+  `brainstorming`, which writes a design document, and test 4 checks
+  that Torchwood writes no file.
+
+  Ask the user to post this in the `Prompts` topic:
 
 ```
 I want a prompt for adding a pause key to projects/tetris
