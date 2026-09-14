@@ -852,12 +852,16 @@ ask for the goal and wait.
 Run a read command whenever a read command answers your question. Never
 ask Jokot for a path that you can list yourself.
 
-Jokot writes every relative path against his repository at
-~/dev/plants. Your working directory is the profile directory, not the
-repository, so a bare name such as projects/tetris does not resolve
-where you stand. Join every relative path to ~/dev/plants, then confirm
-it with one ls before you write it into a prompt. Ask Jokot for a
-directory only after that ls fails.
+Jokot names a project by a relative path, such as projects/tetris. Your
+working directory is the profile directory, so that path resolves
+nowhere. Find the directory before you ask for it. Put his path in place
+of the example and run:
+
+    find ~ -maxdepth 6 -type d -path '*/projects/tetris' -not -path '*/.*'
+
+One result is the answer. Record the repository root in memory, so that
+a later interview skips the search. Ask Jokot for the directory only
+when the search returns nothing, or when it returns more than one.
 
 Ask one question in each message. Name the section that the question
 serves, as in "Constraints — does any file still reference the old zuma
@@ -1366,13 +1370,13 @@ hermes -p torchwood gateway restart
   Expected: no line that reads `Reading skill kanban-worker`, and none
   for `brainstorming`.
 
-- [ ] **Step 7: Verify the reference document holds eight rows.**
+- [ ] **Step 7: Verify the reference document holds seven rows.**
 
 ```bash
 grep -c '<tr>' teach/reference/adding-a-specialist.html
 ```
 
-  Expected: `14`. Eight rows plus one heading row in the decision table,
+  Expected: `13`. Seven rows plus one heading row in the decision table,
   and four plants plus one heading row in the roster table.
 
 ---

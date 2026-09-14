@@ -10,7 +10,7 @@
 
 <p class="kicker">Reference</p>
 <h1>Adding a specialist</h1>
-<p class="lede">Eight decisions turn a cloned profile into a specialist
+<p class="lede">Seven decisions turn a cloned profile into a specialist
 with its own voice, its own room, and its own limits. Each decision has
 exactly one home. This page records the home, the value Torchwood used,
 and the trap that the decision hides.</p>
@@ -88,15 +88,6 @@ row is written in advance.</p>
           invite the mistake. Never assert it.</td>
     </tr>
     <tr>
-      <td>Working directory</td>
-      <td><code>config.yaml</code>, key <code>terminal.cwd</code></td>
-      <td>The absolute path of the repository</td>
-      <td>A clone points at the profile directory, so every relative path
-          that the user types resolves nowhere. Put the path here and not
-          in <code>SOUL.md</code>. A soul file states a role, and a role
-          travels to another machine. A path does not.</td>
-    </tr>
-    <tr>
       <td>Skill kit</td>
       <td>The <code>skills/</code> directory of the profile</td>
       <td><code>ste-writing</code> only, every other directory deleted</td>
@@ -150,8 +141,8 @@ row is written in advance.</p>
 </table>
 
 <div class="box knowledge">
-  <span class="box-label">Why these eight</span>
-  <p>A profile holds hundreds of settings. Eight of them decide whether
+  <span class="box-label">Why these seven</span>
+  <p>A profile holds hundreds of settings. Seven of them decide whether
   a specialist behaves as a specialist. The rest arrive correct from the
   clone and stay correct.</p>
   <p>Three decisions give the agent a place: the bot it speaks through,
@@ -168,12 +159,12 @@ row is written in advance.</p>
   forbids every kanban command. Lesson 30 cut the kit and
   <a href="../learning-records/0029-a-clone-that-kept-the-skills-of-its-parent.md">record
   0029</a> holds the reply that exposed it.</p>
-  <p>The eighth arrived from a design rule rather than from a reply.
-  Jokot intends to run this roster on a server, so no soul file may hold
-  a path. The working directory is the one place a machine path belongs,
-  and <code>terminal.cwd</code> is the one key that sets it.
+  <p>No eighth decision holds the working directory. Jokot intends to
+  run this roster on a server, and every machine setting is one more
+  command to repeat there. Torchwood finds a project with one
+  <code>find</code> and records the root in memory instead.
   <a href="../learning-records/0033-a-path-that-sat-in-memory.md">Record
-  0033</a> holds the question that started the change.</p>
+  0033</a> holds the two rejected designs.</p>
 </div>
 
 <h2>The order that matters</h2>
@@ -188,9 +179,8 @@ row is written in advance.</p>
     thread 157, and it is the fourth topic in the group.</li>
     <li>Test the routing description with one decompose run. Never
     assert it.</li>
-    <li>Set <code>terminal.cwd</code> before you write the soul file.
-    A soul file that says "your working directory" is false until the
-    directory is correct.</li>
+    <li>Give a soul file a search, never a path. A path is one more
+    command on the next machine.</li>
   </ul>
 </div>
 

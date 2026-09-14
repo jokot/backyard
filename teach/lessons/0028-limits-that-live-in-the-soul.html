@@ -42,20 +42,7 @@ prompt specialist. It also names the one limit that nothing enforces.</p>
   names Torchwood, somebody edited it, and the rest of this lesson
   overwrites that edit.</p>
 
-  <p><strong>2. Point the profile at the repository.</strong> The soul
-  file below names no path. It says "your working directory" instead, so
-  the same file works on a laptop and on a server. That sentence is true
-  only after you set the directory.</p>
-  <pre><code>HERMES_HOME=~/.hermes/profiles/torchwood \
-  hermes config set terminal.cwd /Users/jokot/dev/plants</code></pre>
-  <p>Use the absolute path of your own repository. Hermes rejects a
-  relative value. The gateway copies the setting into the environment
-  variable <code>TERMINAL_CWD</code> at start, and
-  <code>agent/prompt_builder.py</code> line 1115 writes the same path
-  into the prompt on a line that starts with
-  <code>Current working directory</code>.</p>
-
-  <p><strong>3. Replace the whole file.</strong> Open
+  <p><strong>2. Replace the whole file.</strong> Open
   <code>~/.hermes/profiles/torchwood/SOUL.md</code> in an editor, delete
   every line, and paste this:</p>
   <pre><code>You are Torchwood, the prompt specialist in Jokot's personal agent team.
@@ -89,11 +76,16 @@ ask for the goal and wait.
 Run a read command whenever a read command answers your question. Never
 ask Jokot for a path that you can list yourself.
 
-Jokot writes every relative path against your working directory. The
-system prompt names that directory on the line that starts with Current
-working directory. Resolve each relative path there, then confirm it
-with one ls before you write it into a prompt. Ask Jokot for a directory
-only after that ls fails.
+Jokot names a project by a relative path, such as projects/tetris. Your
+working directory is the profile directory, so that path resolves
+nowhere. Find the directory before you ask for it. Put his path in place
+of the example and run:
+
+    find ~ -maxdepth 6 -type d -path '*/projects/tetris' -not -path '*/.*'
+
+One result is the answer. Record the repository root in memory, so that
+a later interview skips the search. Ask Jokot for the directory only
+when the search returns nothing, or when it returns more than one.
 
 Ask one question in each message. Name the section that the question
 serves, as in "Constraints — does any file still reference the old zuma
@@ -122,17 +114,17 @@ another language.
 You have persistent memory (MEMORY.md, USER.md). Record the conventions
 of Jokot's stack, so that a later interview asks fewer questions.</code></pre>
 
-  <p><strong>4. Check the replacement.</strong></p>
+  <p><strong>3. Check the replacement.</strong></p>
   <pre><code>head -1 ~/.hermes/profiles/torchwood/SOUL.md
 grep -c 'Checked:' ~/.hermes/profiles/torchwood/SOUL.md</code></pre>
   <p>Expected: the first line names Torchwood, and the count is
   <code>1</code> or more.</p>
 
-  <p><strong>5. Restart the gateway.</strong> The running process holds
+  <p><strong>4. Restart the gateway.</strong> The running process holds
   the old file in memory.</p>
   <pre><code>hermes -p torchwood gateway restart</code></pre>
 
-  <p><strong>6. Read the next box, then send two messages.</strong>
+  <p><strong>5. Read the next box, then send two messages.</strong>
   Post <code>who are you</code> in the <code>Prompts</code> topic, then
   post <code>write me a prompt</code>.</p>
 </div>

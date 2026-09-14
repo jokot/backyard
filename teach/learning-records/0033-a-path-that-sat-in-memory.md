@@ -54,7 +54,7 @@ the Fizzy interview, Torchwood ran `git status` inside
 `/Users/jokot/dev/plants` without being told to. It guessed the root
 once and asked for it once.
 
-## The first fix, and why Jokot rejected it
+## Two fixes that Jokot rejected
 
 The first repair wrote `~/dev/plants` into `SOUL.md`. Jokot refused it:
 
@@ -62,43 +62,58 @@ The first repair wrote `~/dev/plants` into `SOUL.md`. Jokot refused it:
 > final goal is to deploy this on other machine or on the server
 
 He is right. A soul file states a role, and a role travels. A path
-describes one machine. The first repair traded a broken interview for an
-unportable profile.
+describes one machine.
+
+The second repair moved the path to `config.yaml`, key `terminal.cwd`.
+That key exists for this purpose. `agent/runtime_cwd.py` bridges it to
+the environment variable `TERMINAL_CWD` when the gateway starts, and
+`agent/prompt_builder.py` line 1115 writes the value into the prompt.
+Jokot refused that one too:
+
+> i still want to keep the cwd to default, because i don't want to setup
+> those work directory every time i setup the project on the other
+> machine
+
+This objection is different from the first. The first was about the
+wrong file. The second is about the count of steps. A correct setting in
+the correct file is still one more command on every machine.
 
 ## The fix
 
-The path moved to the one key that exists for it. `config.yaml` holds
-`terminal.cwd`, and `agent/runtime_cwd.py` bridges that key to the
-environment variable `TERMINAL_CWD` when the gateway starts. The value
-must be absolute, because `tools/file_tools.py` line 242 rejects a
-relative anchor.
-
-```bash
-HERMES_HOME=~/.hermes/profiles/torchwood   hermes config set terminal.cwd /Users/jokot/dev/plants
-```
-
-`agent/prompt_builder.py` line 1115 then writes the same path into the
-prompt, on a line that starts with `Current working directory`. So the
-soul file can name the directory without naming the machine:
+Torchwood searches for the directory, then remembers it.
 
 ```
-Jokot writes every relative path against your working directory. The
-system prompt names that directory on the line that starts with Current
-working directory. Resolve each relative path there, then confirm it
-with one ls before you write it into a prompt. Ask Jokot for a directory
-only after that ls fails.
+Jokot names a project by a relative path, such as projects/tetris. Your
+working directory is the profile directory, so that path resolves
+nowhere. Find the directory before you ask for it. Put his path in place
+of the example and run:
+
+    find ~ -maxdepth 6 -type d -path '*/projects/tetris' -not -path '*/.*'
+
+One result is the answer. Record the repository root in memory, so that
+a later interview skips the search. Ask Jokot for the directory only
+when the search returns nothing, or when it returns more than one.
 ```
 
-The same change removed the second path from `SOUL.md`. The template
-paragraph now reads `cat "$HERMES_HOME/TEMPLATE.md"` in place of
-`~/.hermes/profiles/torchwood/TEMPLATE.md`. The launchd job exports that
-variable already.
+Three facts make this work.
 
-The last sentence of the new rule keeps the question legal for the case
-that earns it. A directory that no `ls` finds is a real question, and the
-Fizzy interview of the same day proved that case exists.
+`find` already sits in the permitted command list, so the rule needs no
+new permission.
 
-`terminal.cwd` became the eighth row of the specialist reference.
+The search costs 669 ms from the profile directory on this machine, and
+it returns exactly one result.
+
+`config.yaml` sets `memory.memory_enabled: true` and
+`memory.write_approval: false`, so Torchwood records the root without
+asking. `SOUL.md` line 51 already tells it to record the conventions of
+Jokot's stack.
+
+The last sentence keeps the question legal for the case that earns it. A
+directory that no search finds is a real question, and the Fizzy
+interview of the same day proved that case exists.
+
+No eighth roster decision was added. The working directory stays at its
+default value of `.` on every machine.
 
 ## Generalization
 
@@ -111,9 +126,15 @@ because asking is the only remaining move.
 working directories read `projects/tetris` as two different places. A
 rule about paths must name the root that the paths hang from.
 
-*A machine fact belongs in machine configuration.* The rule that needed
-a path was correct. The file that held it was wrong. Ask which of the two
-travels, the rule or the value, and put each one where it belongs.
+*Give an agent a search, not a value.* A value is correct on one
+machine and wrong on the next. A search is correct on both, and it costs
+one command. Prefer the rule that discovers the fact over the rule that
+states it.
+
+*A setting in the right file is still a setting.* The second design put
+the path where the tool intends it. Jokot still refused, because every
+per-machine value is one more step in a deployment. Count the steps a
+design adds to the next machine, not only the files it touches.
 
 *Memory in the prompt is not memory in use.* The repository root sat in
 `USER.md`, inside the same request that produced the question. Loading a
