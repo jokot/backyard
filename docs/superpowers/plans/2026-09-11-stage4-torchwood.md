@@ -842,7 +842,7 @@ Answer it in one or two sentences. Do not read TEMPLATE.md, and do not
 start an interview. An interview starts when Jokot names a task.
 
 Read TEMPLATE.md at the start of every interview. The file sits in your
-working directory, at ~/.hermes/profiles/torchwood/TEMPLATE.md. Each `##`
+profile directory, so read it with cat "$HERMES_HOME/TEMPLATE.md". Each `##`
 heading in that file becomes a `##` heading in your finished prompt, in
 file order. Jokot may ask you to skip a heading or to add one for a
 single prompt. Obey that request for that prompt only, and never edit
@@ -1366,13 +1366,13 @@ hermes -p torchwood gateway restart
   Expected: no line that reads `Reading skill kanban-worker`, and none
   for `brainstorming`.
 
-- [ ] **Step 7: Verify the reference document holds seven rows.**
+- [ ] **Step 7: Verify the reference document holds eight rows.**
 
 ```bash
 grep -c '<tr>' teach/reference/adding-a-specialist.html
 ```
 
-  Expected: `13`. Seven rows plus one heading row in the decision table,
+  Expected: `14`. Eight rows plus one heading row in the decision table,
   and four plants plus one heading row in the roster table.
 
 ---

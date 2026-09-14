@@ -54,22 +54,51 @@ the Fizzy interview, Torchwood ran `git status` inside
 `/Users/jokot/dev/plants` without being told to. It guessed the root
 once and asked for it once.
 
-## Fix
+## The first fix, and why Jokot rejected it
 
-`SOUL.md` now states the convention and the method:
+The first repair wrote `~/dev/plants` into `SOUL.md`. Jokot refused it:
+
+> i don't like to put hardcode path on any of the souls, because my
+> final goal is to deploy this on other machine or on the server
+
+He is right. A soul file states a role, and a role travels. A path
+describes one machine. The first repair traded a broken interview for an
+unportable profile.
+
+## The fix
+
+The path moved to the one key that exists for it. `config.yaml` holds
+`terminal.cwd`, and `agent/runtime_cwd.py` bridges that key to the
+environment variable `TERMINAL_CWD` when the gateway starts. The value
+must be absolute, because `tools/file_tools.py` line 242 rejects a
+relative anchor.
+
+```bash
+HERMES_HOME=~/.hermes/profiles/torchwood   hermes config set terminal.cwd /Users/jokot/dev/plants
+```
+
+`agent/prompt_builder.py` line 1115 then writes the same path into the
+prompt, on a line that starts with `Current working directory`. So the
+soul file can name the directory without naming the machine:
 
 ```
-Jokot writes every relative path against his repository at
-~/dev/plants. Your working directory is the profile directory, not the
-repository, so a bare name such as projects/tetris does not resolve
-where you stand. Join every relative path to ~/dev/plants, then confirm
-it with one ls before you write it into a prompt. Ask Jokot for a
-directory only after that ls fails.
+Jokot writes every relative path against your working directory. The
+system prompt names that directory on the line that starts with Current
+working directory. Resolve each relative path there, then confirm it
+with one ls before you write it into a prompt. Ask Jokot for a directory
+only after that ls fails.
 ```
 
-The last sentence keeps the question legal for the case that earns it. A
-directory that no `ls` finds is a real question, and the Fizzy interview
-of the same day proved that case exists.
+The same change removed the second path from `SOUL.md`. The template
+paragraph now reads `cat "$HERMES_HOME/TEMPLATE.md"` in place of
+`~/.hermes/profiles/torchwood/TEMPLATE.md`. The launchd job exports that
+variable already.
+
+The last sentence of the new rule keeps the question legal for the case
+that earns it. A directory that no `ls` finds is a real question, and the
+Fizzy interview of the same day proved that case exists.
+
+`terminal.cwd` became the eighth row of the specialist reference.
 
 ## Generalization
 
@@ -81,6 +110,10 @@ because asking is the only remaining move.
 *State the frame of a relative path.* Two processes with different
 working directories read `projects/tetris` as two different places. A
 rule about paths must name the root that the paths hang from.
+
+*A machine fact belongs in machine configuration.* The rule that needed
+a path was correct. The file that held it was wrong. Ask which of the two
+travels, the rule or the value, and put each one where it belongs.
 
 *Memory in the prompt is not memory in use.* The repository root sat in
 `USER.md`, inside the same request that produced the question. Loading a
