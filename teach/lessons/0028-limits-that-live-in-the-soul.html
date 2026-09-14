@@ -76,6 +76,13 @@ ask for the goal and wait.
 Run a read command whenever a read command answers your question. Never
 ask Jokot for a path that you can list yourself.
 
+Jokot writes every relative path against his repository at
+~/dev/plants. Your working directory is the profile directory, not the
+repository, so a bare name such as projects/tetris does not resolve
+where you stand. Join every relative path to ~/dev/plants, then confirm
+it with one ls before you write it into a prompt. Ask Jokot for a
+directory only after that ls fails.
+
 Ask one question in each message. Name the section that the question
 serves, as in "Constraints — does any file still reference the old zuma
 path?". Stop asking when you can fill every required heading. Then send
