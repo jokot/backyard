@@ -74,7 +74,15 @@ and by invoking another skill, and you write no file.</code></pre>
   <p>Expected: <code>24 enabled shown</code>. Write the number down. The
   check after the cut compares against it.</p>
 
-  <p><strong>2. Delete every category except one.</strong> Torchwood
+  <p><strong>2. Stop the reseeding before you delete.</strong> Hermes
+  puts category directories back. Write the opt-out marker first, or the
+  next command restores what you removed.</p>
+  <pre><code>HERMES_HOME=~/.hermes/profiles/torchwood hermes skills opt-out</code></pre>
+  <p>Expected: <code>Opted out of bundled skills.</code> The command
+  writes <code>~/.hermes/profiles/torchwood/.no-bundled-skills</code> and
+  deletes nothing. Delete that file to opt back in.</p>
+
+  <p><strong>3. Delete every category except one.</strong> Torchwood
   keeps <code>ste-writing</code>, because its soul file permits that one
   skill and no other.</p>
   <pre><code>cd ~/.hermes/profiles/torchwood/skills
@@ -88,25 +96,53 @@ rm -rf brainstorming code-review codebase-design devops domain-modeling \
 rm -rf apple autonomous-ai-agents creative data-science email media \
        mlops note-taking productivity research smart-home social-media</code></pre>
 
-  <p><strong>3. Check what survived.</strong></p>
-  <pre><code>ls ~/.hermes/profiles/torchwood/skills/
-hermes skills list -p torchwood --enabled-only | tail -1</code></pre>
-  <p>Expected: one directory named <code>ste-writing</code>, plus the
-  dot files that track the kit, and <code>1 enabled shown</code>.</p>
+  <p><strong>4. Check what survived.</strong> Read the count, not the
+  listing.</p>
+  <pre><code>hermes skills list -p torchwood --enabled-only | tail -1
+ls ~/.hermes/profiles/torchwood/skills/</code></pre>
+  <p>Expected: <code>1 enabled shown</code>, and one directory named
+  <code>ste-writing</code> plus the dot files that track the kit.</p>
+  <p>If the listing holds 13 more directories, the opt-out marker is
+  missing. Each of those directories holds one file named
+  <code>DESCRIPTION.md</code> and no skill, so the count still reads
+  <code>1 enabled shown</code>. Read the box below, write the marker,
+  then delete them again.</p>
 
-  <p><strong>4. Restart the gateway.</strong> The skill list reaches the
+  <p><strong>5. Restart the gateway.</strong> The skill list reaches the
   model through the prompt, so the running process still offers the old
   one.</p>
   <pre><code>hermes -p torchwood gateway restart</code></pre>
 
-  <p><strong>5. Repeat the request that exposed this.</strong> Post a
+  <p><strong>6. Repeat the request that exposed this.</strong> Post a
   task in the <code>Prompts</code> topic and watch the first lines of
   the reply. Expected: no <code>Reading skill</code> line for
   <code>kanban-worker</code> and none for <code>brainstorming</code>.</p>
 </div>
 
 <div class="box warning">
-  <span class="box-label">Before you run step 2</span>
+  <span class="box-label">Why the directories come back</span>
+  <p><code>rm -rf</code> alone does not hold. Jokot ran the delete on
+  2026-09-14 and 13 directories returned within seconds.</p>
+  <p><code>tools/skills_sync.py</code> lines 696 to 705 walk the bundled
+  library for every file named <code>DESCRIPTION.md</code>. For each one
+  that the profile lacks, the function creates the parent directory and
+  copies the file with <code>shutil.copy2</code>. That call preserves the
+  original modification time, so the returned file carries the date of
+  the bundled copy and the directory carries the date of the sync.</p>
+  <p><code>hermes_cli/main.py</code> line 2192 calls that sync from chat,
+  from the dashboard, and from the gateway. The launchd job for Torchwood
+  exports <code>HERMES_HOME=/Users/jokot/.hermes/profiles/torchwood</code>,
+  so a gateway start rebuilds the shells inside the profile.</p>
+  <p>Two facts limit the damage. A deleted <em>skill</em> stays deleted,
+  because the same file treats an entry in the manifest with no directory
+  on disk as a deliberate removal. And the returned directories hold no
+  skill, so <code>hermes skills list</code> still reports
+  <code>1 enabled shown</code>. The marker in step 2 stops the rebuild at
+  <code>tools/skills_sync.py</code> line 496.</p>
+</div>
+
+<div class="box warning">
+  <span class="box-label">Before you run step 3</span>
   <p>These directories are copies. The bundled kits live in
   <code>~/.hermes/skills/</code>, and the local kits, including
   <code>ste-writing</code> and <code>brainstorming</code>, still exist
@@ -189,6 +225,7 @@ ls ~/.hermes/profiles/peashooter/skills/</code></pre>
   <label><input type="checkbox"> Both restore paths listed before any deletion</label>
   <label><input type="checkbox"> Only <code>ste-writing</code> survives in the skills directory</label>
   <label><input type="checkbox"> <code>hermes skills list -p torchwood --enabled-only</code> reports <code>1 enabled shown</code></label>
+  <label><input type="checkbox"> <code>~/.hermes/profiles/torchwood/.no-bundled-skills</code> exists</label>
   <label><input type="checkbox"> Gateway restarted after the cut</label>
   <label><input type="checkbox"> A new request loaded no skill named <code>kanban-worker</code></label>
   <label><input type="checkbox"> The reference document holds seven rows</label>

@@ -1307,7 +1307,19 @@ hermes skills list -p torchwood --enabled-only | tail -1
 
   Expected: `24 enabled shown`.
 
-- [ ] **Step 2: Delete twenty one directories and keep one.**
+- [ ] **Step 2: Write the opt-out marker before the delete.** Hermes
+  rebuilds category directories on the next sync. `tools/skills_sync.py`
+  lines 696 to 705 recreate every missing `DESCRIPTION.md`, and
+  `hermes_cli/main.py` line 2192 calls that sync from the gateway.
+
+```bash
+HERMES_HOME=~/.hermes/profiles/torchwood hermes skills opt-out
+```
+
+  Expected: `Opted out of bundled skills.` The command writes
+  `~/.hermes/profiles/torchwood/.no-bundled-skills` and deletes nothing.
+
+- [ ] **Step 3: Delete twenty one directories and keep one.**
 
 ```bash
 cd ~/.hermes/profiles/torchwood/skills
@@ -1318,27 +1330,31 @@ rm -rf apple autonomous-ai-agents creative data-science email media \
        mlops note-taking productivity research smart-home social-media
 ```
 
-- [ ] **Step 3: Check the count after the cut.**
+- [ ] **Step 4: Check the count after the cut. Read the count first.**
 
 ```bash
-ls ~/.hermes/profiles/torchwood/skills/
 hermes skills list -p torchwood --enabled-only | tail -1
+ls ~/.hermes/profiles/torchwood/skills/
 ```
 
-  Expected: one directory named `ste-writing`, and `1 enabled shown`.
+  Expected: `1 enabled shown`, and one directory named `ste-writing`.
 
-- [ ] **Step 4: Restart the gateway.** The skill list reaches the model
+  A listing of 14 directories means the marker is missing. The 13 extra
+  directories hold one file named `DESCRIPTION.md` and no skill, so the
+  count still reads `1 enabled shown`. Record 0030 holds the evidence.
+
+- [ ] **Step 5: Restart the gateway.** The skill list reaches the model
   through the prompt.
 
 ```bash
 hermes -p torchwood gateway restart
 ```
 
-- [ ] **Step 5: Repeat one request and read the first three lines.**
+- [ ] **Step 6: Repeat one request and read the first three lines.**
   Expected: no line that reads `Reading skill kanban-worker`, and none
   for `brainstorming`.
 
-- [ ] **Step 6: Verify the reference document holds seven rows.**
+- [ ] **Step 7: Verify the reference document holds seven rows.**
 
 ```bash
 grep -c '<tr>' teach/reference/adding-a-specialist.html
