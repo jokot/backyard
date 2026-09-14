@@ -231,7 +231,14 @@ How to undo the change in one command, when an undo is possible.</code></pre>
 <div class="box skill">
   <span class="box-label">Skill — test 3, a per-prompt override</span>
   <p>Post this in the topic:</p>
-  <pre><code>write me a prompt for the tetris score bug, and skip the Constraints section</code></pre>
+  <pre><code>write me a prompt for the missing level multiplier test in projects/tetris, and skip the Constraints section</code></pre>
+  <p>The gap is real. <code>SPEC.md</code> line 72 multiplies every line
+  clear by the current level, and <code>game.js</code> line 205 does so.
+  <code>test.js</code> line 188 asserts a one-row clear scores 100, which
+  is 100 &times; level 1. No line of <code>test.js</code> assigns
+  <code>game.level</code> or <code>game.lines</code> before a clear, so
+  the multiplication is never measured above level 1. The destination is
+  <code>projects/tetris/test.js</code>.</p>
   <p>Expected: that prompt holds no <code>Constraints</code> heading.
   Then check that the file itself did not move:</p>
   <pre><code>git diff --stat hermes-config/torchwood/TEMPLATE.md
@@ -239,6 +246,25 @@ diff ~/.hermes/profiles/torchwood/TEMPLATE.md hermes-config/torchwood/TEMPLATE.m
   <p>Expected: <code>git diff --stat</code> prints nothing, and
   <code>diff</code> prints nothing. A request for one prompt changes one
   prompt. The soul file says so, and this is the check.</p>
+</div>
+
+<div class="box warning">
+  <span class="box-label">Why the first version of this test failed</span>
+  <p>Test 3 first read <code>write me a prompt for the tetris score bug,
+  and skip the Constraints section</code>. Torchwood answered with a
+  question:</p>
+  <pre><code>Goal — what score behavior is wrong, and what score should the game show instead?</code></pre>
+  <p>The question is correct, and the task is the defect. No score bug
+  exists. Every scoring rule of <code>SPEC.md</code> lines 65 to 78
+  matches <code>game.js</code>, and <code>node test.js</code> prints
+  <code>RESULT  20/20 checks passed</code>.</p>
+  <p>This is the same failure that test 1 met, in a different costume.
+  Test 1 named a repository that this machine does not hold. Test 3 named
+  a defect that this repository does not hold. Both tasks end in a
+  question, because an interview cannot write a <code>Deliverable</code>
+  for work with no destination.</p>
+  <p>Check the premise of a test task against the code before you post
+  it. A task invented to exercise a feature still has to be true.</p>
 </div>
 
 <div class="box skill">

@@ -1169,8 +1169,19 @@ How to undo the change in one command, when an undo is possible.
   Ask the user to post this in the topic:
 
 ```
-write me a prompt for the tetris score bug, and skip the Constraints section
+write me a prompt for the missing level multiplier test in projects/tetris, and skip the Constraints section
 ```
+
+  The gap is real. `SPEC.md` line 72 multiplies every line clear by the
+  current level, and `game.js` line 205 does so. `test.js` line 188
+  asserts a one-row clear scores 100, which is 100 x level 1. No line of
+  `test.js` assigns `game.level` or `game.lines` before a clear, so the
+  multiplication is never measured above level 1. The destination is
+  `projects/tetris/test.js`.
+
+  The first version of this step named "the tetris score bug". No score
+  bug exists, so Torchwood asked which behaviour was wrong. Record 0039
+  holds the reply and the check that found no defect.
 
   Expected: that prompt holds no `Constraints` heading. Then give the
   check that the file did not change:
