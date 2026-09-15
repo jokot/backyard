@@ -54,18 +54,30 @@ Five of the seven checkboxes were mechanical. Two were not.
 
 ## Why the obligation survived
 
-The interview asked about rollback before the template changed. The
-answer stayed in the conversation. The heading list controls where an
-answer prints, and it does not control whether an answer exists.
+The first explanation in this record was wrong. It claimed that the
+answer stayed in the conversation after the template changed. A read of
+the profile directory proves a stronger cause.
 
-A removed heading is therefore two different instructions to a reader:
+`TEMPLATE.md` is not the only home of the rollback rule. A second file
+holds it:
 
-1. Stop printing this section.
-2. Stop collecting this information.
+    ~/.hermes/profiles/torchwood/skills/prompting/prompt-interviewing/SKILL.md
 
-The template states the first. Nothing states the second. The model chose
-the reading that loses the least information, and it wrote the rollback
-command into the nearest section that accepts a list.
+Line 26 of that file states:
+
+    - Give a one-command rollback when the repository state supports one.
+      Do not invent a rollback path.
+
+`SOUL.md` never mentions rollback. `grep -n -i rollback` returns no line.
+So the rule has exactly two homes, and the test changed one of them.
+
+The message that opened the test 2 interview shows the agent reading this
+skill by name. The heading disappeared from the output because
+`TEMPLATE.md` no longer lists it. The command appeared inside `Done when`
+because the skill still demands it.
+
+Stage 4 claims that `TEMPLATE.md` is the only home of the section list.
+That claim is false while line 26 exists.
 
 ## Evidence
 
@@ -91,7 +103,14 @@ and `ls -ld` confirms that claim.
 
 ## The fix
 
-Add one sentence to the `Done when` description in `TEMPLATE.md`:
+Two changes, because the record found two faults.
+
+First, remove line 26 from the skill. The heading list belongs to
+`TEMPLATE.md` alone, and a rule that repeats it in a second file defeats
+the design.
+
+Second, add one sentence to the `Done when` description in
+`TEMPLATE.md`:
 
     Every checkbox names a command. A checkbox that states a condition
     or names no command does not belong here.
@@ -99,11 +118,35 @@ Add one sentence to the `Done when` description in `TEMPLATE.md`:
 This rule is mechanical. A reviewer reads each checkbox and asks one
 question: does this line name a command I can run now?
 
+## A second finding: the cut kit did not stay cut
+
+Lesson 30 cut the skill kit of Torchwood on 14 September 2026 at 15:02,
+and it wrote `.no-bundled-skills` so that `skills_sync` would not rebuild
+the category directories. The marker is present and holds 139 bytes.
+
+The kit still holds two skills:
+
+    ste-writing/SKILL.md                      born 2026-09-07 22:45:34
+    prompting/prompt-interviewing/SKILL.md    born 2026-09-14 17:24:05
+
+The second directory was born two hours after the cut, with the marker
+already in place. `skills_sync` did not create it. This record does not
+name the author, because no log read so far proves one.
+
+The content is a restatement of `SOUL.md`. It repeats the one-question
+rule, the section prefix, the single fenced block, the `Checked:` trailer,
+and the rule that forbids a prompt without a path. That duplication is the
+same fault as the rollback rule. Two files state one rule, so an edit to
+one file leaves the other unchanged.
+
+Row 7 of `teach/reference/adding-a-specialist.html` claimed
+`ste-writing` only. That row now states two skills and the date.
+
 ## Generalizations
 
-**A removed section does not remove the requirement.** Deleting a heading
-changes the shape of the output. It does not delete the information the
-interview already collected.
+**A rule with two homes has no home.** Removing a heading from the file
+that lists headings does not remove a rule that a second file states in
+words. Find every home before you call a change complete.
 
 **A checkbox is not a check.** The bracket pair is punctuation. A check
 names a command and has an outcome.
