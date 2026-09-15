@@ -149,3 +149,11 @@
   reported a healthy process. Ask which values a program resolved once,
   and recheck every "it is running" claim after a rename. Learning
   record 0021.
+
+- Stage 4 found defects in the gap between stating a rule and the rule
+  taking effect. A cut skill kit grew back, a written fix ran on no
+  schedule, a backup copied an empty directory, and a removed heading
+  left the output while the rule stayed. After you state a rule, ask what
+  would change on the machine if the rule were false. If the answer is
+  nothing, you have written a note about a rule. Every rule needs a
+  command that fails when the rule is broken. Learning record 0042.

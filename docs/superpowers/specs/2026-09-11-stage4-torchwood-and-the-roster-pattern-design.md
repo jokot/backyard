@@ -1,7 +1,13 @@
 # Stage 4 Design: Torchwood and the roster pattern
 
 **Date:** 2026-09-11
-**Status:** Approved for implementation
+**Status:** Complete on 2026-09-15. All 10 success criteria pass against
+reported output. Five criteria pass by a mechanism this document does not
+name: criterion 6 needs a command and not an eye, criterion 7 returns the
+heading and not the content, criterion 9 needs three sentences and not one,
+criterion 10 asked for six rows and the document holds seven, and the claim
+that `TEMPLATE.md` is the only home of the section list was false between
+2026-09-14 and 2026-09-15. Record 0042 holds the score and the evidence.
 **Author:** jokot, with Claude Code
 
 ## Background
