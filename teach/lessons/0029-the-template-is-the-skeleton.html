@@ -258,6 +258,18 @@ diff ~/.hermes/profiles/torchwood/TEMPLATE.md hermes-config/torchwood/TEMPLATE.m
   <p>Expected: <code>git diff --stat</code> prints nothing, and
   <code>diff</code> prints nothing. A request for one prompt changes one
   prompt. The soul file says so, and this is the check.</p>
+  <p>Test 3 ran on 15 September 2026 and passed both checks. The prompt
+  held five headings, in file order, with <code>Constraints</code>
+  absent. Both commands printed nothing. The override crossed two turns
+  of the interview, because the instruction arrived in the first message
+  and the prompt arrived after two questions.</p>
+  <p>One difference from test 1 is worth a note. The trailer of test 1
+  listed every entry as a runnable command with an absolute path. This
+  trailer listed some entries as a relative command plus a directory in
+  English, as in <code>ls -la</code> and <code>find .</code> in
+  <code>/Users/jokot/dev/plants/projects/tetris</code>. Every path still
+  traced, so the rule held. A trailer entry that you cannot paste is
+  weaker evidence than one you can.</p>
 </div>
 
 <div class="box warning">
