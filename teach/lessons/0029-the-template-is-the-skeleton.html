@@ -191,6 +191,18 @@ Checked:
   and asked which change you meant. That question is a pass, not a
   failure. An interview that reads the code before it writes the prompt
   is the whole point of the profile.</p>
+  <p>Test 1 ran again on 15 September 2026, after the four sentences of
+  record 0034 reached the live <code>SOUL.md</code>. All four checks
+  passed. The prompt held three distinct paths, and each one traced to
+  its own <code>ls -l</code> inside the trailer. Every path survived
+  <code>ls</code>. The <code>Rollback</code> command named a file that
+  <code>git ls-files</code> knows, and both <code>Done when</code>
+  commands ran, with <code>node test.js</code> printing
+  <code>RESULT  20/20 checks passed</code>.</p>
+  <p>Count the paths across the two runs. The failing prompt held nine
+  paths and the passing prompt held three. The fix wrote one rule for
+  that: write a path once, then copy it into every later heading. Fewer
+  distinct paths means fewer chances to drift.</p>
 </div>
 
 <div class="box warning">
