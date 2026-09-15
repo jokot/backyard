@@ -43,8 +43,10 @@ in the list, because it produces text and changes no file.
   prompt as Telegram text.
 - The section list of the prompt lives in a file the user can edit.
 - Every path in a prompt traces to a command that Torchwood ran.
-- Produce `teach/reference/adding-a-specialist.html`, which records the six
-  decisions that a new specialist needs, with the values Torchwood used.
+- Produce `teach/reference/adding-a-specialist.html`, which records the
+  seven decisions that a new specialist needs, with the values Torchwood
+  used. This document named six decisions when Stage 4 started. Lesson 30
+  added the seventh.
 
 ## Non-goals
 
@@ -53,10 +55,16 @@ in the list, because it produces text and changes no file.
 - Torchwood does not write, move, or delete any file.
 - Stage 4 does not build Magnet-shroom, Marigold, or Imitater.
 
-## The six roster decisions
+## The seven roster decisions
 
-A new specialist needs six decisions. Each decision has one home. The
+A new specialist needs seven decisions. Each decision has one home. The
 reference document holds one row for each.
+
+This section named six decisions on 11 September 2026. The seventh
+arrived on 14 September 2026, from a real reply. Torchwood loaded a skill
+for kanban workers during an interview, and its `SOUL.md` forbids every
+kanban command. The clone had carried the skill kit of the profile it
+copied. Lesson 30 cut the kit and wrote row 7.
 
 | Decision | Home | Current values |
 |---|---|---|
@@ -66,6 +74,7 @@ reference document holds one row for each.
 | Identity and limits | `SOUL.md` | Domain, out-of-scope rule, reporting rule, memory rule |
 | Board membership | `config.yaml`, key `kanban.orchestrator_profile` | All three profiles name `crazydave` |
 | Bot credentials | `.env`, key `TELEGRAM_BOT_TOKEN` | One token for each profile. Never copied into the repository. |
+| Skill kit | The `skills/` directory of the profile | Torchwood keeps `ste-writing` only. A delete alone does not hold, because `skills_sync` rebuilds category directories. Run `hermes skills opt-out` first. |
 
 ## Torchwood design
 
@@ -262,8 +271,10 @@ prompt for the flappy refactor". The test waits one `auto_decompose` tick of
    `git diff hermes-config/torchwood/TEMPLATE.md` prints nothing afterward.
 9. Torchwood declines a direct request to edit a file, and `git status` in
    the target repository stays clean.
-10. `teach/reference/adding-a-specialist.html` holds six rows. Each row
-    carries the value that Torchwood used.
+10. `teach/reference/adding-a-specialist.html` holds seven rows. Each row
+    carries the value that Torchwood used. This criterion asked for six
+    rows when Stage 4 started, because the skill kit decision was not
+    known then.
 
 ## Known gap
 
