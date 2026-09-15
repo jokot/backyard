@@ -22,4 +22,5 @@ Never a scratch directory.
 
 ## Done when
 Checks the worker can run without asking a question. One checkbox
-for each check.
+for each check. Every checkbox names a command. A checkbox that states a
+condition or names no command does not belong here.

@@ -258,6 +258,36 @@ diff ~/.hermes/profiles/torchwood/TEMPLATE.md hermes-config/torchwood/TEMPLATE.m
   <p>Expected: <code>git diff --stat</code> prints nothing, and
   <code>diff</code> prints nothing. A request for one prompt changes one
   prompt. The soul file says so, and this is the check.</p>
+  <p>Test 2 ran in two halves. The first half added <code>## Rollback</code>
+  on 14 September 2026 at 07:08:39. The three prompts after that edit all
+  carried the heading in position 4. The second half removed the heading on
+  15 September 2026, and the next prompt held five headings with
+  <code>## Rollback</code> absent. The gateway process kept the identifier
+  68460 across both halves, so no restart happened. A file that Jokot edited
+  by hand changed the output of the agent. That is the whole argument for
+  keeping the skeleton outside <code>SOUL.md</code>.</p>
+</div>
+
+<div class="box warning">
+  <span class="box-label">The defect that the passing test exposed</span>
+  <p>The heading left. The obligation did not. The last entry of
+  <code>Done when</code> read <code>If the change must be rolled back, use
+  git checkout -- projects/zuma/notify.sh</code>. That entry is not a check.
+  A worker cannot run it and read a pass or a fail.</p>
+  <p>A second entry failed the same rule. It read <code>Run the relevant
+  local verification commands and inspect the final diff</code>. The word
+  "relevant" names no command, so the worker must choose the commands. The
+  check asks a question, and <code>TEMPLATE.md</code> forbids that. This is
+  the failure of <a href="../learning-records/0016-a-specification-that-could-not-work.md">record
+  0016</a>, where a specification passed review while reporting
+  <code>tests_run: 0</code>.</p>
+  <p>Five of the seven checkboxes named a command. Two did not. A removed
+  heading is two instructions to a reader: stop printing this section, and
+  stop collecting this information. The template states the first only, so
+  the rollback command moved to the nearest section that accepts a list.
+  <a href="../learning-records/0041-a-heading-that-moved-instead-of-leaving.md">Record
+  0041</a> holds the fix, which adds one sentence to the
+  <code>Done when</code> description of <code>TEMPLATE.md</code>.</p>
   <p>Test 3 ran on 15 September 2026 and passed both checks. The prompt
   held five headings, in file order, with <code>Constraints</code>
   absent. Both commands printed nothing. The override crossed two turns
