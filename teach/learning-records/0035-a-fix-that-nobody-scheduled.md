@@ -82,10 +82,31 @@ Register the script as a cron job of the orchestrator profile, then
 prove that the job runs:
 
 ```
-hermes cron add --profile crazydave \
-  --schedule '*/2 * * * *' \
-  --command ~/.hermes/scripts/kanban-autosubscribe.sh
+hermes -p crazydave cron create '*/2 * * * *' --no-agent \
+  --script ~/.hermes/scripts/kanban-autosubscribe.sh \
+  --name kanban-autosubscribe
 ```
+
+**Correction, 2026-09-15.** The first version of this record proposed
+`hermes cron add --profile crazydave --schedule ... --command ...`. That
+command cannot run. `hermes cron create --help` shows the schedule as a
+positional argument. It shows `--script` and `--no-agent`, and it shows no
+`--profile` flag and no `--command` flag.
+
+The profile selector is `-p`, and it belongs to `hermes` rather than to
+`cron`. The target profile matters. `hermes profile list` marks
+`torchwood` as the active profile, and cron jobs live in
+`~/.hermes/profiles/<name>/cron/jobs.json`. A bare `hermes cron create`
+would therefore schedule a kanban command under the one profile whose
+`SOUL.md` forbids every kanban command.
+
+`--no-agent` runs the script alone and delivers its output. Without that
+flag the output of the script feeds a language model prompt, which is not
+the intent here.
+
+This correction is the finding of this record, repeated. A fix written
+into a document and never run is a note about a fix. This note stayed
+wrong for six days because nobody typed it.
 
 Verify with two commands after four minutes:
 
