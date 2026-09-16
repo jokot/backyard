@@ -99,6 +99,16 @@ drifted. The count is the test.
 No gateway restart is needed. `hermes send` reads the `.env` file on
 each call, through `_load_hermes_env()` at `send_cmd.py:300`.
 
+Jokot proved the fix against the real machine on 2026-09-16:
+
+```
+hermes -p peashooter send --to telegram "reporting path now lands in the group"
+```
+
+The message arrived in the General topic of the Backyard group, and the
+Peashooter bot sent it. The destination moved, and the sender identity
+of record 0010 held. The gateway of Peashooter never restarted.
+
 ## A second defect, found on the way, and not fixed here
 
 A forum group routes a message to a topic by `message_thread_id`. The
