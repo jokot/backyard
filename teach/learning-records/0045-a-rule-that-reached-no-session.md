@@ -105,6 +105,39 @@ the `system_prompt` column to separate the two failures. NULL means that
 nobody has spoken since `/new`. A non-empty value without the rule text
 means a real failure.
 
+## The result on the real machine
+
+Jokot sent one message in `#Coding` after the `/new` command. The
+session then held a prompt of 16,168 characters, and the proof query
+returned one row:
+
+```
+20260916_200002_bda1e48d  thread=2  open  prompt=16168 chars  NEW_rule=True
+20260910_202515_024dd579  thread=2  ended prompt=15351 chars  NEW_rule=False
+```
+
+The new prompt is 817 characters longer than the prompt that it
+replaced. The rule is live in the chat with Peashooter.
+
+## A second stale session, in another topic
+
+The same query found a third row in the same database:
+
+```
+20260909_232542_0d06add5  thread=1  open  prompt=15352 chars  NEW_rule=False
+```
+
+Thread 1 is the `#General` topic. Peashooter does not free-respond
+there, because `free_response_topics` names only `-1004371805465:2`.
+Peashooter still answers a mention anywhere, because
+`telegram.require_mention` is True. So a mention of Peashooter in
+`#General` reuses a prompt built on 9 September 2026, and that prompt
+holds no rule about a server.
+
+One `/new` fixes one topic. A profile holds one open session for each
+topic that it has ever answered in. Count the open rows, never the
+topics that you remember.
+
 ## What needs no action
 
 A dispatched kanban worker reads the new rule without any command. The
