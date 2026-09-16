@@ -268,13 +268,19 @@ code. An open port is not a working service.</code></pre>
   a new session for each task, so the next worker reads the new rule.
   Six worker sessions on 14 September 2026 each hold a separate prompt,
   which is the proof.</p>
-  <p>This command proves the result, and it fails when the rule is not
-  live:</p>
+  <p>Then send one ordinary message and wait for the reply. The
+  <code>/new</code> command creates the session row and leaves
+  <code>system_prompt</code> as NULL. The gateway builds the prompt on
+  the first turn and writes it back on that turn only.</p>
+  <p>After the reply arrives, this command proves the result, and it
+  fails when the rule is not live:</p>
   <pre><code>sqlite3 -readonly ~/.hermes/profiles/peashooter/state.db \
   "SELECT id FROM sessions WHERE source='telegram' AND ended_at IS NULL
      AND system_prompt LIKE '%Starting a long-lived service%';"</code></pre>
-  <p>One row means the rule is live in the chat. No row means the chat
-  still runs on the old prompt.</p>
+  <p>One row means the rule is live in the chat. No row means either the
+  chat still runs on the old prompt, or nobody has sent a message since
+  <code>/new</code>. Read the <code>system_prompt</code> column to tell
+  the two cases apart. NULL means the second case.</p>
 </div>
 
 <h2>The command that fails when the rule is broken</h2>
@@ -357,7 +363,8 @@ echo "audit complete"</code></pre>
   <label><input type="checkbox"> The same script with <code>DEVNULL</code> passed 2000 requests</label>
   <label><input type="checkbox"> The hard rule block added to <code>~/.hermes/profiles/peashooter/SOUL.md</code></label>
   <label><input type="checkbox"> The same block mirrored to <code>hermes-config/peashooter/SOUL.md</code></label>
-  <label><input type="checkbox"> <code>/new</code> sent in <code>#Coding</code>, and the sqlite3 query returned one row</label>
+  <label><input type="checkbox"> <code>/new</code> sent in <code>#Coding</code>, then one message sent and answered</label>
+  <label><input type="checkbox"> The sqlite3 query returned one row after that reply</label>
   <label><input type="checkbox"> The listener audit reported <code>audit complete</code> with no line marked <code>AT RISK</code></label>
 </div>
 

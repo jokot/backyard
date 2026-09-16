@@ -67,7 +67,8 @@ Send the message inside the topic, not in the group root.
 `gateway/run.py:10106` tests for the topic root lobby and answers with a
 different message there.
 
-One command proves the result, and it fails when the rule is not live:
+Then send one ordinary message and wait for the reply. One command
+proves the result, and it fails when the rule is not live:
 
 ```bash
 sqlite3 -readonly ~/.hermes/profiles/peashooter/state.db \
@@ -75,8 +76,34 @@ sqlite3 -readonly ~/.hermes/profiles/peashooter/state.db \
      AND system_prompt LIKE '%Starting a long-lived service%';"
 ```
 
-One row means the rule is live. No row means the chat still runs on the
-prompt of 10 September.
+One row means the rule is live. No row carries two meanings, and the
+next section separates them.
+
+## The proof query has a blind window
+
+Jokot sent `/new` at 20:00:02 on 2026-09-16. The database answered at
+once:
+
+```
+20260910_202515_024dd579  telegram  thread=2  ended=2026-09-16 20:00:02
+20260916_200002_bda1e48d  telegram  thread=2  open  system_prompt=NULL
+```
+
+The old session closed and a new session opened in the same second. The
+new row holds NULL, not the new rule, so the proof query returned no
+row. The command that was supposed to confirm the fix reported failure
+after a correct fix.
+
+The reason sits in the same docstring at
+`agent/conversation_loop.py:281`. The function "persists a freshly-built
+prompt back to the session DB on first build". The `/new` command
+creates the row. The first turn builds the prompt and writes it.
+Between those two events the column is NULL.
+
+So the query needs one message and one reply before it can answer. Read
+the `system_prompt` column to separate the two failures. NULL means that
+nobody has spoken since `/new`. A non-empty value without the rule text
+means a real failure.
 
 ## What needs no action
 
