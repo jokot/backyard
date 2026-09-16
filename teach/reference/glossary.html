@@ -252,6 +252,23 @@ possible definition.</p>
   enforced.
   <span class="from">Introduced in: <a href="../lessons/0022-fizzy-the-visible-board.html">Lesson 22</a></span></dd>
 
+  <dt>Pipe</dt>
+  <dd>A fixed buffer in memory with a writer at one end and a reader at
+  the other. An agent gives every command it starts a pipe, so that the
+  agent can read the output. A write to a full pipe does not fail and
+  does not return. It blocks until a reader takes bytes out, so a pipe
+  that lost its reader stops the writer forever. This machine gives a
+  pipe 16,384 bytes and grows it to 65,536 bytes under load.
+  <span class="from">Introduced in: <a href="../lessons/0031-a-service-that-outlives-its-agent.html">Lesson 31</a></span></dd>
+
+  <dt>Orphan process</dt>
+  <dd>A process whose parent has exited. A parent process id of 1 names
+  one, because the operating system adopts a process that loses its
+  parent. Every service an agent starts becomes an orphan, since the
+  agent exits within a turn. An orphan that still holds the pipes of its
+  parent is the failure of learning record 0038.
+  <span class="from">Introduced in: <a href="../lessons/0031-a-service-that-outlives-its-agent.html">Lesson 31</a></span></dd>
+
 </dl>
 
 <p style="margin-top:3rem; font-family:-apple-system,sans-serif; font-size:0.85rem; color:var(--ink-soft);">

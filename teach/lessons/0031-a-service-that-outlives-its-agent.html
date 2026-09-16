@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 31 — A Service That Outlives Its Agent</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 31 of the Stage 4 build</p>
+<h1>A server an agent starts dies at request 978</h1>
+<p class="lede">On 14 September two web servers stopped answering while
+their ports stayed open. Both had inherited the standard error pipe of
+the agent that started them. This lesson reproduces the failure on
+demand, measures the exact request that kills it, and writes the one
+rule that prevents it into the soul file of Peashooter.</p>
+
+<h2>What an agent leaves behind</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>An agent is a short process by design. It reads a request, runs
+  commands, answers, and exits. A web server is a long process by
+  design. When the agent starts the server as its own child, the two
+  lifetimes disagree, and the child keeps every file descriptor the
+  parent handed it.</p>
+  <p>Standard output and standard error are the dangerous two. A
+  terminal gives the child a character device. An agent gives the child
+  a <span class="term">pipe</span>, because the agent wants to read the
+  command output and report it back to you.</p>
+  <p>A pipe is a fixed buffer with a writer at one end and a reader at
+  the other. When the buffer is full, the next write does not fail and
+  does not return. It blocks, and it waits for the reader to take bytes
+  out.</p>
+  <p>The agent exits. The reader is gone. The buffer never drains
+  again.</p>
+</div>
+
+<h2>Why the port stays open</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p><code>python3 -m http.server</code> writes one log line to standard
+  error for every request it serves. That log line is the trap.</p>
+  <p>The server accepts a connection, writes the log line, and then
+  writes the response. When the pipe is full, the server stops inside
+  the log write and never reaches the response. It holds the connection
+  open and answers nothing.</p>
+  <p>The socket stays in <code>LISTEN</code>, because the kernel owns
+  the socket, not the process. The kernel keeps accepting connections
+  into a queue that nobody reads. Every diagnostic that asks the kernel
+  reports a healthy service.</p>
+  <p>This is why the failure of 14 September looked impossible.
+  <code>lsof</code> showed a listener. The port answered a connection.
+  ngrok reported HTTP 503. Only a real request exposed the truth.</p>
+</div>
+
+<div class="box warning">
+  <span class="box-label">An open port is not a working service</span>
+  <p><code>LISTEN</code> says the kernel holds the socket. It says
+  nothing about the process behind it. Test a service with a request,
+  never with <code>lsof</code>:</p>
+  <pre><code>curl -sS -o /dev/null -w '%{http_code}\n' --max-time 5 http://127.0.0.1:8000/</code></pre>
+  <p>A blocked server returns <code>curl: (52) Empty reply from
+  server</code> or a timeout. A working server returns
+  <code>200</code>.</p>
+</div>
+
+<h2>Do this now — reproduce the failure</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>Read the number off your own machine. Do not trust the number in
+  this lesson.</p>
+  <p><strong>Step 1.</strong> Measure the pipe buffer. Write into a pipe
+  that has no reader until the write refuses:</p>
+  <pre><code>python3 - &lt;&lt;'PY'
+import os, fcntl, errno
+r, w = os.pipe()
+fcntl.fcntl(w, fcntl.F_SETFL, os.O_NONBLOCK)
+total = 0
+try:
+    while True:
+        total += os.write(w, b"x" * 1024)
+except OSError as e:
+    if e.errno not in (errno.EAGAIN, errno.EWOULDBLOCK): raise
+print(f"pipe blocks after {total} bytes")
+PY</code></pre>
+  <p>This machine reported <code>65536</code>.</p>
+
+  <p><strong>Step 2.</strong> Measure one log line. Start a server, send
+  one request, and count the bytes:</p>
+  <pre><code>python3 -m http.server 8901 --directory /tmp 2&gt;/tmp/hs.err &amp;
+curl -s -o /dev/null http://127.0.0.1:8901/
+awk '{print length($0)+1, "bytes"}' /tmp/hs.err</code></pre>
+  <p>This machine reported <code>67 bytes</code>, from the line
+  <code>::ffff:127.0.0.1 - - [16/Sep/2026 18:57:03] "GET / HTTP/1.1" 200
+  -</code>.</p>
+
+  <p><strong>Step 3.</strong> Predict the request that kills the server.
+  Divide the buffer by the line:</p>
+  <pre><code>65536 / 67 = 978</code></pre>
+
+  <p><strong>Step 4.</strong> Run the prediction against a real server.
+  Save this file as <code>repro.py</code> and run it:</p>
+  <pre><code>import subprocess, os, sys, time, urllib.request
+
+p = subprocess.Popen(
+    [sys.executable, "-m", "http.server", "8902", "--directory", os.getcwd()],
+    stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+)
+for _ in range(200):
+    try:
+        urllib.request.urlopen("http://127.0.0.1:8902/", timeout=0.5).read(); break
+    except Exception: time.sleep(0.05)
+
+n = 0
+try:
+    while n &lt; 5000:
+        n += 1
+        urllib.request.urlopen("http://127.0.0.1:8902/", timeout=2).read()
+except Exception as e:
+    print(f"server stopped answering at request {n}")
+subprocess.run(["lsof", "-a", "-p", str(p.pid), "-d", "0,1,2"])
+p.kill()</code></pre>
+  <p>The <code>stderr=subprocess.PIPE</code> line is the whole defect.
+  It is what an agent does every time it starts a server and wants to
+  read the output.</p>
+</div>
+
+<div class="box warning">
+  <span class="box-label">The measured result</span>
+  <p>Two runs on 16 September 2026 gave the same answer:</p>
+  <pre><code>server stopped answering at request 978
+pipe bytes written before block: about 65526
+
+Python 31456 jokot 1 PIPE 0x193f...  16384 -&gt;0x2630...
+Python 31456 jokot 2 PIPE 0x8dad...  65536 -&gt;0x2712...</code></pre>
+  <p>978 requests times 67 bytes is 65,526 bytes, against a buffer of
+  65,536. The prediction and the measurement agree to within one log
+  line.</p>
+  <p>Read the two pipe sizes in that output. Descriptor 1 stayed at
+  16,384 because nothing wrote to it. Descriptor 2 grew to 65,536
+  because the log filled it. macOS gives a pipe 16,384 bytes and grows
+  it on demand.</p>
+  <p>That growth makes the <code>SIZE/OFF</code> column a trap. A third
+  server, planted on port 8904, reported both descriptors at
+  <code>16384</code> while it was still healthy. The arithmetic on that
+  reading predicts request 244. The server answered 978 requests and
+  then stopped, because the buffer grew under the load that was filling
+  it.</p>
+  <p>Take 978 as the number for this machine, from three runs. Take the
+  reading from <code>lsof</code> as a snapshot of the buffer now, never
+  as its limit.</p>
+</div>
+
+<h2>The fix, and the proof</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>Send the output to a device that never fills, and detach the
+  process from the agent:</p>
+  <pre><code>nohup python3 -m http.server 8000 --directory &lt;dir&gt; &gt;/dev/null 2&gt;&amp;1 &amp;</code></pre>
+  <p>Keep the log when you want it. A file has no buffer limit and no
+  reader requirement:</p>
+  <pre><code>nohup python3 -m http.server 8000 --directory &lt;dir&gt; &gt;&gt;/tmp/http8000.log 2&gt;&amp;1 &amp;</code></pre>
+  <p>Run the same load against the repaired server. Change the two
+  <code>subprocess.PIPE</code> values to <code>subprocess.DEVNULL</code>
+  and raise the limit to 2000 requests. The result on 16 September
+  2026:</p>
+  <pre><code>still answering after 2000 requests, which is 134000 bytes of log
+
+Python 31516 jokot 0u CHR 3,2 /dev/null
+Python 31516 jokot 1u CHR 3,2 /dev/null
+Python 31516 jokot 2u CHR 3,2 /dev/null</code></pre>
+  <p>134,000 bytes is more than twice the buffer that killed the first
+  server. All three descriptors name a character device.</p>
+</div>
+
+<h2>Diagnose a silent process by its descriptors</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The logs are exactly what the process cannot write, so the logs
+  cannot report this failure. Two commands give the answer instead.</p>
+  <p>The first command names the parent:</p>
+  <pre><code>ps -o pid,ppid,etime,command -p &lt;pid&gt;</code></pre>
+  <p>A parent process id of 1 means the agent that started this process
+  has exited. The process is an orphan, and
+  <code>launchd</code> adopted it.</p>
+  <p>The second command names the cause:</p>
+  <pre><code>lsof -a -p &lt;pid&gt; -d 0,1,2</code></pre>
+  <p>Read the <code>TYPE</code> column. <code>CHR</code> pointing at
+  <code>/dev/null</code> is safe. <code>REG</code> pointing at a log file
+  is safe. <code>PIPE</code> on an orphan is the defect, and the
+  <code>SIZE/OFF</code> column states how many bytes the process may
+  still write before it stops.</p>
+</div>
+
+<div class="box warning">
+  <span class="box-label">The server from record 0038, two days later</span>
+  <p>The repair of 14 September still holds. The same process id
+  answered on 16 September 2026:</p>
+  <pre><code>$ ps -o pid,ppid,etime -p 32523
+  PID  PPID     ELAPSED
+32523     1 02-00:24:52
+
+$ lsof -a -p 32523 -d 0,1,2
+Python 32523 jokot 0r CHR 3,2 /dev/null
+Python 32523 jokot 1w CHR 3,2 /dev/null
+Python 32523 jokot 2w CHR 3,2 /dev/null
+
+$ curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/
+200</code></pre>
+  <p>A parent process id of 1 with three character devices is the shape
+  you want. The process is an orphan on purpose, and it writes nowhere.</p>
+</div>
+
+<h2>Do this now — write the rule where it fires</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p><a href="../learning-records/0038-a-server-killed-by-its-own-log.md">Record
+  0038</a> stated this rule on 14 September and changed no file. Its own
+  status line says so: "Fixed for this server. The pattern remains in the
+  prompts."</p>
+  <p><a href="../learning-records/0042-stage-4-complete.md">Record
+  0042</a> gives the test that this fails. After you state a rule, ask
+  what would change on the machine if the rule were false. Nothing
+  changed. The rule was a note.</p>
+  <p>Peashooter is the profile that builds and runs software, so the
+  rule belongs in the soul file of Peashooter. Add this block:</p>
+  <pre><code>Starting a long-lived service — HARD RULE: you are a short process and a
+server is a long one. Never start a server in the foreground, and never
+let it inherit your standard output or standard error. Both are pipes
+that nobody drains after you exit, and a full pipe stops the server
+inside a log write while its port stays open. Always redirect and
+detach:
+
+  nohup &lt;command&gt; &gt;/dev/null 2&gt;&amp;1 &amp;
+
+Use a log file instead of /dev/null when you need the output:
+
+  nohup &lt;command&gt; &gt;&gt;/tmp/&lt;name&gt;.log 2&gt;&amp;1 &amp;
+
+Verify before you report the service running. Run both commands and
+paste both results:
+
+  lsof -a -p &lt;pid&gt; -d 0,1,2
+  curl -sS -o /dev/null -w '%{http_code}\n' --max-time 5 http://127.0.0.1:&lt;port&gt;/
+
+Descriptors 1 and 2 must not say PIPE. The curl must print a status
+code. An open port is not a working service.</code></pre>
+  <p>Write the same block into the soul file of any later profile that
+  runs software. The rule belongs to the job, not to the plant.</p>
+</div>
+
+<h2>The command that fails when the rule is broken</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Record 0042 asks every rule for a command that fails when the rule
+  is broken. This rule has one. Run it against every listener you own:</p>
+  <pre><code>for pid in $(lsof -nP -iTCP -sTCP:LISTEN -t 2&gt;/dev/null | sort -u); do
+  [ "$(ps -o ppid= -p "$pid" 2&gt;/dev/null | tr -d ' ')" = "1" ] || continue
+  lsof -a -p "$pid" -d 1,2 2&gt;/dev/null | grep -q PIPE \
+    &amp;&amp; echo "AT RISK  $pid  $(ps -o comm= -p "$pid" | sed 's#.*/##')"
+done
+echo "audit complete"</code></pre>
+  <p>The test for the parent process id is not optional, and the first
+  version of this audit omitted it. Without that test the audit reported
+  six processes on this machine, and all six were healthy. Five belonged
+  to Cursor and one to Stremio, and every one had a living parent that
+  drains its pipe.</p>
+  <p>A pipe is a defect only when nobody reads it. A parent process id
+  of 1 is the cheap test for that, because it means the process that
+  held the other end has exited.</p>
+  <p>The audit was checked against all three cases. It named the planted
+  failure on port 8904. It stayed silent about the six processes with a
+  living parent. It stayed silent about process 32523, which has a
+  parent process id of 1 and writes to <code>/dev/null</code>.</p>
+  <p>One limit stays open. A parent that is still alive and never reads
+  its pipe produces the same failure, and this audit does not see it.
+  Redirection at start is the rule. The audit is the net under it.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">A server answers for hours, then stops while its port stays in <code>LISTEN</code>. What does this most likely mean?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">It blocked inside a write to a pipe that no reader drains</label>
+      <div class="reveal"><p class="feedback correct">Right. The kernel holds the socket, so LISTEN survives a process that cannot speak. The delay is the buffer filling one log line at a time.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">It ran out of memory, and the kernel paused the process</label>
+      <div class="reveal"><p class="feedback incorrect">A memory failure ends the process, and the port closes with it. This port stayed open, so the process is alive and stopped.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">The tunnel expired, so requests never reached the port</label>
+      <div class="reveal"><p class="feedback incorrect">The local port failed the same test as the tunnel. A request to 127.0.0.1 returned an empty reply, which puts the fault behind the socket.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">Why can the logs of a blocked server never report this failure?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">The write of the log line is the operation that blocked</label>
+      <div class="reveal"><p class="feedback correct">Right. The process stopped inside the log write, so the message describing the fault is the message that cannot leave. Read the descriptors instead.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">The agent deleted the log file when the agent exited</label>
+      <div class="reveal"><p class="feedback incorrect">No file exists to delete. The output went to a pipe in memory, which is why no file appears anywhere on disk.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">A pipe holds the last line only, and it overwrites the rest</label>
+      <div class="reveal"><p class="feedback incorrect">A pipe drops nothing and overwrites nothing. It stops the writer instead, which is the whole mechanism of this failure.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+<div class="checklist">
+  <label><input type="checkbox"> The pipe measurement on this machine reported a byte count</label>
+  <label><input type="checkbox"> One log line of <code>http.server</code> measured in bytes</label>
+  <label><input type="checkbox"> The predicted request number written down before the test ran</label>
+  <label><input type="checkbox"> <code>repro.py</code> stopped at a request within one line of the prediction</label>
+  <label><input type="checkbox"> The same script with <code>DEVNULL</code> passed 2000 requests</label>
+  <label><input type="checkbox"> The hard rule block added to <code>~/.hermes/profiles/peashooter/SOUL.md</code></label>
+  <label><input type="checkbox"> The same block mirrored to <code>hermes-config/peashooter/SOUL.md</code></label>
+  <label><input type="checkbox"> The listener audit reported <code>audit complete</code> with no line marked <code>AT RISK</code></label>
+</div>
+
+<p><strong>Primary source:</strong> the <code>pipe(7)</code> manual page,
+which states that a write to a full pipe blocks, and
+<a href="../learning-records/0038-a-server-killed-by-its-own-log.md">learning
+record 0038</a>, which holds the original diagnosis and the two
+processes that died.</p>
+
+<p><a href="../learning-records/0021-a-server-that-resolved-its-root-once.md">Record
+0021</a> &middot;
+<a href="../learning-records/0042-stage-4-complete.md">Record 0042</a>
+&middot;
+<a href="../reference/glossary.html">&rarr; Full glossary</a></p>
+
+<p class="ask-agent">Send me the request number your own
+<code>repro.py</code> stopped at, and the output of the listener audit. I
+check the number against your measured buffer divided by your measured
+log line. A server that survives past that number, or one that dies well
+before it, is a real finding, and it earns a record.</p>
+
+<div class="nav">
+  <span><a href="0030-the-skill-kit-nobody-cut.html">&larr; Lesson 30</a></span>
+  <span>Lesson 31 of Stage 4</span>
+  <span></span>
+</div>
+
+</body>
+</html>

@@ -167,3 +167,8 @@ A soul file states an intention. A toolsets key performs it. The
 `SOUL.md` of Crazy Dave named the kanban tool for seven days while the
 profile lacked `kanban` in `toolsets`, so every board action went through
 the terminal. Learning record 0044.
+
+An open port is not a working service. Test a service with a request,
+never with lsof. A server that an agent started inherits the pipe of the
+agent, and it stops inside a log write at request 978 while the port
+stays in LISTEN. Lesson 31 and learning record 0038.

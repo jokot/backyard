@@ -2,7 +2,9 @@
 
 **Date:** 2026-09-14
 **Stage:** 4, live board, Connect Four
-**Status:** Fixed for this server. The pattern remains in the prompts.
+**Status:** Fixed for this server, and the rule now lives in the soul
+file of Peashooter. Lesson 31 carries the reproduction and the audit.
+The arithmetic in "Root cause" is corrected at the end of this record.
 
 ## What happened
 
@@ -59,8 +61,9 @@ reading it any more.
 request it serves. The agent started the server as its own child, so the
 server inherited the agent's pipe.
 
-A pipe on this machine holds 16,384 bytes. A log line for one request is
-roughly 80 bytes, so about 200 requests fill the buffer. The reader died
+A pipe on this machine holds 16,384 bytes at first. A log line for one
+request is roughly 80 bytes, so about 200 requests fill the buffer. Both
+numbers are corrected at the end of this record. The reader died
 with the agent, so nothing ever drained it.
 
 The 201st write blocks. The process stops inside `write`, before it ever
@@ -130,8 +133,34 @@ started, not only at what it did last.
 is a short process by design. Write `>/dev/null 2>&1 &` or a log file
 into every prompt that starts a server.
 
+## Corrected on 2026-09-16
+
+The mechanism above is right. Two numbers in "Root cause" are wrong, and
+Lesson 31 measured the correct ones.
+
+A log line is 67 bytes, not roughly 80. The line was measured:
+
+```
+::ffff:127.0.0.1 - - [16/Sep/2026 18:57:03] "GET / HTTP/1.1" 200 -
+```
+
+A pipe on this machine holds 16,384 bytes at first and grows to 65,536
+bytes under load. The figure of 16,384 in this record came from the
+`SIZE/OFF` column of `lsof`, which reports the buffer at the moment of
+reading. It is not the limit.
+
+So the server does not stop at request 200. It stops at request 978,
+which is 65,536 divided by 67. Three runs on 16 September 2026 gave 978
+each time. One of the three reported both descriptors at `16384` while
+it was still healthy, and it still answered 978 requests.
+
+The correction does not change the fix. A buffer that is finite and has
+no reader stops the writer, whatever its size.
+
 ## Related
 
+- Lesson 31 — a service that outlives its agent, which reproduces this
+  failure on demand and carries the listener audit.
 - Record 0021 — a server that resolved its root once.
 - Record 0037 — another failure whose only symptom was silence.
 - Record 0035 — a repair that exists and runs nowhere.
