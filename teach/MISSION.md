@@ -1,37 +1,49 @@
 # Mission: Personal multi-agent AI system on Hermes Agent
 
 ## Why
-Jokot is a software engineer who has used AI daily at work for two years,
-and wants a personal team of specialized AI agents — modeled on Zain
-Fathoni's "Project Transformers" / OpenClaw ("The Ark") — reachable over
-Telegram, built on Hermes Agent, so that different domains of life and
-work (starting with coding) get a dedicated, memory-persistent
-specialist instead of one assistant crossing contexts.
+Jokot is a software engineer who has used AI daily at work for two
+years. He wants a personal team of specialized AI agents, reachable over
+Telegram and built on Hermes Agent. Each domain of life and work gets a
+dedicated specialist with its own memory, instead of one assistant that
+crosses contexts. The model is the "Project Transformers" roster of Zain
+Fathoni, also called The Ark. The end state runs on a server, not on a
+laptop.
 
 ## Success looks like
-- Can explain "context contamination" and why a coordinator+specialist
-  pattern fixes it, using Zain's project as the worked example.
-- Has a real, working Hermes profile ("Peashooter") reachable over
-  Telegram, with memory that survives across sessions.
-- Can explain the Hermes primitives used so far (profile, SOUL.md,
-  MEMORY.md/USER.md, gateway) well enough to design the next specialist
-  without help.
-- Understands enough of the reference architecture (coordinator agent,
-  shared task board, shared/private memory split) to make an informed
-  call, later, about which pieces to replicate with Hermes's `kanban`
-  and which to skip.
+- Explain context contamination, and explain why a coordinator with
+  specialists fixes it. **Met in Stage 1.**
+- Run a real Hermes profile named Peashooter over Telegram, with memory
+  that survives a restart. **Met in Stage 1.**
+- Design the next specialist without help. Seven decisions and their
+  traps live in `reference/adding-a-specialist.html`. **Met in Stage 4.**
+- Decide which parts of the reference architecture to build with the
+  Hermes kanban board. The board runs, Crazy Dave dispatches work, and
+  learning record 0044 opened the kanban tool. **Met in Stage 4.**
+- Give every rule that the roster obeys a command that fails when the
+  rule is broken. **Open.** Learning records 0042 through 0046 name five
+  rules that a file recorded and no machine enforced.
+- Move all four profiles to a server, and prove that each one answers
+  from there. **Open.**
+- Run work that Jokot never started, through cron and through the Fizzy
+  webhook receiver. **Open, deferred since Stage 1 and Stage 3.**
 
 ## Constraints
-- Learn by building the real thing (the `plants` project) — every
-  lesson should produce a working piece of the actual build, not a toy
-  exercise.
-- Explain unfamiliar terms inline, each lesson.
-- Already fluent in software engineering and daily AI-tool use — skip
-  beginner framing of things like APIs, CLIs, git.
+- Build the real thing. Every lesson produces a working piece of the
+  `plants` roster, never a toy exercise.
+- Jokot runs every command that changes the machine, then reports the
+  output. A lesson states what output proves the step.
+- Ground every claim in real output or real source. A diagnosis without
+  evidence is a guess, and learning record 0035 shows the cost.
+- Turn every defect into a fix and a learning record. Never write a
+  workaround.
+- Explain an unfamiliar term inside the lesson that first uses it.
+- Skip beginner framing of APIs, command lines, and git.
 
 ## Out of scope
-- Replicating Zain's entire agent roster (9+ agents).
-- Building agent-orchestration primitives from scratch — Hermes already
-  provides profiles/kanban/cron; the mission is learning to use and
-  compose them, not reimplement them.
+- The full roster of nine agents. Four profiles run today. Add a fifth
+  only when a real task needs one.
+- Building orchestration primitives from scratch. Hermes provides
+  profiles, kanban, and cron. The mission composes them.
+- Patching the Hermes source. Learning record 0043 found an upstream
+  defect and worked around it in configuration instead.
 - Telegram Bot API internals beyond what `hermes gateway setup` needs.
