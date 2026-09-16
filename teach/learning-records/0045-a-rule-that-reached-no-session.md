@@ -138,6 +138,38 @@ One `/new` fixes one topic. A profile holds one open session for each
 topic that it has ever answered in. Count the open rows, never the
 topics that you remember.
 
+Jokot chose to delete the row. A backup of the database ran first,
+because a delete of a session destroys the conversation:
+
+```bash
+sqlite3 -readonly ~/.hermes/profiles/peashooter/state.db \
+  ".backup '<backup path>/peashooter-state-before-delete.db'"
+hermes -p peashooter sessions delete 20260909_232542_0d06add5 --yes
+```
+
+The command answered `Deleted session '20260909_232542_0d06add5'.` and
+the session count fell from 49 to 48. The next mention of Peashooter in
+`#General` now builds a prompt from the file as it stands.
+
+The same count then found a third open session:
+
+```
+20260909_081257_1542c52f  thread=None  start=2026-09-09 08:12:57  NEW_rule=False
+```
+
+A `thread_id` of None and a positive `chat_id` name the private chat
+with Jokot. Stage 2 used that chat as the only channel, and
+[record 0043](0043-a-report-that-went-to-the-wrong-room.md) moved the
+reports to the group. The session stayed open across the move.
+
+The count is the check, and one run of the count found each row that the
+previous run missed. Run this after any change of a soul file:
+
+```bash
+sqlite3 -readonly ~/.hermes/profiles/<profile>/state.db \
+  "SELECT id, thread_id FROM sessions WHERE ended_at IS NULL;"
+```
+
 ## What needs no action
 
 A dispatched kanban worker reads the new rule without any command. The
