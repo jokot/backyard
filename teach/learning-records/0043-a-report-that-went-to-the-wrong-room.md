@@ -124,11 +124,49 @@ channel, line 317 and line 452, copy `home.chat_id` and never copy
 effect on `hermes send`.
 
 So a report cannot reach a chosen topic through the home channel. Every
-report lands in the General topic of the group, which is thread 1, where
-Crazy Dave listens and where Jokot coordinates. For a blocked task that
-destination is correct, because the coordinator is the agent that can
-unblock it. The defect is upstream, in the Hermes source under
-`~/.hermes/hermes-agent/`, so this project does not patch it.
+report lands in the General topic of the group, which is thread 1. The
+defect is upstream, in the Hermes source under `~/.hermes/hermes-agent/`,
+so this project does not patch it.
+
+The General topic is the chosen destination, not only the reachable one.
+Crazy Dave listens there, and Crazy Dave is the agent that can unblock a
+task or reassign it. A report about blocked work belongs beside the agent
+that can act on it. Jokot reads one room instead of four.
+
+Three routes can reach a specific topic, and the table states the cost of
+each:
+
+| Route | Reaches a chosen topic | Cost |
+| --- | --- | --- |
+| `TELEGRAM_HOME_CHANNEL` in `.env` | No | One line for each profile |
+| `--to telegram:-1004371805465:<topic>` in `SOUL.md` | Yes | Four files, and the group id repeats |
+| A patch of `send_message_tool.py` | Yes | The next upgrade of Hermes deletes it |
+
+Row 1 cannot work, and the reason is not awkwardness. The home channel
+passes `chat_id` straight to `_send_to_platform` at line 493, with
+`thread_id=thread_id`, and that value is `None`. Nothing parses the
+string again. A value of `-1004371805465:2` therefore reaches the
+Telegram API as one chat id, and the call fails.
+
+Row 2 needs a correct reading of Lesson 17, because the lesson looks like
+a prohibition and is not one. Lesson 17 makes two arguments, and only one
+of them still applies:
+
+- The identity argument, at lines 179 to 184, says that Peashooter holds
+  only the token of Peashooter, so Peashooter cannot speak as Crazy Dave.
+  A destination inside `SOUL.md` does not touch that argument. The
+  argument names the sender, and the destination names the room.
+- The portability argument, at lines 173 to 178, is a prediction. A chat
+  id in `SOUL.md` "would work today and break the day you move the team
+  into a group". Stage 3 moved the team into the group on 2026-09-09, so
+  that day has passed. The group id `-1004371805465` is now the stable
+  value.
+
+What remains of the portability argument is bookkeeping. A change of
+destination costs four edits of `SOUL.md` rather than four edits of
+`.env`. That cost is real, and it is not a design reversal. Do not read
+Lesson 17 as a standing rule against a chat id in a soul file. Read it as
+a prediction that Stage 3 already settled.
 
 No message loop follows. Telegram never delivers the message of one bot
 to another bot. Discord and Feishu both carry a setting for that case,
