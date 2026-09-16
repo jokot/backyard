@@ -81,13 +81,18 @@ both passes came from a real message rather than from review. See
 the first, and [Lesson 20](../lessons/0020-dave-answers-the-room.html) for
 the current wording.
 
-## Open, not fixed
+## Closed on 2026-09-16
 
 Every kanban action in this run went through the `terminal` tool, not the
 kanban tool. The gateway log records `_check_kanban_mode returned False` on
 those turns, which is why Dave guessed at CLI flags and read
 `hermes kanban create --help` in the middle of a conversation. The
 `SOUL.md` says "using the kanban tool". The two do not agree yet.
+
+The two agree now. The profile of Crazy Dave was missing `kanban` in its
+`toolsets` list, which is the only door for a profile that no dispatcher
+spawned. See
+[record 0044](0044-a-tool-that-was-never-turned-on.md).
 
 ## Superseded in part
 

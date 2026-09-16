@@ -6,6 +6,7 @@ model:
 fallback_providers: []
 toolsets:
   - hermes-cli
+  - kanban
 agent:
   max_turns: 150
   gateway_timeout: 1800
@@ -476,8 +477,10 @@ approvals:
   mcp_reload_confirm: true
   destructive_slash_confirm: false
 command_allowlist:
-  - kill hermes/gateway process (self-termination)
   - script execution via -e/-c flag
+  - recursive delete
+  - kill hermes/gateway process (self-termination)
+  - execute_code
 hooks_auto_accept: false
 security:
   allow_private_urls: false

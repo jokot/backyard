@@ -162,3 +162,8 @@ An indirection records an intention. It does not perform it. Lesson 17
 wrote `TELEGRAM_HOME_CHANNEL` so that one edit could move the roster into
 a group. Stage 3 built the group and never made the edit. Learning
 record 0043.
+
+A soul file states an intention. A toolsets key performs it. The
+`SOUL.md` of Crazy Dave named the kanban tool for seven days while the
+profile lacked `kanban` in `toolsets`, so every board action went through
+the terminal. Learning record 0044.

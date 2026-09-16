@@ -303,9 +303,12 @@ it.
 
 - The read-only terminal probe. Deferred to Stage 5, Magnet-shroom.
 - Magnet-shroom, Marigold, and Imitater. Each needs its own specification.
-- The blocked-child notification gap of learning record 0008. This defect
-  has occurred twice and remains open.
+- The blocked-child notification gap of learning record 0008. Closed on
+  2026-09-16. The reports did send, and each one reached a private chat
+  that nobody watched. See learning record 0043.
 - Crazy Dave uses the kanban command line instead of the kanban tool,
-  because `_check_kanban_mode` returns False. This defect remains open.
+  because `_check_kanban_mode` returns False. Closed on 2026-09-16. The
+  profile was missing `kanban` in its `toolsets` list. See learning
+  record 0044.
 - Cron and scheduled automation, deferred since Stage 1.
 - The Fizzy webhook receiver, deferred in Stage 3.
