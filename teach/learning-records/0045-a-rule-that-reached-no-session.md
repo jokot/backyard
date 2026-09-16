@@ -162,13 +162,32 @@ with Jokot. Stage 2 used that chat as the only channel, and
 [record 0043](0043-a-report-that-went-to-the-wrong-room.md) moved the
 reports to the group. The session stayed open across the move.
 
+Jokot deleted that row as well. The earlier backup already held it, so
+no second backup ran. The session count fell from 48 to 47.
+
 The count is the check, and one run of the count found each row that the
 previous run missed. Run this after any change of a soul file:
 
 ```bash
 sqlite3 -readonly ~/.hermes/profiles/<profile>/state.db \
-  "SELECT id, thread_id FROM sessions WHERE ended_at IS NULL;"
+  "SELECT id, source, thread_id FROM sessions WHERE ended_at IS NULL;"
 ```
+
+## Read the source column before you count a row as stale
+
+The final count reports 36 open sessions of Peashooter. Only one of the
+36 comes from Telegram, and that one holds the rule. The other 35 hold
+`cli` in the `source` column.
+
+A `cli` row stays open because a one-shot run never writes `ended_at`.
+The gateway never reuses one. The six runs of 14 September 2026 prove
+the point, because each run created a new row inside 51 minutes. A
+person can still resume one by hand with `hermes --resume`.
+
+So the test for a stale prompt is narrower than the count of open rows.
+A row matters when the platform reopens it by itself, which means
+`source` is `telegram`. The correct question is not "how many rows stay
+open", but "which rows does the platform reuse without asking".
 
 ## What needs no action
 
