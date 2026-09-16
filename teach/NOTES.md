@@ -157,3 +157,8 @@
   would change on the machine if the rule were false. If the answer is
   nothing, you have written a note about a rule. Every rule needs a
   command that fails when the rule is broken. Learning record 0042.
+
+An indirection records an intention. It does not perform it. Lesson 17
+wrote `TELEGRAM_HOME_CHANNEL` so that one edit could move the roster into
+a group. Stage 3 built the group and never made the edit. Learning
+record 0043.
