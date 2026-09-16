@@ -2,9 +2,8 @@
 
 **Date:** 2026-09-16
 **Stage:** 4, cleanup
-**Status:** Active. The file change is complete. The running gateway of
-Crazy Dave still holds the old value, and a restart is the remaining
-step.
+**Status:** Complete on 2026-09-16. The file holds three entries, and a
+restarted gateway proves that the fourth entry is gone.
 
 The `command_allowlist` of Crazy Dave held four entries on 16 September
 2026. Two of them arrived from a button press during one task. One of
@@ -97,14 +96,38 @@ has run for 6 days. The button press of 14 September added the key to
 that process in memory. The file no longer holds the key, and the
 process still does.
 
-Restart the gateway of Crazy Dave, then read the value back:
+Restart the gateway of Crazy Dave:
 
 ```bash
-hermes -p crazydave config get command_allowlist
+hermes -p crazydave gateway restart
 ```
 
-Three entries in the file, and a fresh process, together make the
-removal real.
+The command answered `Stopping gateway (PID 73052) — draining in-flight
+runs (up to 180s)` and then `Service restarted`. The new process is PID
+96752, started at 21:59:14 on 2026-09-16. The config file changed at
+21:31:06, so the new process read the new file.
+
+A read of the config file does not prove the result, because the file is
+not the place that decides. Call the gate instead, in a fresh process,
+with `HERMES_HOME` set to the profile:
+
+```
+loaded permanent set: ['execute_code',
+                       'kill hermes/gateway process (self-termination)',
+                       'script execution via -e/-c flag']
+  is_approved('recursive delete')                -> False
+  is_approved('execute_code')                    -> True
+  is_approved('script execution via -e/-c flag') -> True
+```
+
+`recursive delete` now returns False. An `rm -r` command from Crazy Dave
+raises an approval prompt again.
+
+The restart broke nothing else. The `toolsets` key still reports
+`hermes-cli` and `kanban`. The gateway logged one line about the kanban
+dispatcher lock, and the same line appears at the two earlier starts of
+10 September 2026. Crazy Dave never held that lock, so the restart
+changed nothing about dispatch.
 
 ## What generalizes
 
@@ -115,6 +138,10 @@ key before you press always, and prefer "session" for a one-time task.
 **A permanent allowlist grows and never shrinks by itself.** The loader
 only adds. A removal needs an edit of the file and a new process. Audit
 the list on a schedule, as `security.md:677` recommends.
+
+**Test the gate, never the file.** A read of `config.yaml` reports the
+intention. A call to `is_approved` reports the answer that the agent
+gets. The two disagreed for 28 minutes on 16 September 2026.
 
 **Three caches, three lifetimes, one day.** Record 0044 found a toolset
 cache of about 30 seconds.
