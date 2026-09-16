@@ -172,3 +172,8 @@ An open port is not a working service. Test a service with a request,
 never with lsof. A server that an agent started inherits the pipe of the
 agent, and it stops inside a log write at request 978 while the port
 stays in LISTEN. Lesson 31 and learning record 0038.
+
+A file edit is not a delivery. A soul file reaches the agent through a
+system prompt that the gateway builds once for each session and then
+reuses verbatim. Send `/new` in the topic after any soul file change,
+then query the `sessions` table for the new text. See record 0045.

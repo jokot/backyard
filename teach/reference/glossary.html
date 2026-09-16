@@ -269,6 +269,14 @@ possible definition.</p>
   parent is the failure of learning record 0038.
   <span class="from">Introduced in: <a href="../lessons/0031-a-service-that-outlives-its-agent.html">Lesson 31</a></span></dd>
 
+  <dt>Session prompt</dt>
+  <dd>The system prompt that the gateway builds once for a session and
+  then stores in the <code>sessions</code> table. Later turns reuse the
+  stored text verbatim, so an edit of <code>SOUL.md</code> reaches an
+  open session only after <code>/new</code>. A dispatched kanban worker
+  gets a new session for each task, so it reads the file as it stands.
+  <span class="from">Introduced in: <a href="../lessons/0031-a-service-that-outlives-its-agent.html">Lesson 31</a></span></dd>
+
 </dl>
 
 <p style="margin-top:3rem; font-family:-apple-system,sans-serif; font-size:0.85rem; color:var(--ink-soft);">

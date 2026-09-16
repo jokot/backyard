@@ -5,6 +5,9 @@
 **Status:** Fixed for this server, and the rule now lives in the soul
 file of Peashooter. Lesson 31 carries the reproduction and the audit.
 The arithmetic in "Root cause" is corrected at the end of this record.
+The soul file alone does not deliver the rule to the chat session, and
+[record 0045](0045-a-rule-that-reached-no-session.md) holds the missing
+step.
 
 ## What happened
 

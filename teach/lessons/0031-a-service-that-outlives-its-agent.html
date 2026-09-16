@@ -254,6 +254,27 @@ Descriptors 1 and 2 must not say PIPE. The curl must print a status
 code. An open port is not a working service.</code></pre>
   <p>Write the same block into the soul file of any later profile that
   runs software. The rule belongs to the job, not to the plant.</p>
+  <p><strong>The edit is not the end.</strong> A soul file reaches an
+  agent through the system prompt, and the gateway builds that prompt
+  once for each session. <code>agent/conversation_loop.py:281</code>
+  states the rule. When the session row already holds a usable prompt,
+  the gateway reuses that prompt verbatim. The chat session of
+  Peashooter in <code>#Coding</code> opened on 10 September 2026 and
+  stayed open, so an edit made today does not reach it.</p>
+  <p>Send one message inside the <code>#Coding</code> topic. It closes
+  the old session and forces a new prompt:</p>
+  <pre><code>/new</code></pre>
+  <p>A dispatched kanban worker needs no action. The dispatcher creates
+  a new session for each task, so the next worker reads the new rule.
+  Six worker sessions on 14 September 2026 each hold a separate prompt,
+  which is the proof.</p>
+  <p>This command proves the result, and it fails when the rule is not
+  live:</p>
+  <pre><code>sqlite3 -readonly ~/.hermes/profiles/peashooter/state.db \
+  "SELECT id FROM sessions WHERE source='telegram' AND ended_at IS NULL
+     AND system_prompt LIKE '%Starting a long-lived service%';"</code></pre>
+  <p>One row means the rule is live in the chat. No row means the chat
+  still runs on the old prompt.</p>
 </div>
 
 <h2>The command that fails when the rule is broken</h2>
@@ -336,6 +357,7 @@ echo "audit complete"</code></pre>
   <label><input type="checkbox"> The same script with <code>DEVNULL</code> passed 2000 requests</label>
   <label><input type="checkbox"> The hard rule block added to <code>~/.hermes/profiles/peashooter/SOUL.md</code></label>
   <label><input type="checkbox"> The same block mirrored to <code>hermes-config/peashooter/SOUL.md</code></label>
+  <label><input type="checkbox"> <code>/new</code> sent in <code>#Coding</code>, and the sqlite3 query returned one row</label>
   <label><input type="checkbox"> The listener audit reported <code>audit complete</code> with no line marked <code>AT RISK</code></label>
 </div>
 
