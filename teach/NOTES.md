@@ -177,3 +177,9 @@ A file edit is not a delivery. A soul file reaches the agent through a
 system prompt that the gateway builds once for each session and then
 reuses verbatim. Send `/new` in the topic after any soul file change,
 then query the `sessions` table for the new text. See record 0045.
+
+An "always" button stores a pattern key, not the command on screen.
+`recursive delete` covers every `rm -r` on every path. The permanent
+allowlist only grows, because the loader runs
+`_permanent_approved.update()` once for each process. A removal needs an
+edit of the file and a gateway restart. See record 0046.

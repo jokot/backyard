@@ -478,7 +478,6 @@ approvals:
   destructive_slash_confirm: false
 command_allowlist:
   - script execution via -e/-c flag
-  - recursive delete
   - kill hermes/gateway process (self-termination)
   - execute_code
 hooks_auto_accept: false
