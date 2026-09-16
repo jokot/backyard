@@ -2,7 +2,68 @@
 
 **Date:** 2026-09-14
 **Stage:** 4, live board, Connect Four
-**Status:** Open. The script exists. No scheduler runs it.
+**Status:** RETRACTED on 2026-09-16. The conclusion below is wrong. Read
+the retraction first.
+
+## Retraction
+
+This record named a defect that does not exist. It read two facts and
+called each one a failure:
+
+- `kanban_notify_subs` holds 0 rows.
+- No cron job runs `kanban-autosubscribe.sh`.
+
+Both facts describe the intended state. [Record
+0010](0010-a-fix-that-amplified-the-defect.md) removed the cron job on
+purpose on 2026-09-09, and it removed the notifier path with it.
+
+Record 0010 proved that the job amplified the defect that it repaired.
+The column definition reads `last_event_id INTEGER NOT NULL DEFAULT 0`,
+so a new subscription row starts at cursor zero and replays every past
+event. A second gateway then failed to send and called `_kanban_unsub` at
+`gateway/kanban_watchers.py:461`. The next tick subscribed the task
+again. Work that finished at 01:33:29 still sent completion messages at
+06:53, from three bots, five hours later.
+
+The chosen repair was to delete the notifier path. Each profile holds its
+own bot token, so a worker runs `hermes send` and speaks as itself. That
+repair is live. `SOUL.md` of crazydave names `hermes send` twice, and
+`SOUL.md` of peashooter and of sunflower name it once each. Torchwood
+names it zero times, which is correct, because Torchwood is never a work
+destination.
+
+Do not create the cron job. The empty table is the fix, not the fault.
+
+The real defect of 14 September stands, and this record states it in the
+wrong terms. Three tasks blocked and Telegram delivered no message. The
+cause is not a missing cron job. The cause is that a blocked task sends
+no message under the `hermes send` design, because the agent that blocks
+stops before it reports. That defect needs its own record and its own
+fix.
+
+## Why this record was written
+
+The evidence in this record is correct. Every command output below ran
+and printed what it shows. The fault is that the record read the machine
+and never read the records.
+
+`grep -ril cron teach/learning-records/` returns
+`0010-a-fix-that-amplified-the-defect.md` as the first result. That one
+command, run before writing, would have stopped this record.
+
+Record 0010 also states the rule that a later correction to this record
+rediscovered from source:
+
+> The flag `--script` resolves against the scripts directory of the
+> profile, not a global directory, per `cron/scheduler.py:2086`.
+
+Two corrections to the command below cost one session. The answer sat in
+the record set for six days.
+
+**Generalization: search the records before you write a record.** A fact
+read from a machine names a state. Only the records say whether somebody
+chose that state.
+
 
 ## What happened
 
@@ -76,10 +137,12 @@ is silence. A missing message raises no error. Nothing on the board turns
 red. The board simply waits, and Jokot reads the board by hand instead
 of being told.
 
-## The fix
+## The fix as first written — DO NOT RUN
 
-Register the script as a cron job of the orchestrator profile, then
-prove that the job runs:
+The retraction above cancels this section. The command stays on the page
+because two corrections to it carry their own lesson. Running it recreates
+the amplification loop of record 0010.
+
 
 ```
 hermes -p crazydave cron create '*/2 * * * *' --no-agent \
