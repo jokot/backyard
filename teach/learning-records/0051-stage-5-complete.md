@@ -184,14 +184,39 @@ then printed nothing, and criterion 5 passed.
 
 ## Section 2 — Seven days is a proxy, not the rule
 
-Crazy Dave holds one more open session in the private chat. That session
-started 6 days ago, so check 4 stays silent about it. The session
-carries `old_rule=True`. The audit reports a healthy roster while one
-agent runs the Stage 2 reporting rule.
+The audit passed criterion 5 while one agent still ran the Stage 2
+reporting rule. Crazy Dave held an open session in the private chat that
+started 6 days ago and that carried `old_rule=True`. Check 4 counts 7
+days, so the check stayed silent and the roster was not healthy.
 
 The real rule is "no session runs a prompt older than the last soul file
 edit". Check 4 tests age against a fixed number instead. The two agree
 only when no soul file changed inside the last 7 days.
+
+Jokot authorized the delete of that session as well. A backup ran first:
+
+```bash
+sqlite3 -readonly ~/.hermes/profiles/crazydave/state.db \
+  ".backup '$HOME/crazydave-state-before-delete-20260917.db'"
+hermes -p crazydave sessions delete 20260910_193106_6716cd38 --yes
+```
+
+The backup holds 8.9 MB. The session count fell from 37 to 36. Every
+open Telegram session of the three reporting profiles now carries
+`new_rule=True`:
+
+```
+crazydave  thread 1  age 0d  new_rule=True  old_rule=False
+peashooter thread 2  age 0d  new_rule=True  old_rule=False
+sunflower  thread 3  age 0d  new_rule=True  old_rule=False
+```
+
+Torchwood holds three open sessions that test False on both columns.
+Torchwood writes prompts and never reports, so neither string belongs in
+its soul file. A False in both columns means "the rule does not apply
+here", and it never means "the rule is missing".
+
+The delete fixed one session. It did not fix the check.
 
 A better check reads the `system_prompt` column and compares it against
 the current text of the soul file. Stage 5 does not write that check,
