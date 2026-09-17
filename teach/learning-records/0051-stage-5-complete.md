@@ -331,12 +331,23 @@ So the defect reached one path and not the other. A script that calls
 `hermes send` needs a name. A script whose text the gateway delivers
 already runs inside a named process.
 
-### The room has the same cause
+### The room is not part of the defect
 
 Every profile sets `TELEGRAM_HOME_CHANNEL=-1004371805465`, with no topic
 suffix. A send with no topic reaches the group root, and Telegram renders
-the group root as `#General`. So the wrong name and the wrong room are
-one defect with two symptoms, and the topic half stays open.
+the group root as `#General`. That looked like a second symptom of the
+same defect, and it is not one.
+
+[Record 0043](0043-a-report-that-went-to-the-wrong-room.md) already ruled
+on the room: "The General topic is the chosen destination, not only the
+reachable one." Crazy Dave listens there, and Crazy Dave is the agent
+that can unblock a task. Jokot reads one room instead of four. Check 1 of
+the audit enforces that choice, because it fails when the four profiles
+hold more than one value.
+
+So the defect had one symptom, not two. The name was wrong. The room was
+right. A shared cause is not the same thing as a shared defect, and the
+proof that separates them is a prior decision, not a log line.
 
 ## Section 4 — One report of three met an approval prompt
 
