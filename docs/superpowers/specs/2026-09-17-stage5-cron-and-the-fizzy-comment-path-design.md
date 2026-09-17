@@ -194,9 +194,17 @@ coordinates the roster. All three use `--no-agent`, so no job spends a
 model call. All three deliver to Telegram, which resolves to the group
 through `TELEGRAM_HOME_CHANNEL`.
 
+All three scripts live under `~/.hermes/profiles/crazydave/scripts/`. The
+`--script` flag takes a bare filename, because `tools/cronjob_tools.py`
+rejects an absolute path and rejects a leading tilde. That filename resolves
+under `$HERMES_HOME/scripts`, and the flag `-p crazydave` sets `HERMES_HOME`
+to `~/.hermes/profiles/crazydave`. The directory `~/.hermes/scripts/` holds
+the report script instead, because a soul file calls that script by full
+path and no cron job resolves it.
+
 ### Job 1: the roster audit
 
-Path: `~/.hermes/scripts/roster-audit.sh`
+Path: `~/.hermes/profiles/crazydave/scripts/roster-audit.sh`
 Schedule: `0 9 * * *`
 
 The script runs four checks and prints one line for each failure.
@@ -216,7 +224,7 @@ The script runs four checks and prints one line for each failure.
 
 ### Job 2: the stale block watch
 
-Path: `~/.hermes/scripts/blocked-watch.sh`
+Path: `~/.hermes/profiles/crazydave/scripts/blocked-watch.sh`
 Schedule: `every 1h`
 
 The script reads the kanban database for every task with status
@@ -232,10 +240,12 @@ correctly the whole time. Only the reader was missing.
 
 ### Job 3: the autosubscribe repair
 
-Path: `~/.hermes/scripts/kanban-autosubscribe.sh`
+Path: `~/.hermes/profiles/crazydave/scripts/kanban-autosubscribe.sh`
 Schedule: `every 15m`
 
-The script exists and needs one repair before any schedule starts it.
+The script exists at `~/.hermes/scripts/kanban-autosubscribe.sh` and needs
+two repairs before any schedule starts it. The first repair moves the file
+into the profile directory of Crazy Dave.
 Line 14 reads the chat id with a fallback to the private chat of Jokot:
 
 ```bash

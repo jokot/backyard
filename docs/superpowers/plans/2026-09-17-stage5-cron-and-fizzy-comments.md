@@ -135,14 +135,17 @@ carries the date 9 September 2026 and no cron job has ever run it.
 
 ## File structure
 
-**New scripts**, which live under `~/.hermes/scripts/` and are mirrored
-into `hermes-config/scripts/`:
+**New scripts**, which are mirrored into `hermes-config/scripts/`. The live
+directory depends on the caller. A soul file calls a script by full path, so
+that script lives under `~/.hermes/scripts/`. A cron job resolves `--script`
+inside the profile of the `-p` flag, so that script lives under
+`~/.hermes/profiles/crazydave/scripts/`:
 
-| File | Responsibility |
-| --- | --- |
-| `hermes-report.sh` | Send one message to Telegram and to the Fizzy card |
-| `roster-audit.sh` | Check four roster rules once each day |
-| `blocked-watch.sh` | Name every task blocked for more than 60 minutes |
+| File | Responsibility | Live directory |
+| --- | --- | --- |
+| `hermes-report.sh` | Send one message to Telegram and to the Fizzy card | `~/.hermes/scripts/` |
+| `roster-audit.sh` | Check four roster rules once each day | `~/.hermes/profiles/crazydave/scripts/` |
+| `blocked-watch.sh` | Name every task blocked for more than 60 minutes | `~/.hermes/profiles/crazydave/scripts/` |
 
 **Changed files:**
 
@@ -598,11 +601,23 @@ session: sunflower holds 3 telegram session(s) older than 7 days
 - [ ] **Step 5: Write the install and test steps.**
 
 ```bash
-chmod +x ~/.hermes/scripts/roster-audit.sh
-~/.hermes/scripts/roster-audit.sh; echo "exit=$?"
+mkdir -p ~/.hermes/profiles/crazydave/scripts
+chmod +x ~/.hermes/profiles/crazydave/scripts/roster-audit.sh
+~/.hermes/profiles/crazydave/scripts/roster-audit.sh; echo "exit=$?"
 ```
 
   Expected: `exit=0`, with no line or with one session line.
+
+  **State the reason for this directory, because it is not the obvious one.**
+  A cron job resolves `--script` inside the profile sandbox, never inside
+  `~/.hermes/scripts/`. The command `hermes -p crazydave` sets `HERMES_HOME`
+  to `~/.hermes/profiles/crazydave`, and the validator at
+  `tools/cronjob_tools.py:556` joins `scripts` onto that value. The dashboard
+  path agrees at `hermes_cli/web_server.py:10467`. Lesson 17 already removed a
+  file from `~/.hermes/profiles/crazydave/scripts/`, so the course has met this
+  directory before. The report script of Lesson 32 stays at
+  `~/.hermes/scripts/hermes-report.sh`, because a soul file calls it by full
+  path and no cron job resolves it.
 
 - [ ] **Step 6: Write the deliberate break test.** This is the step that
   proves the job is worth having. Tell Jokot to change one value, run the
@@ -611,10 +626,10 @@ chmod +x ~/.hermes/scripts/roster-audit.sh
 ```bash
 cp ~/.hermes/profiles/torchwood/.env ~/torchwood-env.bak
 # Change TELEGRAM_HOME_CHANNEL in ~/.hermes/profiles/torchwood/.env to -1
-~/.hermes/scripts/roster-audit.sh
+~/.hermes/profiles/crazydave/scripts/roster-audit.sh
 # Expected: home channel: 2 distinct values across profiles, expected 1
 cp ~/torchwood-env.bak ~/.hermes/profiles/torchwood/.env
-~/.hermes/scripts/roster-audit.sh
+~/.hermes/profiles/crazydave/scripts/roster-audit.sh
 # Expected: that line is gone
 ```
 
@@ -628,10 +643,12 @@ hermes -p crazydave cron create '0 9 * * *' \
   --deliver telegram
 ```
 
-  State that `--script` documents a path "under `~/.hermes/scripts/`", so
-  the basename is the first thing to try. Tell Jokot to run
-  `hermes -p crazydave cron list` and report the stored value. If the job
-  shows no script or fails, retry with the absolute path.
+  State the rule that decides the value of `--script`. The validator rejects
+  an absolute path and rejects a leading `~`, so only a bare filename works.
+  That filename resolves under `$HERMES_HOME/scripts`, and `-p crazydave` sets
+  `HERMES_HOME` to `~/.hermes/profiles/crazydave`. Step 5 installed the file
+  there for this reason. Tell Jokot to run `hermes -p crazydave cron list` and
+  report the stored value.
 
 - [ ] **Step 8: Write the immediate proof step.** A daily job proves
   nothing today. Tell Jokot to force one run:
@@ -669,9 +686,11 @@ hermes -p crazydave cron runs roster-audit
 - Create: `hermes-config/scripts/blocked-watch.sh`
 - Create: `hermes-config/scripts/kanban-autosubscribe.sh`
 
-  The repository holds no copy of `kanban-autosubscribe.sh` today. Jokot
-  modifies the live file at `~/.hermes/scripts/`, and this task creates the
-  first mirror of it.
+  The repository holds no copy of `kanban-autosubscribe.sh` today. The live
+  file sits at `~/.hermes/scripts/kanban-autosubscribe.sh`, where no cron job
+  can resolve it. Jokot moves the file to
+  `~/.hermes/profiles/crazydave/scripts/`, repairs line 14, and this task
+  creates the first mirror of it.
 
 **Interfaces:**
 - Consumes: the cron pattern from Task 3.
@@ -726,6 +745,14 @@ SQL
 exit 0
 ```
 
+  Name the install path and the reason for it. The file goes to
+  `~/.hermes/profiles/crazydave/scripts/blocked-watch.sh`, because step 7
+  creates its cron job under `-p crazydave`:
+
+```bash
+chmod +x ~/.hermes/profiles/crazydave/scripts/blocked-watch.sh
+```
+
 - [ ] **Step 4: Write the test that proves the formatting.** The healthy
   board prints nothing, which proves little. Tell Jokot to relax both
   filters into a copy and run that copy:
@@ -733,7 +760,8 @@ exit 0
 ```bash
 sed -e "s/t.status = 'blocked'/1=1/" \
     -e "s/e.created_at < strftime('%s','now') - 3600/1=1/" \
-    ~/.hermes/scripts/blocked-watch.sh > /tmp/blocked-watch-relaxed.sh
+    ~/.hermes/profiles/crazydave/scripts/blocked-watch.sh \
+    > /tmp/blocked-watch-relaxed.sh
 bash /tmp/blocked-watch-relaxed.sh
 ```
 
@@ -753,6 +781,19 @@ CHAT_ID="${HERMES_TELEGRAM_CHAT_ID:--1004371805465}"
 
   Warn about the two colons. The first colon belongs to the `:-` default
   operator and the minus sign belongs to the group id.
+
+  State the second defect of this file. The script sits in
+  `~/.hermes/scripts/`, so `hermes -p crazydave cron create` cannot resolve
+  it. Lesson 17 removed the profile copy, which left the file in the one
+  directory a cron job never reads. Tell Jokot to move it back:
+
+```bash
+mv ~/.hermes/scripts/kanban-autosubscribe.sh \
+   ~/.hermes/profiles/crazydave/scripts/kanban-autosubscribe.sh
+ls -l ~/.hermes/profiles/crazydave/scripts/
+```
+
+  Expected: three files, all with mode `-rwxr-xr-x`.
 
 - [ ] **Step 6: Write the repair test.**
 
@@ -783,8 +824,9 @@ hermes -p crazydave cron list
   `kanban-autosubscribe`.
 
 - [ ] **Step 9: Write the checkpoint list** with one checkbox for each of
-  `chmod +x`, the relaxed-filter test, the line 14 repair, the repair
-  test, the two job creations, and the three-job list.
+  `chmod +x`, the relaxed-filter test, the move of
+  `kanban-autosubscribe.sh`, the line 14 repair, the repair test, the two
+  job creations, and the three-job list.
 
 - [ ] **Step 10: Verify tag balance, run the link existence check, ask
   Jokot to run Lesson 35, and verify the reported output.**
@@ -850,7 +892,7 @@ Each task reverses on its own.
 | 1 | Delete `~/.hermes/scripts/hermes-report.sh`. Nothing calls it yet. |
 | 2 | Restore each `SOUL.md` from the backup, then send `/new` in each topic. |
 | 3 | `hermes -p crazydave cron rm roster-audit` |
-| 4 | `hermes -p crazydave cron rm blocked-watch` and `cron rm kanban-autosubscribe`, then restore line 14. |
+| 4 | `hermes -p crazydave cron rm blocked-watch` and `cron rm kanban-autosubscribe`, restore line 14, then move `kanban-autosubscribe.sh` back to `~/.hermes/scripts/`. |
 
 A cron job never changes a soul file or a profile, so removing a job
 returns the roster to the state before Task 3.
