@@ -14,7 +14,7 @@
 0043</a> found the gap this lesson closes: a worker that stops before it
 reports leaves its task blocked in silence, with no reader to see it.
 This lesson adds a second cron job, <code>blocked-watch</code>, that
-reads the kanban board directly instead of waiting on a worker's report.
+reads the kanban board directly instead of a worker's report.
 It also repairs <code>kanban-autosubscribe.sh</code> and installs it as
 the cron job named <code>kanban-autosubscribe</code>, the third job of
 Stage 5. Together with <code>roster-audit</code> from
