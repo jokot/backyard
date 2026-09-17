@@ -296,9 +296,10 @@ possible definition.</p>
   <dt>WAL sidecar file</dt>
   <dd>One of two files, <code>-shm</code> and <code>-wal</code>, that
   SQLite keeps beside a database file running in WAL mode. Both files
-  exist only while a writer holds the database open. A connection opened
-  <code>-readonly</code> needs both files already present, because it
-  holds no permission to create them itself.
+  exist only while a process holds the database open. A connection
+  opened <code>-readonly</code> holds no permission to create the files
+  it needs, so SQLite refuses to open the database until they already
+  exist.
   <span class="from">Introduced in: <a href="../lessons/0035-the-watch-for-a-task-that-stopped.html">Lesson 35</a></span></dd>
 
 </dl>

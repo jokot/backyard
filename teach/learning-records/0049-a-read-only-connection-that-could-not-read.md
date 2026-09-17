@@ -27,13 +27,13 @@ sqlite3 -readonly ~/.hermes/profiles/crazydave/state.db "SELECT 1;"
 
 `kanban.db` runs in WAL mode. A WAL database keeps its recent writes in
 two sidecar files, `kanban.db-shm` and `kanban.db-wal`, next to the main
-file. A connection opened `-readonly` needs both sidecar files to exist
-already, because a read-only connection holds no permission to create
-them. The sidecar files exist only while a writer holds the database
-open.
+file. A connection opened `-readonly` holds no permission to create the
+sidecar files it needs, so SQLite refuses to open the database until
+those files already exist. The sidecar files exist only while a process
+holds the database open.
 
-`kanban.db` sits idle between cron runs, with no writer holding it open,
-so its sidecar files are absent when the script starts. Every profile's
+`kanban.db` sits idle between cron runs, with no process holding it
+open, so its sidecar files are absent when the script starts. Every profile's
 `state.db` stays open inside a running gateway process, so its sidecar
 files are already present when a script opens a read-only connection.
 
@@ -50,9 +50,13 @@ SELECT 'blocked ' || (1000 - 400)/60 || 'm';
 -- returns 0
 ```
 
-In SQLite, the `||` operator binds tighter than `-` and `/`. The
-expression divides a string by a number instead of dividing a number by
-a number. Parentheses around the arithmetic fix the order:
+In SQLite, the `||` operator binds tighter than `-` and `/`, so both
+concatenations run before the division. The expression groups as
+`('blocked ' || (1000 - 400)) / (60 || 'm')`, which reduces to
+`'blocked 600' / '60m'`, a string divided by a string. SQLite casts
+each string operand to a number before it divides them, and
+`'blocked 600'` casts to `0`, so the whole expression returns the
+integer `0`. Parentheses around the arithmetic fix the order:
 
 ```sql
 SELECT 'blocked ' || ((1000 - 400)/60) || 'm';
@@ -67,10 +71,10 @@ Whether that request succeeds depends on the file layout: which sidecar
 files exist, and who created them. The flag names an intention. The
 file layout decides whether the intention works.
 
-**A concatenation operator can outrank arithmetic around it.** A
-default operator precedence is easy to assume and easy to leave
-unchecked. Two parentheses, placed once and tested once, settle the
-question for every future run of the query.
+**A concatenation operator can outrank arithmetic around it.** A reader
+easily assumes the familiar order and skips a check of operator
+precedence. Parentheses around the arithmetic settle the question once,
+and every future run of the query then trusts that answer.
 
 See [record 0043](0043-a-report-that-went-to-the-wrong-room.md), which
 named the two tasks that blocked on 14 September 2026 and that this

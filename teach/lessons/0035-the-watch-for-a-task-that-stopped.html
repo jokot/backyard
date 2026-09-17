@@ -11,13 +11,13 @@
 <p class="kicker">Lesson 35 of the Stage 5 build</p>
 <h1>A second scheduled script reads the kanban board directly, because a worker that stops sends no report</h1>
 <p class="lede"><a href="../learning-records/0043-a-report-that-went-to-the-wrong-room.md">Record
-0043</a> named two tasks that blocked on 14 September 2026,
-<code>t_8e9c7cfb</code> and <code>t_34115dfd</code>. The kanban board held
-both blocked states correctly the whole time. This lesson adds a second
-cron job, <code>blocked-watch</code>, that reads the board directly
-instead of waiting on a worker's report. It also repairs and installs
-<code>kanban-autosubscribe.sh</code>, the third cron job of Stage 5.
-Together with <code>roster-audit</code> from
+0043</a> found the gap this lesson closes: a worker that stops before it
+reports leaves its task blocked in silence, with no reader to see it.
+This lesson adds a second cron job, <code>blocked-watch</code>, that
+reads the kanban board directly instead of waiting on a worker's report.
+It also repairs <code>kanban-autosubscribe.sh</code> and installs it as
+the cron job named <code>kanban-autosubscribe</code>, the third job of
+Stage 5. Together with <code>roster-audit</code> from
 <a href="0034-a-job-that-speaks-only-on-failure.html">Lesson 34</a>,
 three cron jobs then run on the machine.</p>
 
@@ -43,10 +43,14 @@ three cron jobs then run on the machine.</p>
   <pre><code>SELECT 'blocked ' || (1000 - 400)/60 || 'm';
 -- returns 0</code></pre>
   <p>In SQLite, the <code>||</code> operator binds tighter than
-  <code>-</code> and <code>/</code>. The expression above computes
-  <code>'blocked ' || (1000 - 400)</code> first, then divides that string
-  by <code>60</code>, then concatenates <code>'m'</code>. Parentheses
-  around the arithmetic fix the order:</p>
+  <code>-</code> and <code>/</code>, so both concatenations run before
+  the division. The expression groups as
+  <code>('blocked ' || (1000 - 400)) / (60 || 'm')</code>, which reduces
+  to <code>'blocked 600' / '60m'</code>, a string divided by a string.
+  SQLite casts each string operand to a number before it divides them.
+  <code>'blocked 600'</code> casts to <code>0</code>, so the whole
+  expression returns the integer <code>0</code>. Parentheses around the
+  arithmetic fix the order:</p>
   <pre><code>SELECT 'blocked ' || ((1000 - 400)/60) || 'm';
 -- returns blocked 10m</code></pre>
 </div>
@@ -81,8 +85,10 @@ WHERE t.status = 'blocked'
   AND e.created_at &lt; strftime('%s','now') - 3600;
 SQL
 exit 0</code></pre>
-  <p>Make the file executable:</p>
-  <pre><code>chmod +x ~/.hermes/profiles/crazydave/scripts/blocked-watch.sh</code></pre>
+  <p>Create the folder if it does not exist yet, then make the file
+  executable:</p>
+  <pre><code>mkdir -p ~/.hermes/profiles/crazydave/scripts
+chmod +x ~/.hermes/profiles/crazydave/scripts/blocked-watch.sh</code></pre>
 </div>
 
 <h2>Prove the formatting</h2>
@@ -107,7 +113,7 @@ bash /tmp/blocked-watch-relaxed.sh</code></pre>
 
 <div class="box skill">
   <span class="box-label">Skill — hands on</span>
-  <p>Line 14 of <code>kanban-autosubscribe.sh</code> defaults to the
+  <p>Line 14 of <code>~/.hermes/scripts/kanban-autosubscribe.sh</code> defaults to the
   private chat. No profile sets <code>HERMES_TELEGRAM_CHAT_ID</code>, so
   that default fires every time. Replace the line with this default
   instead:</p>
@@ -119,18 +125,18 @@ bash /tmp/blocked-watch-relaxed.sh</code></pre>
   0043</a> established.</p>
 </div>
 
-<h2>Move the file cron can reach</h2>
+<h2>Move the file where cron can reach it</h2>
 
 <div class="box warning">
   <span class="box-label">This step moves a real file</span>
   <p><code>kanban-autosubscribe.sh</code> sits in
-  <code>~/.hermes/scripts/</code>, the one directory a cron job never
-  reads. <a href="0034-a-job-that-speaks-only-on-failure.html">Lesson
+  <code>~/.hermes/scripts/</code>, the one directory <code>--script</code>
+  never resolves under. <a href="0034-a-job-that-speaks-only-on-failure.html">Lesson
   34</a> already named the rule: a cron job resolves <code>--script</code>
   only under <code>$HERMES_HOME/scripts</code>.
   <a href="0017-workers-report-their-own-results.html">Lesson 17</a>
   removed the profile copy of this file, and that removal left the file
-  in the one place a cron job never reads.</p>
+  there.</p>
   <p>Move the file into the profile scripts folder:</p>
   <pre><code>mv ~/.hermes/scripts/kanban-autosubscribe.sh \
    ~/.hermes/profiles/crazydave/scripts/kanban-autosubscribe.sh
@@ -183,7 +189,7 @@ hermes -p crazydave cron create 'every 15m' \
       <label for="q1a">The concatenation operator binds tighter than division</label>
       <div class="reveal"><p class="feedback correct">Right. <code>||</code>
       binds tighter than <code>-</code> and <code>/</code>, so the
-      expression divides a string by a number.</p></div>
+      expression divides a string by a string.</p></div>
     </div>
     <div>
       <input type="radio" name="q1" id="q1b">
@@ -211,7 +217,7 @@ hermes -p crazydave cron create 'every 15m' \
       <label for="q2a">WAL mode needs sidecar files a reader cannot create</label>
       <div class="reveal"><p class="feedback correct">Right. The
       <code>-shm</code> and <code>-wal</code> files exist only while a
-      writer holds the database open, and a read-only connection cannot
+      process holds the database open, and a read-only connection cannot
       create them.</p></div>
     </div>
     <div>
@@ -264,7 +270,7 @@ that shaped this script.
 
 <p class="ask-agent">Send me the six lines from the relaxed-filter test.
 Send me the chat id line from the repair test. Send me the three job
-names that <code>cron list</code> reports, too. I check each value
+names that <code>cron list</code> reports. I check each value
 against the rule in this lesson.</p>
 
 <div class="nav">
