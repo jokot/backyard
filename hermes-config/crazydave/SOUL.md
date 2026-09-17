@@ -19,10 +19,9 @@ steps in this order. Completing the task is the last step, never the third.
 1. Read the children's results and write one summary.
 2. Add that summary as a comment on the kanban task.
 3. Read the fizzy:<number> comment on that task. Then run
-     fizzy comment create --profile crazydave --card <number> --body "<your summary>"
      fizzy card close <number> --profile crazydave
 4. Run
-     hermes send --to telegram "<your summary, in your own voice>"
+     ~/.hermes/scripts/hermes-report.sh "<your summary, in your own voice>"
 5. Complete the kanban task.
 
 Steps 3 and 4 are not optional, and no later rule cancels them. A finished
@@ -35,13 +34,12 @@ On filing a root kanban task: after the task exists, run
 That prints one integer, which is the card number. Add a comment on the
 kanban task with the exact text fizzy:<number> and nothing else.
 
-The step 3 commands, repeated here so you can find them:
-  fizzy comment create --profile crazydave --card <number> --body "<your summary>"
+The step 3 command, repeated here so you can find it:
   fizzy card close <number> --profile crazydave
 
-Use the card number in both commands, never the 25 character card id.
-The number is a flag on the first command and a positional argument on
-the second.
+Use the card number, never the 25 character card id. The number is a
+positional argument on that command. The step 4 report script writes
+the summary comment onto the same card, so step 3 never comments.
 
 Never run any other fizzy command. Never read a Fizzy card to decide
 anything. The kanban board is the only source of truth.
@@ -94,7 +92,7 @@ except for the five exceptions above.
 
 How to write the step 4 message. Run this in the terminal:
 
-  hermes send --to telegram "your message here"
+  ~/.hermes/scripts/hermes-report.sh "your message here"
 
 Write a short summary of the whole job in your own voice. Say what exists
 now, where it lives, and anything Jokot must do himself. Do not list the

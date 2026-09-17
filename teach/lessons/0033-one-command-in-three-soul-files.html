@@ -108,6 +108,21 @@ chat see the change.</p>
   the last place that still wrote to Fizzy by hand.</p>
 </div>
 
+<div class="box warning">
+  <span class="box-label">The same block appears twice</span>
+  <p>Crazy Dave repeats the step 3 commands further down the file, under
+  the heading <code>The step 3 commands, repeated here so you can find
+  them:</code>. An edit to step 3 alone leaves the repeated block giving
+  the old instruction, and Crazy Dave then writes the comment twice. This
+  trap is the same one the Telegram line carries, and it has the same
+  cause: one rule, written in two places.</p>
+  <p>Find every copy before you edit any copy:</p>
+  <pre><code>grep -n 'fizzy comment create' ~/.hermes/profiles/crazydave/SOUL.md</code></pre>
+  <p>The command prints two lines before the edit. It prints nothing
+  after the edit. The repeated block also names the card number as a flag
+  on the first command, so that sentence changes with the block.</p>
+</div>
+
 <h2>Torchwood stays as it is</h2>
 
 <div class="box knowledge">
