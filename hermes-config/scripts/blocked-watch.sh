@@ -4,7 +4,7 @@
 #
 # The script opens kanban.db without `-readonly`. A read-only connection to
 # a WAL database fails when the -shm and -wal sidecar files are absent, and
-# those files exist only while a writer holds the database open. This query
+# those files exist only while a process holds the database open. This query
 # is a SELECT and changes nothing.
 set -uo pipefail
 DB="${HERMES_KANBAN_DB:-$HOME/.hermes/kanban.db}"

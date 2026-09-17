@@ -95,12 +95,22 @@ exit 0</code></pre>
   <p>The script above was tested against the live machine on 17 September
   2026, before any cron job existed. That run printed exactly one line:</p>
   <pre><code>session: sunflower holds 3 telegram session(s) older than 7 days</code></pre>
-  <p>The audit found a real defect on its first run, on that date.
-  <a href="0033-one-command-in-three-soul-files.html">Lesson 33</a> sends a
-  <code>/new</code> message inside the <code>#Planning</code> topic for
-  Sunflower. That message ends the three Sunflower sessions this script
-  counts. A reader who has already completed Lesson 33 runs this same
-  script today. That reader sees no line at all.</p>
+  <p>The audit found a real defect on its first run, on that date. The
+  defect is still open. Sunflower holds four open Telegram sessions. The
+  three that this script counts started on 9 September 2026, on thread
+  <code>NULL</code>, thread 1, and thread 2. The fourth session serves
+  <code>#Planning</code>, which is thread 3, and it started on 10
+  September 2026.</p>
+  <p>Read that list once more, because it carries the trap. The
+  <code>/new</code> message of
+  <a href="0033-one-command-in-three-soul-files.html">Lesson 33</a> ends
+  the thread 3 session, and this script never counted that session. The
+  three counted sessions stay open. A reader who completed Lesson 33
+  therefore still sees the same line today.</p>
+  <p>This result is correct behavior, not a defect in the script. The
+  rule of <a href="../learning-records/0045-a-rule-that-reached-no-session.md">record
+  0045</a> is broken on the real machine, and the audit says so every
+  morning until somebody ends those three sessions.</p>
 </div>
 
 <h2>Install and test</h2>
@@ -173,9 +183,16 @@ cp ~/torchwood-env.bak ~/.hermes/profiles/torchwood/.env
   <span class="box-label">Skill — hands on</span>
   <p>A daily job proves nothing today. Force one run now.</p>
   <pre><code>hermes -p crazydave cron run roster-audit
-hermes -p crazydave cron runs roster-audit</code></pre>
-  <p>The first command runs the job immediately. The second command lists
-  that run and its result.</p>
+hermes -p crazydave cron runs &lt;job id&gt;</code></pre>
+  <p>The first command runs the job immediately. It accepts the name,
+  because <code>cron run</code> resolves a name to an id through
+  <code>resolve_job_ref</code>.</p>
+  <p>The second command does not accept the name. It passes the value
+  straight to an SQL filter on the <code>job_id</code> column, so a name
+  matches no row and the output reads
+  <code>No cron execution attempts recorded.</code> Use the 12-character
+  id that <code>cron create</code> printed, or read the id from
+  <code>cron list</code>.</p>
 </div>
 
 <div class="quiz">

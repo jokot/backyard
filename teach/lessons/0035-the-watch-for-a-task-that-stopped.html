@@ -15,11 +15,11 @@
 reports leaves its task blocked in silence, with no reader to see it.
 This lesson adds a second cron job, <code>blocked-watch</code>, that
 reads the kanban board directly instead of a worker's report.
-It also repairs <code>kanban-autosubscribe.sh</code> and installs it as
-the cron job named <code>kanban-autosubscribe</code>, the third job of
-Stage 5. Together with <code>roster-audit</code> from
+The lesson also examines <code>kanban-autosubscribe.sh</code>, and it
+explains why Stage 5 does not schedule that script. Together with
+<code>roster-audit</code> from
 <a href="0034-a-job-that-speaks-only-on-failure.html">Lesson 34</a>,
-three cron jobs then run on the machine.</p>
+two cron jobs then run on the machine.</p>
 
 <h2>The report script cannot see a worker that never speaks</h2>
 
@@ -109,75 +109,85 @@ bash /tmp/blocked-watch-relaxed.sh</code></pre>
   0043</a>.</p>
 </div>
 
-<h2>The autosubscribe repair</h2>
+<h2>The repair this stage does not schedule</h2>
 
-<div class="box skill">
-  <span class="box-label">Skill — hands on</span>
-  <p>Line 14 of <code>~/.hermes/scripts/kanban-autosubscribe.sh</code> defaults to the
-  private chat. No profile sets <code>HERMES_TELEGRAM_CHAT_ID</code>, so
-  that default fires every time. Replace the line with this default
-  instead:</p>
-  <pre><code>CHAT_ID="${HERMES_TELEGRAM_CHAT_ID:--1004371805465}"</code></pre>
-  <p>Read the two dashes with care. The first dash pairs with the colon
-  to form the <code>:-</code> default operator. The second dash is the
-  sign of the negative group id, the value
-  <a href="../learning-records/0043-a-report-that-went-to-the-wrong-room.md">record
-  0043</a> established.</p>
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p><code>kanban-autosubscribe.sh</code> still sits in
+  <code>~/.hermes/scripts/</code>. An earlier draft of this lesson
+  repaired line 14, moved the file into the profile scripts folder, and
+  created a cron job named <code>kanban-autosubscribe</code> on a
+  15-minute schedule. That plan was wrong, and
+  <a href="../learning-records/0010-a-fix-that-amplified-the-defect.md">record
+  0010</a> already said so.</p>
+  <p>Record 0010 measured the cost. The same script, on a one-minute
+  schedule, delivered one message every two minutes for six hours. The
+  record states the fix in one line: delete the notifier path rather
+  than repair it.
+  <a href="0017-workers-report-their-own-results.html">Lesson 17</a>
+  carried out that deletion, and it removed the profile copy of this
+  file.</p>
+  <p>The loop needs four steps, and all four still work today:</p>
+  <ol>
+    <li>The cron job subscribes a task at cursor zero.</li>
+    <li>The gateway replays every past event and delivers it.</li>
+    <li>One failed send drops the subscription row.</li>
+    <li>The next cron tick subscribes the same task again.</li>
+  </ol>
 </div>
-
-<h2>Move the file where cron can reach it</h2>
 
 <div class="box warning">
-  <span class="box-label">This step moves a real file</span>
-  <p><code>kanban-autosubscribe.sh</code> sits in
-  <code>~/.hermes/scripts/</code>, the one directory <code>--script</code>
-  never resolves under. <a href="0034-a-job-that-speaks-only-on-failure.html">Lesson
-  34</a> already named the rule: a cron job resolves <code>--script</code>
-  only under <code>$HERMES_HOME/scripts</code>.
-  <a href="0017-workers-report-their-own-results.html">Lesson 17</a>
-  removed the profile copy of this file, and that removal left the file
-  there.</p>
-  <p>Move the file into the profile scripts folder:</p>
-  <pre><code>mv ~/.hermes/scripts/kanban-autosubscribe.sh \
-   ~/.hermes/profiles/crazydave/scripts/kanban-autosubscribe.sh
-ls -l ~/.hermes/profiles/crazydave/scripts/</code></pre>
-  <p>Expect three files, each with mode <code>-rwxr-xr-x</code>.</p>
+  <span class="box-label">Both conditions are still in the source</span>
+  <p>Read the installed source before you trust any claim about a loop
+  that closed years ago. Two greps settle it.</p>
+  <pre><code>grep -n 'last_event_id INTEGER NOT NULL DEFAULT 0' \
+  ~/.hermes/hermes-agent/hermes_cli/kanban_db.py
+grep -n 'MAX_SEND_FAILURES' \
+  ~/.hermes/hermes-agent/gateway/kanban_watchers.py</code></pre>
+  <p>The first grep prints lines 1263 and 2154. A new subscription row
+  starts at cursor zero, so it replays history. The second grep prints
+  line 457, where three consecutive send failures call
+  <code>_kanban_unsub</code> and drop the row. Step 1 and step 3 of the
+  list above are therefore both live.</p>
+  <p>Leave the file where it is. Do not repair line 14, and do not
+  create the job. A repair that runs on a schedule turns a failure that
+  happens once into a failure that happens forever.</p>
 </div>
 
-<h2>Prove the default value</h2>
-
-<div class="box skill">
-  <span class="box-label">Skill — hands on</span>
-  <pre><code>bash -c 'set -u; CHAT_ID="${HERMES_TELEGRAM_CHAT_ID:--1004371805465}"; echo "$CHAT_ID"'</code></pre>
-  <p>Expect <code>-1004371805465</code>.</p>
+<div class="box knowledge">
+  <span class="box-label">Why blocked-watch is different</span>
+  <p><code>blocked-watch.sh</code> writes nothing. It runs one
+  <code>SELECT</code> against <code>kanban.db</code> and prints the
+  result. It creates no subscription row, so no cursor can reset and no
+  second process can claim the row. The script reads state, and the
+  autosubscribe script created state. That difference is the whole
+  reason one job is safe and the other is not.</p>
 </div>
 
-<h2>Create the two cron jobs</h2>
+<h2>Create the second cron job</h2>
 
 <div class="box skill">
   <span class="box-label">Skill — hands on</span>
   <pre><code>hermes -p crazydave cron create 'every 1h' \
-  --name blocked-watch --script blocked-watch.sh --no-agent --deliver telegram
-
-hermes -p crazydave cron create 'every 15m' \
-  --name kanban-autosubscribe --script kanban-autosubscribe.sh \
-  --no-agent --deliver telegram</code></pre>
-  <p>Both commands pass a bare filename, per the rule
+  --name blocked-watch --script blocked-watch.sh --no-agent --deliver telegram</code></pre>
+  <p>The command passes a bare filename, per the rule
   <a href="0034-a-job-that-speaks-only-on-failure.html">Lesson 34</a>
-  already taught. Each filename resolves under
+  already taught. The filename resolves under
   <code>$HERMES_HOME/scripts</code>, which <code>hermes -p crazydave</code>
   sets to <code>~/.hermes/profiles/crazydave/scripts</code>.</p>
+  <p>The command prints the 12-character job id. This run printed
+  <code>f9b05a451c28</code>, and <code>every 1h</code> stored as
+  <code>every 60m</code>.</p>
 </div>
 
-<h2>Confirm three jobs</h2>
+<h2>Confirm two jobs</h2>
 
 <div class="box skill">
   <span class="box-label">Skill — hands on</span>
   <pre><code>hermes -p crazydave cron list</code></pre>
-  <p>Expect three jobs: <code>roster-audit</code>,
-  <code>blocked-watch</code>, and <code>kanban-autosubscribe</code>. Three
-  cron jobs then run on the machine, and success criterion 3 is
-  complete.</p>
+  <p>Expect two jobs, <code>roster-audit</code> and
+  <code>blocked-watch</code>. Two cron jobs then run on the machine, and
+  success criterion 3 is complete.</p>
 </div>
 
 <div class="quiz">
@@ -244,15 +254,14 @@ hermes -p crazydave cron create 'every 15m' \
   executable with <code>chmod +x</code></label>
   <label><input type="checkbox"> You ran the relaxed-filter test and saw
   six lines</label>
-  <label><input type="checkbox"> You moved <code>kanban-autosubscribe.sh</code>
-  into the profile scripts folder</label>
-  <label><input type="checkbox"> You repaired line 14 with the
-  <code>HERMES_TELEGRAM_CHAT_ID</code> default</label>
-  <label><input type="checkbox"> You ran the repair test and read
-  <code>-1004371805465</code></label>
-  <label><input type="checkbox"> You created both cron jobs</label>
+  <label><input type="checkbox"> You ran the two greps and read the
+  three source lines that keep the loop live</label>
+  <label><input type="checkbox"> You left
+  <code>kanban-autosubscribe.sh</code> unscheduled</label>
+  <label><input type="checkbox"> You created the
+  <code>blocked-watch</code> job</label>
   <label><input type="checkbox"> You ran <code>cron list</code> and saw
-  three jobs</label>
+  two jobs</label>
 </div>
 
 <p><strong>Primary source:</strong>
@@ -269,9 +278,9 @@ that shaped this script.
 <a href="../reference/glossary.html">&rarr; Full glossary</a></p>
 
 <p class="ask-agent">Send me the six lines from the relaxed-filter test.
-Send me the chat id line from the repair test. Send me the three job
-names that <code>cron list</code> reports. I check each value
-against the rule in this lesson.</p>
+Send me the output of the two greps. Send me the two job names that
+<code>cron list</code> reports. I check each value against the rule in
+this lesson.</p>
 
 <div class="nav">
   <span><a href="0034-a-job-that-speaks-only-on-failure.html">&larr; Lesson 34</a></span>
