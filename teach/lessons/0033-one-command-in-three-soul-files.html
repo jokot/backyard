@@ -13,9 +13,9 @@
 <p class="lede">Three soul files call <code>hermes send --to telegram</code> on
 their own, and skip the new report script from Lesson 32. Fizzy never
 receives a comment when that call runs alone, because only the report
-script resolves a card. This lesson replaces four lines across three
-files, and adds the delivery step that lets a live chat see the
-change.</p>
+script resolves a card. This lesson replaces four lines and removes
+one, across three files, and adds the delivery step that lets a live
+chat see the change.</p>
 
 <h2>The rule that record 0017 forced</h2>
 
@@ -38,8 +38,13 @@ change.</p>
 <div class="box skill">
   <span class="box-label">Skill — hands on</span>
   <p>Peashooter and Sunflower hold the same line today. Peashooter
-  carries it at line 23 of its <code>SOUL.md</code>. Sunflower carries
-  the same line at line 25 of its <code>SOUL.md</code>.</p>
+  carries it at line 23 of
+  <code>~/.hermes/profiles/peashooter/SOUL.md</code>. Sunflower carries
+  the same line at line 25 of
+  <code>~/.hermes/profiles/sunflower/SOUL.md</code>. Edit the file under
+  <code>~/.hermes/profiles/</code>, not the copy inside the repository.
+  Copy the file first. The section below gives the command and the
+  reason.</p>
   <pre><code># Find this line
   hermes send --to telegram "your message here"
 
@@ -58,8 +63,10 @@ change.</p>
 
 <div class="box skill">
   <span class="box-label">Skill — hands on</span>
-  <p>Crazy Dave's <code>SOUL.md</code> holds two lines that call
-  <code>hermes send --to telegram</code>, not one. Line 97 carries the
+  <p>Crazy Dave's <code>SOUL.md</code>, at
+  <code>~/.hermes/profiles/crazydave/SOUL.md</code>, holds two lines
+  that call <code>hermes send --to telegram</code>, not one. Line 97
+  carries the
   general reporting rule, the same rule that Peashooter and Sunflower
   carry. Line 25 carries step 4 of the root task procedure, inside a
   numbered list. Both lines call Telegram directly, so both lines
@@ -70,8 +77,8 @@ change.</p>
 
   ~/.hermes/scripts/hermes-report.sh "your message here"</code></pre>
   <p>Line 25 takes the same call, with the wording of Crazy Dave. Keep
-  the five leading spaces, because the indent holds the list item
-  together.</p>
+  the five leading spaces, because the indent keeps the line inside the
+  list item.</p>
   <pre><code>     hermes send --to telegram "&lt;your summary, in your own voice&gt;"
 
      ~/.hermes/scripts/hermes-report.sh "&lt;your summary, in your own voice&gt;"</code></pre>
@@ -120,8 +127,9 @@ change.</p>
   <p>Edit each <code>SOUL.md</code> with a text editor, not with
   <code>hermes config set</code>. <a href="../learning-records/0044-a-tool-that-was-never-turned-on.md">Record
   0044</a> found that <code>hermes config set</code> wrote a string
-  where a list belonged. That same command also deleted 22 lines of
-  comments from a config file. Copy each file before you touch it.</p>
+  where a list belonged. That same command also deleted the last 22
+  lines of a config file, one blank line and 21 lines of comments. Copy
+  each file before you touch it.</p>
   <pre><code>cp ~/.hermes/profiles/peashooter/SOUL.md ~/peashooter-SOUL.bak</code></pre>
   <p>Run the same command for Sunflower and Crazy Dave, with the
   profile name changed in both places.</p>
@@ -133,10 +141,10 @@ change.</p>
   <span class="box-label">Skill — hands on</span>
   <p>A soul file edit does not reach an open chat session by itself.
   <a href="../learning-records/0045-a-rule-that-reached-no-session.md">Record
-  0045</a> found a rule that sat in a soul file for a full day, unseen
-  by the running agent. The gateway builds a system prompt once, then
-  stores it for every later turn. Only a fresh session reads the file
-  again.</p>
+  0045</a> found that the file was correct within one minute, but the
+  running session still used the old prompt until <code>/new</code>.
+  The gateway builds a system prompt once, then stores it for every
+  later turn. Only a fresh session reads the file again.</p>
   <p>Send <code>/new</code> inside each topic below. Then send one
   ordinary message. Wait for the reply before you move to the next
   profile.</p>
@@ -194,8 +202,8 @@ done</code></pre>
       <input type="radio" name="q1" id="q1b">
       <label for="q1b">Fizzy now closes cards without comments</label>
       <div class="reveal"><p class="feedback incorrect">Fizzy card close
-      still runs in step 3. Only the comment command was removed, not
-      the close.</p></div>
+      still runs in step 3. The edit removes only the comment command,
+      not the close.</p></div>
     </div>
     <div>
       <input type="radio" name="q1" id="q1c">
@@ -239,18 +247,19 @@ done</code></pre>
 <h2>Checkpoint</h2>
 
 <div class="checklist">
-  <label><input type="checkbox"> Peashooter's <code>SOUL.md</code> line
-  23 replaced with the report script call</label>
-  <label><input type="checkbox"> Sunflower's <code>SOUL.md</code> line
-  25 replaced with the report script call</label>
-  <label><input type="checkbox"> Crazy Dave's <code>SOUL.md</code> lines
-  25 and 97 replaced, and step 3 of the root task procedure edited</label>
-  <label><input type="checkbox"> <code>/new</code> sent in
-  <code>#Coding</code>, then one message sent and answered</label>
-  <label><input type="checkbox"> <code>/new</code> sent in
-  <code>#Planning</code>, then one message sent and answered</label>
-  <label><input type="checkbox"> <code>/new</code> sent in
-  <code>#General</code>, then one message sent and answered</label>
+  <label><input type="checkbox"> You replaced line 23 of Peashooter's
+  <code>SOUL.md</code> with the report script call</label>
+  <label><input type="checkbox"> You replaced line 25 of Sunflower's
+  <code>SOUL.md</code> with the report script call</label>
+  <label><input type="checkbox"> You replaced lines 25 and 97 of Crazy
+  Dave's <code>SOUL.md</code>, and edited step 3 of the root task
+  procedure</label>
+  <label><input type="checkbox"> You sent <code>/new</code> in
+  <code>#Coding</code>, then sent one message and read the reply</label>
+  <label><input type="checkbox"> You sent <code>/new</code> in
+  <code>#Planning</code>, then sent one message and read the reply</label>
+  <label><input type="checkbox"> You sent <code>/new</code> in
+  <code>#General</code>, then sent one message and read the reply</label>
   <label><input type="checkbox"> The file proof command printed 0 for
   all four profiles</label>
   <label><input type="checkbox"> The session proof command printed 1 or
@@ -259,8 +268,8 @@ done</code></pre>
 
 <p><strong>Primary source:</strong>
 <a href="../learning-records/0045-a-rule-that-reached-no-session.md">Learning
-record 0045</a>, which found a soul file edit that stayed dead in one
-open Telegram session for a full day.
+record 0045</a>, which found a soul file edit that reached no open
+Telegram session until <code>/new</code> arrived.
 <a href="0032-a-report-that-reaches-two-rooms.html">Lesson 32</a> builds
 the report script that every edit in this lesson calls.</p>
 
