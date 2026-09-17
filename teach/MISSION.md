@@ -20,12 +20,16 @@ laptop.
   Hermes kanban board. The board runs, Crazy Dave dispatches work, and
   learning record 0044 opened the kanban tool. **Met in Stage 4.**
 - Give every rule that the roster obeys a command that fails when the
-  rule is broken. **Open.** Learning records 0042 through 0046 name five
-  rules that a file recorded and no machine enforced.
+  rule is broken. **Four rules are enforced in Stage 5.** The script
+  `roster-audit.sh` checks the rules of records 0043, 0044, 0045 and
+  0046, and a cron job runs it each day at 09:00. The criterion stays
+  open, because record 0051 shows that check 4 counts days and the rule
+  it stands for is about stale text.
 - Move all four profiles to a server, and prove that each one answers
   from there. **Open.**
-- Run work that Jokot never started, through cron and through the Fizzy
-  webhook receiver. **Open, deferred since Stage 1 and Stage 3.**
+- Run work that Jokot never started. **The cron half is met in Stage 5.**
+  The Fizzy webhook receiver stays open, because it needs a public HTTPS
+  endpoint.
 
 ## Constraints
 - Build the real thing. Every lesson produces a working piece of the

@@ -183,3 +183,32 @@ An "always" button stores a pattern key, not the command on screen.
 allowlist only grows, because the loader runs
 `_permanent_approved.update()` once for each process. A removal needs an
 edit of the file and a gateway restart. See record 0046.
+
+A silent job is a job that a person reads. Both Stage 5 cron jobs print
+nothing when the roster is healthy. `roster-audit.sh` prints one line for
+each broken rule, and `blocked-watch.sh` prints one line for each task
+that stayed blocked for more than 3600 seconds. A job that speaks on
+every run teaches a person to ignore it.
+
+A threshold is not the rule that it stands for. Check 4 of the audit
+counts Telegram sessions older than 7 days, because days are easy to
+count. The rule is "no session runs a prompt older than the last soul
+file edit". A session of 6 days can carry the old rule and pass the
+check. See record 0051, section 2.
+
+Test a soft verb before you trust it. `hermes sessions archive` sets
+`archived = 1` and never writes `ended_at`. The gateway reuse query
+filters on `ended_at IS NULL` and never reads `archived`, so an archived
+session is still reused. Only `sessions delete` ends the row, and it
+destroys the conversation. See record 0051, section 1.
+
+Ask what deleted a thing before you re-create it. A script that sits on
+disk, executable and dated, can be the leftover of a deletion instead of
+a finished step that nobody scheduled. See record 0050.
+
+Jokot lifted the "Jokot runs every command" constraint for Stage 5 on
+17 September 2026, with the words "run everything you can execute by
+yourself, then tell me when I need to do my part". The controller then
+installed three scripts, created two cron jobs and edited three soul
+files. The constraint still stands for later stages until Jokot lifts it
+again.
