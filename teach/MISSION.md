@@ -22,9 +22,12 @@ laptop.
 - Give every rule that the roster obeys a command that fails when the
   rule is broken. **Four rules are enforced in Stage 5.** The script
   `roster-audit.sh` checks the rules of records 0043, 0044, 0045 and
-  0046, and a cron job runs it each day at 09:00. The criterion stays
-  open, because record 0051 shows that check 4 counts days and the rule
-  it stands for is about stale text.
+  0046, and a cron job runs it each day at 09:00. Check 4 now compares
+  the stored prompt of every open Telegram session against the current
+  soul file, so it tests the rule of record 0045 and no longer counts
+  days. The criterion stays open, because two rules that Stage 5 wrote
+  have no check: a soul file must name the report script and no send
+  command, and a report that does not send must be retried.
 - Move all four profiles to a server, and prove that each one answers
   from there. **Open.**
 - Run work that Jokot never started. **The cron half is met in Stage 5.**

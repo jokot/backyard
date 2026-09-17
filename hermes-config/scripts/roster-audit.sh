@@ -18,13 +18,34 @@ n=$(hermes -p crazydave config get command_allowlist 2>/dev/null | grep -c '^- '
 hermes -p crazydave config get toolsets 2>/dev/null | grep -q '^- kanban$' \
   || echo "toolsets: crazydave is missing kanban"
 
-# 4. No Telegram session runs on a prompt older than 7 days. Record 0045.
-for db in "$HOME"/.hermes/profiles/*/state.db; do
-  p=$(basename "$(dirname "$db")")
-  old=$(sqlite3 "$db" "SELECT COUNT(*) FROM sessions WHERE source='telegram'
-          AND ended_at IS NULL
-          AND started_at < strftime('%s','now') - 604800;" 2>/dev/null)
-  [ -n "$old" ] && [ "$old" != "0" ] \
-    && echo "session: $p holds $old telegram session(s) older than 7 days"
+# 4. No live session runs a prompt that has drifted from its SOUL.md.
+#    Record 0051. A Telegram session keeps the prompt it was born with, so a
+#    soul edit never reaches it; the true rule is "the birth prompt must equal
+#    the current soul text". Spec: teach/drafts/prompt-drift-check-spec.md.
+#    Each prompt is the soul text of its birth plus runtime boilerplate that
+#    begins "\n\nYou run on Hermes Agent"; cut at that marker, trim, then
+#    require an exact string match against the current SOUL.md. Only
+#    telegram-sourced, open, non-empty prompts are judged. An ended session
+#    is never reused, so its old prompt is history and not a defect. Reports
+#    drift, never repairs it: SOUL.md is only read.
+for p in crazydave peashooter sunflower torchwood; do
+  db="$HOME/.hermes/profiles/$p/state.db"
+  soul="$HOME/.hermes/profiles/$p/SOUL.md"
+  sqlite3 "file:$db?mode=ro" "
+    SELECT 'prompt-drift: $p session ' || s.id ||
+           ' runs a prompt that does not match the current SOUL.md'
+    FROM sessions s
+    WHERE s.source='telegram'
+      AND s.ended_at IS NULL
+      AND s.system_prompt IS NOT NULL AND s.system_prompt != ''
+      AND trim(
+            CASE WHEN instr(s.system_prompt,
+                            char(10)||char(10)||'You run on Hermes Agent') > 0
+                 THEN substr(s.system_prompt, 1,
+                        instr(s.system_prompt,
+                              char(10)||char(10)||'You run on Hermes Agent') - 1)
+                 ELSE s.system_prompt END,
+            char(10)||char(13)||' ')
+        != trim(readfile('$soul'), char(10)||char(13)||' ');" 2>/dev/null
 done
 exit 0
