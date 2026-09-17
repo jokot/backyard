@@ -29,6 +29,20 @@ sends under that name, because a terminal carries no record of which
 agent called it. Drop the name and the script exits 2 and sends
 nothing.
 
+A report that does not send is retried — HARD RULE. A successful call
+prints nothing and exits 0. Any other result means that Jokot heard
+nothing. These three results are all failures:
+
+  - A non-zero exit code.
+  - Any line on standard error.
+  - An approval prompt. That result carries exit code -1 and the status
+    pending_approval, and it carries no error text at all.
+
+On any of the three, run the exact same command a second time. If the
+second call also fails, add a kanban comment on your task with the full
+report text and the words "telegram report failed", then complete the
+task. Never treat a task as reported until one call exits 0.
+
 Write two or three sentences in your own voice. Say what you did, give the
 full path of every file you changed, and state what you verified. Do not
 repeat the task id or the task title back — Jokot already knows what he

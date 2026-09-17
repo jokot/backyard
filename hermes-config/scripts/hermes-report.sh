@@ -5,7 +5,9 @@
 #
 # A worker calls this script instead of `hermes send --to telegram`.
 # Telegram always receives the message. Fizzy receives a comment only when
-# the task chain carries a `fizzy:<number>` comment.
+# the task chain carries a `fizzy:<number>` comment. The Fizzy comment
+# starts with the display name of the profile, because every comment
+# posts through one Fizzy account.
 #
 # The profile argument is required, and no default is safe. A worker shell
 # carries no profile marker. `hermes send` with no `--profile` reads
@@ -70,8 +72,20 @@ if [ -z "$CARD" ]; then
   exit 0
 fi
 
+# Every Fizzy comment posts through the one Fizzy account of Crazy Dave,
+# so Fizzy shows the same human name on all of them. Telegram shows the
+# real bot name, and the card shows nothing. Name the writer in the first
+# line of the body, so the card carries the same identity as the group.
+case "$PROFILE" in
+  crazydave)  WHO="Crazy Dave" ;;
+  peashooter) WHO="Peashooter" ;;
+  sunflower)  WHO="Sunflower" ;;
+  torchwood)  WHO="Torchwood" ;;
+  *)          WHO="$PROFILE" ;;
+esac
+
 if ! fizzy comment create --profile crazydave --card "$CARD" \
-       --body "$MSG" >/dev/null 2>&1; then
+       --body "$WHO: $MSG" >/dev/null 2>&1; then
   echo "report: fizzy comment failed for card $CARD" >&2
 fi
 exit 0

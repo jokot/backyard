@@ -414,8 +414,36 @@ agent what to do when a report does not send. Crazy Dave read
 `exit_code: -1`, read no error text, and treated the task as finished.
 
 A report is the product of the work, so a lost report is a lost task.
-The soul files need one rule: a report that does not send is retried,
-and a task is never completed until a report leaves.
+All three soul files now carry that rule. A successful call prints
+nothing and exits 0. A non-zero exit code, a line on standard error, and
+an approval prompt are all failures, and each one asks for the same
+command a second time. If the second call also fails, the agent writes
+the report text into a kanban comment on the task and says "telegram
+report failed". That path worked in the same turn where the report
+failed, so the report reaches the board even when it reaches no room.
+
+The rule is live in the files and dead in the sessions, because a soul
+file edit reaches no open session. Jokot sends `/new` in the three
+topics to activate it.
+
+### The card lost the name that the group kept
+
+The same job showed a second gap. Telegram gives each profile its own
+bot token, so the group showed the correct sender name on both worker
+messages. Fizzy has one account, and Crazy Dave owns it. Every comment
+posts through `--profile crazydave`, so the card showed one human name
+on all three comments.
+
+The report script now names the writer in the first line of the Fizzy
+body:
+
+```
+Sunflower: Wrote the prompt-drift check spec at teach/drafts/...
+```
+
+Telegram needs no prefix, because the bot name is already correct there.
+One test comment on card 15 printed `Sunflower: Name prefix test.`, and
+the comment was then deleted. Card 15 holds 2 comments again.
 
 ### The work that the job produced
 
@@ -476,7 +504,7 @@ counts days. The gap that Section 2 named is closed.
 
 ## Section 5 — What Stage 5 delivered
 
-- `~/.hermes/scripts/hermes-report.sh`, 2529 bytes, mode 755. One script
+- `~/.hermes/scripts/hermes-report.sh`, 3139 bytes, mode 755. One script
   carries every report. The profile name is the first argument. Telegram
   receives the message first, so a Fizzy defect never costs a report.
 - `~/.hermes/profiles/crazydave/scripts/roster-audit.sh`, mode 755.
@@ -489,6 +517,7 @@ counts days. The gap that Section 2 named is closed.
 - Two cron jobs. `roster-audit` runs at `0 9 * * *`. `blocked-watch`
   runs `every 60m`.
 - Three soul files that name the report script and name no send command.
+  Each file carries the name rule and the retry rule.
 - Lessons 32 through 35.
 - Records 0050 and 0051.
 

@@ -25,7 +25,9 @@ steps in this order. Completing the task is the last step, never the third.
 5. Complete the kanban task.
 
 Steps 3 and 4 are not optional, and no later rule cancels them. A finished
-root task that Jokot never heard about is a failed task.
+root task that Jokot never heard about is a failed task. Step 4 has a
+result, and you read it before you run step 5. The retry rule below says
+what each result means.
 
 Fizzy mirror — you own it, and you never read it.
 
@@ -98,6 +100,20 @@ The first word is your own name, and it never changes. The script
 sends under that name, because a terminal carries no record of which
 agent called it. Drop the name and the script exits 2 and sends
 nothing.
+
+A report that does not send is retried — HARD RULE. A successful call
+prints nothing and exits 0. Any other result means that Jokot heard
+nothing. These three results are all failures:
+
+  - A non-zero exit code.
+  - Any line on standard error.
+  - An approval prompt. That result carries exit code -1 and the status
+    pending_approval, and it carries no error text at all.
+
+On any of the three, run the exact same command a second time. If the
+second call also fails, add a kanban comment on your task with the full
+report text and the words "telegram report failed", then complete the
+task. Never treat a task as reported until one call exits 0.
 
 Write a short summary of the whole job in your own voice. Say what exists
 now, where it lives, and anything Jokot must do himself. Do not list the

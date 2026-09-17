@@ -165,11 +165,43 @@ if [ -z "$CARD" ]; then
   exit 0
 fi
 
+# Every Fizzy comment posts through the one Fizzy account of Crazy Dave,
+# so Fizzy shows the same human name on all of them. Telegram shows the
+# real bot name, and the card shows nothing. Name the writer in the first
+# line of the body, so the card carries the same identity as the group.
+case "$PROFILE" in
+  crazydave)  WHO="Crazy Dave" ;;
+  peashooter) WHO="Peashooter" ;;
+  sunflower)  WHO="Sunflower" ;;
+  torchwood)  WHO="Torchwood" ;;
+  *)          WHO="$PROFILE" ;;
+esac
+
 if ! fizzy comment create --profile crazydave --card "$CARD" \
-       --body "$MSG" &gt;/dev/null 2&gt;&amp;1; then
+       --body "$WHO: $MSG" &gt;/dev/null 2&gt;&amp;1; then
   echo "report: fizzy comment failed for card $CARD" &gt;&amp;2
 fi
 exit 0</code></pre>
+</div>
+
+<h2>One Fizzy account carries four writers</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Telegram and Fizzy answer the question "who wrote this" in two
+  different ways. Telegram gives each profile its own bot token, so the
+  group shows the real sender name on every message. Fizzy has one
+  account, and Crazy Dave owns it. Every comment that this script writes
+  posts through <code>--profile crazydave</code>, because no other
+  profile holds a Fizzy token.</p>
+  <p>So the card showed the same human name on all three comments of the
+  first real job, and the card lost the identity that the group kept. The
+  fix costs four lines: map the profile name to a display name, then put
+  that name at the front of the comment body.</p>
+  <pre><code>Sunflower: Wrote the prompt-drift check spec at teach/drafts/...
+Peashooter: Implemented check 5 in roster-audit.sh at ...</code></pre>
+  <p>Telegram needs no prefix, because the bot name is already correct
+  there. Add the prefix to the Fizzy body only.</p>
 </div>
 
 <h2>Four rules the script obeys</h2>

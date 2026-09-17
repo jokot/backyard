@@ -113,6 +113,56 @@ nothing.</code></pre>
   An agent that reads only an example line copies the example.</p>
 </div>
 
+<h2>A refused report looks like a finished report</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The first real job of the roster lost one report of three. Crazy
+  Dave ran the correct command, with the correct profile name, and the
+  tool answered:</p>
+  <pre><code>{"exit_code": -1, "status": "pending_approval",
+ "approval_pending": true,
+ "description": "Security scan - [HIGH] Nested executable body ..."}</code></pre>
+  <p>That answer is neither a success nor an error. No text reached
+  standard error, and no exit code said "failed". A machine asked a
+  question, and nobody answered it. Crazy Dave completed the task four
+  seconds later.</p>
+  <p>Sunflower and Peashooter met the same answer in the same job. Both
+  read it as a failure and both sent their report a second time. The
+  difference was not the command and not the script. The difference was
+  the reading of one result.</p>
+  <p>A soul file can close that gap, because a soul file is where an
+  agent learns what a result means. Record 0051 holds the full account.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>Add this rule to all three files, directly after the four-line note
+  that you just added. Change no word of it:</p>
+  <pre><code>A report that does not send is retried - HARD RULE. A successful call
+prints nothing and exits 0. Any other result means that Jokot heard
+nothing. These three results are all failures:
+
+  - A non-zero exit code.
+  - Any line on standard error.
+  - An approval prompt. That result carries exit code -1 and the status
+    pending_approval, and it carries no error text at all.
+
+On any of the three, run the exact same command a second time. If the
+second call also fails, add a kanban comment on your task with the full
+report text and the words "telegram report failed", then complete the
+task. Never treat a task as reported until one call exits 0.</code></pre>
+  <p>The fallback uses the kanban comment on purpose. That path worked in
+  the same turn where the report failed, so the report reaches the board
+  even when it reaches no room. A lost report is a lost task.</p>
+  <p>One command proves that all three files carry the rule:</p>
+  <pre><code>grep -c 'HARD RULE. A successful call' \
+  ~/.hermes/profiles/{crazydave,peashooter,sunflower}/SOUL.md</code></pre>
+  <p>Each of the three lines must end with <code>1</code>. A soul file
+  edit reaches no running session, so send <code>/new</code> in each
+  topic afterwards.</p>
+</div>
+
 <h2>Step 3 of the root task procedure loses one command</h2>
 
 <div class="box skill">
@@ -316,6 +366,8 @@ done</code></pre>
   <code>#General</code>, then sent one message and read the reply</label>
   <label><input type="checkbox"> You added the four line note to all
   three files</label>
+  <label><input type="checkbox"> You added the retry rule to all three
+  files, and the rule proof printed 1 on each of the three lines</label>
   <label><input type="checkbox"> The file proof command printed 0 for
   all four profiles</label>
   <label><input type="checkbox"> The name proof printed four lines, and
