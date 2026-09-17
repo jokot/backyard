@@ -361,7 +361,7 @@ git diff --cached | grep -nE '<DM>|TELEGRAM_BOT_TOKEN=|FIZZY_TOKEN=|[0-9]{9,10}:
 - Create: `teach/lessons/0033-one-command-in-three-soul-files.html`
 - Modify: `hermes-config/peashooter/SOUL.md`
 - Modify: `hermes-config/sunflower/SOUL.md`
-- Modify: `hermes-config/crazydave/SOUL.md`
+- Modify: `hermes-config/crazydave/SOUL.md` (lines 25 and 97, plus the step 3 edit)
 
 **Interfaces:**
 - Consumes: `hermes-report.sh` from Task 1.
@@ -392,16 +392,61 @@ git diff --cached | grep -nE '<DM>|TELEGRAM_BOT_TOKEN=|FIZZY_TOKEN=|[0-9]{9,10}:
   two or three sentences, the full path of every changed file, and one
   message for each task all stay exactly as they are.
 
-- [ ] **Step 3: Give the exact replacement for Crazy Dave.** Line 97 holds
-  the same command and takes the same replacement. State clearly that
-  step 3 of the root task procedure does not change. Crazy Dave keeps
-  `fizzy comment create` and `fizzy card close` for the root task. Only
-  step 4 changes.
+- [ ] **Step 3: Give the exact replacement for Crazy Dave. That file holds
+  two lines, not one.** Line 97 carries the general reporting rule. Line 25
+  carries step 4 of the root task procedure. Both lines run
+  `hermes send --to telegram`, so both lines change. A change to line 97
+  alone leaves one occurrence, and success criterion 4 then fails.
 
-- [ ] **Step 4: Explain why Torchwood does not change.** Torchwood is not
+  Line 97 takes the same replacement as the two worker files:
+
+```
+  ~/.hermes/scripts/hermes-report.sh "your message here"
+```
+
+  Line 25 takes the same call with the wording of Crazy Dave:
+
+```
+     ~/.hermes/scripts/hermes-report.sh "<your summary, in your own voice>"
+```
+
+  Keep the five leading spaces on line 25. That line sits inside a numbered
+  list, and the indent holds the list item together.
+
+- [ ] **Step 4: Remove `fizzy comment create` from step 3 of the root task
+  procedure, and say why.** Step 3 reads:
+
+```
+3. Read the fizzy:<number> comment on that task. Then run
+     fizzy comment create --profile crazydave --card <number> --body "<your summary>"
+     fizzy card close <number> --profile crazydave
+```
+
+  It becomes:
+
+```
+3. Read the fizzy:<number> comment on that task. Then run
+     fizzy card close <number> --profile crazydave
+```
+
+  The reason is a duplicate. After step 4 calls the report script, that
+  script writes the summary onto the card by itself. If step 3 also ran
+  `fizzy comment create`, the card would collect the same summary twice.
+  Success criterion 7 of the spec allows one closing comment of Crazy Dave,
+  not two.
+
+  Crazy Dave still reads the `fizzy:<number>` comment in step 3, because
+  `fizzy card close` needs that number. A missing marker still stops him at
+  the same step, so this edit removes no check.
+
+  State the rule the edit follows: one script owns both destinations. That
+  rule is the first decision of the spec, and step 3 of Crazy Dave was the
+  last place that still wrote to Fizzy by hand.
+
+- [ ] **Step 5: Explain why Torchwood does not change.** Torchwood is not
   a dispatched worker and its soul file forbids every board change.
 
-- [ ] **Step 5: Write the edit method.** Tell Jokot to edit each file with
+- [ ] **Step 6: Write the edit method.** Tell Jokot to edit each file with
   a text editor. State the reason from
   [record 0044](../../../teach/learning-records/0044-a-tool-that-was-never-turned-on.md):
   `hermes config set` wrote a string where a list belonged and deleted 22
@@ -411,7 +456,7 @@ git diff --cached | grep -nE '<DM>|TELEGRAM_BOT_TOKEN=|FIZZY_TOKEN=|[0-9]{9,10}:
 cp ~/.hermes/profiles/peashooter/SOUL.md ~/peashooter-SOUL.bak
 ```
 
-- [ ] **Step 6: Write the delivery step, and say why it is not optional.**
+- [ ] **Step 7: Write the delivery step, and say why it is not optional.**
   A soul file edit does not reach an open chat session. Cite record 0045.
   Tell Jokot to send `/new` inside each topic, then one ordinary message,
   and to wait for the reply:
@@ -424,7 +469,7 @@ cp ~/.hermes/profiles/peashooter/SOUL.md ~/peashooter-SOUL.bak
   Telegram sessions from 9 and 10 September 2026, and one of them serves
   `#Planning`. Without `/new`, the Sunflower edit reaches nobody.
 
-- [ ] **Step 7: Write the file proof command.** This command is success
+- [ ] **Step 8: Write the file proof command.** This command is success
   criterion 4 of the spec. Give it, and state the expected result:
 
 ```bash
@@ -435,7 +480,7 @@ grep -c 'hermes send --to telegram' ~/.hermes/profiles/*/SOUL.md
   profiles. Every count must read 0. Torchwood already reads 0 today,
   because that file holds no such line.
 
-- [ ] **Step 8: Write the session proof command.** The file proof shows
+- [ ] **Step 9: Write the session proof command.** The file proof shows
   the rule on disk. This command shows the rule in a live chat. Give
   this, and state what each result means:
 
@@ -453,23 +498,23 @@ done
   sent a message after `/new`. Read the `system_prompt` column to separate
   the two cases, because `/new` leaves it NULL until the first turn.
 
-- [ ] **Step 9: Write the checkpoint list.** One checkbox for each of the
+- [ ] **Step 10: Write the checkpoint list.** One checkbox for each of the
   three file edits, one for each `/new` plus message, one for the file
   proof reading 0 for all four profiles, and one for the session proof
   reading 1 or more for all three edited profiles.
 
-- [ ] **Step 10: Verify the lesson HTML tag balance and run the link
+- [ ] **Step 11: Verify the lesson HTML tag balance and run the link
   existence check.**
 
-- [ ] **Step 11: Ask Jokot to run Lesson 33** and to report the output of
+- [ ] **Step 12: Ask Jokot to run Lesson 33** and to report the output of
   the proof command.
 
-- [ ] **Step 12: Verify the reported output.** The file proof must print
+- [ ] **Step 13: Verify the reported output.** The file proof must print
   0 for all four profiles. The session proof must print 1 or more for all
   three edited profiles. If one prints 0, read that profile's
   `system_prompt` column before naming a cause.
 
-- [ ] **Step 13: Mirror the three soul files.**
+- [ ] **Step 14: Mirror the three soul files.**
 
 ```bash
 for p in peashooter sunflower crazydave; do
@@ -477,7 +522,7 @@ for p in peashooter sunflower crazydave; do
 done
 ```
 
-- [ ] **Step 14: Confirm the mirror holds no secret, then commit.** Run
+- [ ] **Step 15: Confirm the mirror holds no secret, then commit.** Run
   the secret scan from the global constraints.
 
 ---
@@ -622,7 +667,11 @@ hermes -p crazydave cron runs roster-audit
 - Create: `teach/lessons/0035-the-watch-for-a-task-that-stopped.html`
 - Create: `teach/learning-records/0049-a-read-only-connection-that-could-not-read.md`
 - Create: `hermes-config/scripts/blocked-watch.sh`
-- Modify: `hermes-config/scripts/kanban-autosubscribe.sh`
+- Create: `hermes-config/scripts/kanban-autosubscribe.sh`
+
+  The repository holds no copy of `kanban-autosubscribe.sh` today. Jokot
+  modifies the live file at `~/.hermes/scripts/`, and this task creates the
+  first mirror of it.
 
 **Interfaces:**
 - Consumes: the cron pattern from Task 3.
@@ -774,9 +823,19 @@ hermes -p crazydave cron list
 - [ ] **Step 3: Write record 0050** with the seven criteria and the output
   that proves each one.
 
-- [ ] **Step 4: Mark the mission criterion met.** The criterion "run work
-  that Jokot never started" moves from **Open** to **Met in Stage 5**.
-  Leave the server criterion open.
+- [ ] **Step 4: Split the mission criterion, and mark only the cron half
+  met.** Line 27 of `teach/MISSION.md` reads "Run work that Jokot never
+  started, through cron and through the Fizzy webhook receiver. **Open,
+  deferred since Stage 1 and Stage 3.**" Stage 5 delivers cron. The spec
+  puts the Fizzy webhook receiver out of scope, because that receiver needs
+  a public HTTPS endpoint. Write the criterion as two sentences:
+
+  > Run work that Jokot never started. **The cron half is met in Stage 5.**
+  > The Fizzy webhook receiver stays open, because it needs a public HTTPS
+  > endpoint.
+
+  Do not write "Met in Stage 5" alone. That wording claims a receiver that
+  no stage has built. Leave the server criterion open.
 
 - [ ] **Step 5: Commit.**
 

@@ -260,11 +260,26 @@ Three files change. Torchwood does not change.
 | --- | --- | --- |
 | `peashooter/SOUL.md` | 23 | The script call replaces `hermes send --to telegram` |
 | `sunflower/SOUL.md` | 25 | The script call replaces `hermes send --to telegram` |
-| `crazydave/SOUL.md` | 97 | The script call replaces `hermes send --to telegram` |
+| `crazydave/SOUL.md` | 25 and 97 | The script call replaces `hermes send --to telegram` on both lines |
 
-Crazy Dave keeps step 3 of the root task procedure without change. That
-step runs `fizzy comment create` and `fizzy card close` on the root task.
-Step 4 changes to the script call.
+**Correction, found while the plan ran.** This table first named line 97
+alone, and the paragraph below it first said that step 3 does not change.
+Both statements were wrong, and the two contradicted each other.
+
+`crazydave/SOUL.md` runs `hermes send --to telegram` on two lines. Line 25
+is step 4 of the root task procedure. Line 97 is the general reporting
+rule. Success criterion 4 requires a count of 0 for every profile, so both
+lines change.
+
+Step 3 of the root task procedure also changes. It drops
+`fizzy comment create` and keeps `fizzy card close`. The report script now
+writes the card comment, so an unchanged step 3 would post the same
+summary onto the card twice. Success criterion 7 allows one closing
+comment of Crazy Dave, not two.
+
+Crazy Dave still owns card create and card close. He still reads the
+`fizzy:<number>` comment in step 3, because `fizzy card close` needs that
+number.
 
 Each edit needs `/new` in the matching Telegram topic, then one message.
 Record 0045 states the reason. The gateway builds a system prompt once
