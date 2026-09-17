@@ -281,9 +281,9 @@ possible definition.</p>
   <dd>The relation the kanban words <code>parents</code> and
   <code>children</code> name. A parent must reach <code>done</code> before
   its child starts, so a child waits on every parent. A root task waits on
-  every one of its workers, so the root task lists its workers as parents,
-  and a worker reaches its own root task through <code>children</code>,
-  never through <code>parents</code>.
+  every one of its workers, so the root task lists its workers as
+  parents. A worker therefore reaches its own root task through
+  <code>children</code>, never through <code>parents</code>.
   <span class="from">Introduced in: <a href="../lessons/0032-a-report-that-reaches-two-rooms.html">Lesson 32</a></span></dd>
 
 </dl>

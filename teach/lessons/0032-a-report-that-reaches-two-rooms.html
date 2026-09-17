@@ -47,7 +47,7 @@ t_29e6cbb8  worker  parents: ['t_3ce59841']     children: [..., 't_e6f5dc9f']</c
   <p>State the rule in one sentence. A parent must reach <code>done</code>
   first, and a child waits. This is a
   <span class="term" title="The relation the kanban words parents and children name. A parent must reach done first, and a child waits.">dependency
-  edge</span>, and the root task waits on every one of its workers, so the
+  edge</span>. The root task waits on every one of its workers, so the
   root task lists its workers as parents, never as children.</p>
   <p>State the consequence. A worker reaches its root task through
   <code>children</code>, never through <code>parents</code>. The worker
@@ -195,8 +195,7 @@ WHERE c.body LIKE 'fizzy:%';"</code></pre>
     </div>
     <div>
       <input type="radio" name="q1" id="q1c">
-      <label for="q1c">Neither list; the task body names it
-      directly</label>
+      <label for="q1c">The task body</label>
       <div class="reveal"><p class="feedback incorrect">The
       <code>children</code> list already carries it, at the position
       shown as <code>t_e6f5dc9f</code>.</p></div>
@@ -210,23 +209,20 @@ WHERE c.body LIKE 'fizzy:%';"</code></pre>
   <div class="choices">
     <div>
       <input type="radio" name="q2" id="q2a">
-      <label for="q2a">Print one line to standard error, and exit
-      0</label>
+      <label for="q2a">Warn on stderr, then exit 0</label>
       <div class="reveal"><p class="feedback correct">Right. The second
       rule holds: a Fizzy failure never changes the exit code.</p></div>
     </div>
     <div>
       <input type="radio" name="q2" id="q2b">
-      <label for="q2b">Exit 1, so the caller reads the task as
-      failed</label>
+      <label for="q2b">Exit 1, and mark it failed</label>
       <div class="reveal"><p class="feedback incorrect">Only a failed
       Telegram send returns exit 1. A Fizzy failure never reaches that
       branch.</p></div>
     </div>
     <div>
       <input type="radio" name="q2" id="q2c">
-      <label for="q2c">Retry the comment once, then exit 1 if it fails
-      again</label>
+      <label for="q2c">Retry the comment, then exit 1</label>
       <div class="reveal"><p class="feedback incorrect">The script has no
       retry. It prints one line to standard error and exits 0.</p></div>
     </div>
@@ -249,19 +245,18 @@ WHERE c.body LIKE 'fizzy:%';"</code></pre>
 <p><strong>Primary source:</strong>
 <a href="../learning-records/0043-a-report-that-went-to-the-wrong-room.md">learning
 record 0043</a>, which lists the two tasks that blocked on 14 September
-2026, and <a href="../lessons/0023-crazy-dave-writes-the-card.html">Lesson
-23</a>, which sets the root task completion trigger this script works
-around.</p>
+2026. <a href="../lessons/0023-crazy-dave-writes-the-card.html">Lesson
+23</a> sets the root task completion trigger this script avoids.</p>
 
 <p><a href="../learning-records/0048-two-words-that-name-the-opposite-edge.md">Record
 0048</a> &middot;
 <a href="../reference/glossary.html">&rarr; Full glossary</a></p>
 
 <p class="ask-agent">Send me the exit code and the group message from test
-1, the exit code from test 2, and a link to the card 17 comment from test
-3. I check each exit code against the rules in this lesson. A test that
-returns a different code, or a comment that never reaches the card, is a
-real finding, and it earns a record.</p>
+1, and the exit code from test 2. Send me a link to the card 17 comment
+from test 3, too. I check each exit code against the rules in this
+lesson. A test that returns a different code, or a comment that never
+reaches the card, is a real finding, and it earns a record.</p>
 
 <div class="nav">
   <span><a href="0031-a-service-that-outlives-its-agent.html">&larr; Lesson 31</a></span>
