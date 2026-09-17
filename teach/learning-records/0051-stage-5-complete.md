@@ -311,7 +311,13 @@ be fixed one time.
 The cron path never carried the defect. Both jobs run in the mode
 `no-agent (script stdout delivered directly)`, and the gateway of Crazy
 Dave delivers that text. No message row appeared in any of the four
-databases during the forced audit run.
+databases during the forced audit run, because that path never calls
+`hermes send`. Jokot read the audit message of 18:07 and reported the
+sender name as Crazy Dave, which is the correct name.
+
+So the defect reached one path and not the other. A script that calls
+`hermes send` needs a name. A script whose text the gateway delivers
+already runs inside a named process.
 
 ### The room has the same cause
 
