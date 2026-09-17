@@ -190,11 +190,14 @@ each broken rule, and `blocked-watch.sh` prints one line for each task
 that stayed blocked for more than 3600 seconds. A job that speaks on
 every run teaches a person to ignore it.
 
-A threshold is not the rule that it stands for. Check 4 of the audit
-counts Telegram sessions older than 7 days, because days are easy to
-count. The rule is "no session runs a prompt older than the last soul
-file edit". A session of 6 days can carry the old rule and pass the
-check. See record 0051, section 2.
+A threshold is not the rule that it stands for. The first check 4 of the
+audit counted Telegram sessions older than 7 days, because days are easy
+to count. The rule is "no session runs a prompt older than the last soul
+file edit", and a session of 6 days can carry the old rule and pass the
+check. Check 4 now reads the stored prompt of each open session and
+compares it against the current soul file. When a proxy is easier to
+measure than the rule, measure the rule anyway. See record 0051,
+section 2.
 
 Test a soft verb before you trust it. `hermes sessions archive` sets
 `archived = 1` and never writes `ended_at`. The gateway reuse query
@@ -212,3 +215,51 @@ yourself, then tell me when I need to do my part". The controller then
 installed three scripts, created two cron jobs and edited three soul
 files. The constraint still stands for later stages until Jokot lifts it
 again.
+
+A path that starts with a tilde is not a path yet. The security scanner
+opens a nested script before the command runs, so it must resolve the
+path itself. A shell expands the tilde, and an agent never gets that far.
+The scanner answers `block` with two findings that read
+`analysis_incomplete`. Write every script path in full inside a soul
+file. See record 0051, section 4.
+
+Find the binary that the resolver picks, not the binary on your PATH.
+Five copies of `tirith` live under `~/.hermes`, and `which tirith` finds
+none of them. Each profile runs the copy in its own `bin` directory, and
+the versions differ. Testing the wrong copy returned `allow` and hid the
+cause for two working sessions.
+
+A script that reads `$1` and `$2` accepts `$3` in silence. A report call
+that lost its quotation marks still sent, and it sent one word. The
+caller read the wrong message, corrected the call, and sent a second
+report for one task. Count the arguments before the side effect, and a
+wrong call costs nothing.
+
+A rule is checkable when it leaves a trace. Five rules of Stage 5 have a
+check in `roster-audit.sh`. One does not, and it cannot: a report that
+does not send must be retried. Only the agent that made the call can see
+that the call failed. Name a limit of this kind in the mission, instead
+of leaving the criterion open forever.
+
+Read the tests that exist before you decide the code under them is wrong.
+The reviewer anchored a `grep` match to the start of a line, to stop a
+false alarm that no real file produced. The test fixtures already held
+the case that the anchor broke, and they predated the change. The change
+was removed.
+
+A test fixture that is a copy of production data carries production data.
+The dedup job was proved against a copy of the live kanban board, which
+held 90 real tasks with real titles and real comment text. The copy was
+not committed, and `.gitignore` now covers that shape.
+
+An idle specialist is a property of the request. The third job of
+criterion 7 gave Sunflower no task, because the request already carried
+the design. The roster is wrong only when it gives planning work to a
+profile that does not plan.
+
+Stage 5 found its defects between a call and its effect. A report met an
+approval prompt and reported success. A malformed call sent anyway. An
+audit query read every session instead of the open ones. In each case the
+caller could not see the failure from where it stood. Ask what the caller
+sees when the step fails, and make the failure reach the caller. Learning
+record 0051.
