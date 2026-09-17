@@ -277,6 +277,15 @@ possible definition.</p>
   gets a new session for each task, so it reads the file as it stands.
   <span class="from">Introduced in: <a href="../lessons/0031-a-service-that-outlives-its-agent.html">Lesson 31</a></span></dd>
 
+  <dt>Dependency edge</dt>
+  <dd>The relation the kanban words <code>parents</code> and
+  <code>children</code> name. A parent must reach <code>done</code> before
+  its child starts, so a child waits on every parent. A root task waits on
+  every one of its workers, so the root task lists its workers as parents,
+  and a worker reaches its own root task through <code>children</code>,
+  never through <code>parents</code>.
+  <span class="from">Introduced in: <a href="../lessons/0032-a-report-that-reaches-two-rooms.html">Lesson 32</a></span></dd>
+
 </dl>
 
 <p style="margin-top:3rem; font-family:-apple-system,sans-serif; font-size:0.85rem; color:var(--ink-soft);">
