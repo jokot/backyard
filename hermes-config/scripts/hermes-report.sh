@@ -27,6 +27,16 @@ usage() {
 [ -z "$PROFILE" ] && usage
 [ -z "$MSG" ] && usage
 
+# Reject a third argument. The script read only $1 and $2 before, so a
+# message that lost its quotation marks still sent, and it sent only the
+# first word. The caller then saw a malformed call, corrected it, and sent
+# a second message for one task. A wrong call must fail before it sends.
+if [ "$#" -ne 2 ]; then
+  echo "report: expected 2 arguments, got $#" >&2
+  echo "  quote the whole message as one argument" >&2
+  usage
+fi
+
 # Reject a name that has no profile directory. A typed name that reaches
 # `hermes send` would send under the wrong bot, or fail with no report.
 if [ ! -d "$HOME/.hermes/profiles/$PROFILE" ]; then

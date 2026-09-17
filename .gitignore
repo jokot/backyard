@@ -5,3 +5,9 @@ projects/*/logs/
 # A stray Hermes plan file written into this working directory. It
 # belongs to the agent, not to the course.
 .hermes/
+
+# Test fixtures copied from the live kanban board hold real task text.
+teach/drafts/*.db
+teach/drafts/*.db-wal
+teach/drafts/*.db-shm
+teach/drafts/.test-state-*.json
