@@ -59,3 +59,31 @@ worker task settled the question that the two words alone could not.
 See [record 0043](0043-a-report-that-went-to-the-wrong-room.md), which
 found the two tasks that blocked on 14 September 2026 and never reached a
 Fizzy card, the gap this record's script closes.
+
+## Confirmed on a second job, 17 September 2026
+
+The card-21 job gives the same shape on four fresh tasks:
+
+```
+t_4370e930  parents: ['t_bbfe307d']                         children: ['t_0949c9e5', 't_b9849715']
+t_0949c9e5  parents: ['t_4370e930']                          children: ['t_b9849715']
+t_b9849715  parents: ['t_bbfe307d','t_4370e930','t_0949c9e5'] children: []
+```
+
+The chain reads in one direction. Each task lists every task before it in
+`parents`, and every task after it in `children`. The closing task of
+Crazy Dave, `t_b9849715`, holds all three workers in `parents` and holds
+nothing in `children`, because nothing runs after it.
+
+This sharpens the earlier reading. The two words are not reversed. They
+name a dependency edge, and a dependency edge runs in the opposite
+direction to descent. A task that waits is the child. A task that others
+wait for is the parent. The root task of a decomposed job waits for every
+worker, so the root task is the last child, never the first parent.
+
+The schema says the same thing in two columns, and it carries no third
+word for hierarchy:
+
+```
+task_links: parent_id, child_id
+```

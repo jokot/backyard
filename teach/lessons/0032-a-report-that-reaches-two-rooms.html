@@ -65,7 +65,7 @@ t_29e6cbb8  worker  parents: ['t_3ce59841']     children: [..., 't_e6f5dc9f']</c
   was tested.</p>
   <p>A dispatched worker runs inside an ordinary shell. That shell holds
   no record of the agent that started it. The four gateways each receive
-  the profile name as a command line flag, and none of them export
+  the profile name as a command line flag. None of them export
   <code>HERMES_PROFILE</code>, so no child process inherits a name.</p>
   <p>A <code>hermes send</code> with no <code>--profile</code> flag then
   falls back to the file <code>~/.hermes/active_profile</code>. That file
@@ -205,7 +205,7 @@ exit 0</code></pre>
   posts through <code>--profile crazydave</code>, because no other
   profile holds a Fizzy token.</p>
   <p>So the card showed the same human name on all three comments of the
-  first real job, and the card lost the identity that the group kept. The
+  first real job. The card lost the identity that the group kept. The
   fix costs four lines: map the profile name to a display name, then put
   that name at the front of the comment body.</p>
   <pre><code>Sunflower: Wrote the prompt-drift check spec at teach/drafts/...
@@ -401,10 +401,9 @@ record 0043</a>, which lists the two tasks that blocked on 14 September
 <p class="ask-agent">Send me the exit code and the group message from
 step 2, the three exit codes from step 3, and the counts from step 5.
 Send me a link to the card 17 comment from step 4, too. I check each
-exit code and each count against the rules in this lesson. A test that
-returns a different code, a row under the wrong profile, or a comment
-that never reaches the card, is a real finding, and it earns a
-record.</p>
+exit code and each count against the rules in this lesson. Three results are real
+findings, and each one earns a record: a different exit code, a row
+under the wrong profile, or a comment that never reaches the card.</p>
 
 <div class="nav">
   <span><a href="0031-a-service-that-outlives-its-agent.html">&larr; Lesson 31</a></span>
