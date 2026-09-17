@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 33 — One Command in Three Soul Files</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 33 of the Stage 5 build</p>
+<h1>A soul file states one command, and the script holds the steps</h1>
+<p class="lede">Three soul files call <code>hermes send --to telegram</code> on
+their own, and skip the new report script from Lesson 32. Fizzy never
+receives a comment when that call runs alone, because only the report
+script resolves a card. This lesson replaces four lines across three
+files, and adds the delivery step that lets a live chat see the
+change.</p>
+
+<h2>The rule that record 0017 forced</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p><a href="../learning-records/0017-three-correct-rules-that-never-combined.md">Record
+  0017</a> found the same reporting rule written in three separate
+  regions of one <code>SOUL.md</code>. Every region was correct alone. The
+  first edit was not enough, because two other regions still offered a
+  competing procedure. The fix needed two more edits of
+  <code>SOUL.md</code> before one region held the whole procedure.</p>
+  <p>This lesson follows the same rule. A soul file states one command,
+  and a script holds the steps. The report script from
+  <a href="0032-a-report-that-reaches-two-rooms.html">Lesson 32</a>
+  already holds every step, so each soul file only needs the call.</p>
+</div>
+
+<h2>Peashooter and Sunflower take the same one-line edit</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>Peashooter and Sunflower hold the same line today. Peashooter
+  carries it at line 23 of its <code>SOUL.md</code>. Sunflower carries
+  the same line at line 25 of its <code>SOUL.md</code>.</p>
+  <pre><code># Find this line
+  hermes send --to telegram "your message here"
+
+# Replace it with
+  ~/.hermes/scripts/hermes-report.sh "your message here"</code></pre>
+  <p>The surrounding paragraph does not change. It keeps three rules
+  exactly as they are today:</p>
+  <ul>
+    <li>Write two or three sentences, in your own voice.</li>
+    <li>Give the full path of every changed file.</li>
+    <li>Send one message for each task.</li>
+  </ul>
+</div>
+
+<h2>Crazy Dave carries the line twice</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>Crazy Dave's <code>SOUL.md</code> holds two lines that call
+  <code>hermes send --to telegram</code>, not one. Line 97 carries the
+  general reporting rule, the same rule that Peashooter and Sunflower
+  carry. Line 25 carries step 4 of the root task procedure, inside a
+  numbered list. Both lines call Telegram directly, so both lines
+  change. A change to line 97 alone leaves one call in place, and the
+  file proof later in this lesson then fails.</p>
+  <p>Line 97 takes the same replacement as the two worker files:</p>
+  <pre><code>  hermes send --to telegram "your message here"
+
+  ~/.hermes/scripts/hermes-report.sh "your message here"</code></pre>
+  <p>Line 25 takes the same call, with the wording of Crazy Dave. Keep
+  the five leading spaces, because the indent holds the list item
+  together.</p>
+  <pre><code>     hermes send --to telegram "&lt;your summary, in your own voice&gt;"
+
+     ~/.hermes/scripts/hermes-report.sh "&lt;your summary, in your own voice&gt;"</code></pre>
+</div>
+
+<h2>Step 3 of the root task procedure loses one command</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>Step 3 of the root task procedure runs two Fizzy commands today, a
+  comment and a close. The report script that step 4 calls already
+  writes the same comment onto the card. A run that still called
+  <code>fizzy comment create</code> would write that comment twice.
+  Success criterion 7 of the spec allows one closing comment from Crazy
+  Dave, not two.</p>
+  <pre><code>3. Read the fizzy:&lt;number&gt; comment on that task. Then run
+     fizzy comment create --profile crazydave --card &lt;number&gt; --body "&lt;your summary&gt;"
+     fizzy card close &lt;number&gt; --profile crazydave</code></pre>
+  <p>It becomes:</p>
+  <pre><code>3. Read the fizzy:&lt;number&gt; comment on that task. Then run
+     fizzy card close &lt;number&gt; --profile crazydave</code></pre>
+  <p>Crazy Dave still reads the <code>fizzy:&lt;number&gt;</code> comment
+  in step 3, because <code>fizzy card close</code> needs that number. A
+  missing marker still stops Crazy Dave at the same step, so this edit
+  removes no check. One script now owns both destinations, Telegram and
+  Fizzy. That rule is the first decision of this stage, and step 3 was
+  the last place that still wrote to Fizzy by hand.</p>
+</div>
+
+<h2>Torchwood stays as it is</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Torchwood's <code>SOUL.md</code> holds no
+  <code>hermes send --to telegram</code> line today, and this lesson
+  leaves the file as it is. Torchwood is not a dispatched worker, so the
+  reporting rule in this lesson never applies to it. Torchwood's
+  <code>SOUL.md</code> also forbids every board change, so a Fizzy
+  comment from Torchwood was never possible.</p>
+</div>
+
+<h2>Edit by hand, and copy the file first</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>Edit each <code>SOUL.md</code> with a text editor, not with
+  <code>hermes config set</code>. <a href="../learning-records/0044-a-tool-that-was-never-turned-on.md">Record
+  0044</a> found that <code>hermes config set</code> wrote a string
+  where a list belonged. That same command also deleted 22 lines of
+  comments from a config file. Copy each file before you touch it.</p>
+  <pre><code>cp ~/.hermes/profiles/peashooter/SOUL.md ~/peashooter-SOUL.bak</code></pre>
+  <p>Run the same command for Sunflower and Crazy Dave, with the
+  profile name changed in both places.</p>
+</div>
+
+<h2>An edit reaches no open chat by itself</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>A soul file edit does not reach an open chat session by itself.
+  <a href="../learning-records/0045-a-rule-that-reached-no-session.md">Record
+  0045</a> found a rule that sat in a soul file for a full day, unseen
+  by the running agent. The gateway builds a system prompt once, then
+  stores it for every later turn. Only a fresh session reads the file
+  again.</p>
+  <p>Send <code>/new</code> inside each topic below. Then send one
+  ordinary message. Wait for the reply before you move to the next
+  profile.</p>
+  <ul>
+    <li><code>#Coding</code> for Peashooter</li>
+    <li><code>#Planning</code> for Sunflower</li>
+    <li><code>#General</code> for Crazy Dave</li>
+  </ul>
+  <p>Sunflower holds four open Telegram sessions from 9 and 10 September
+  2026. One of those four sessions serves <code>#Planning</code> today.
+  Without <code>/new</code>, the Sunflower edit reaches nobody in that
+  topic.</p>
+</div>
+
+<h2>Prove the files, then prove the sessions</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>Two commands prove the edit landed, one for the files and one for
+  the live sessions. The file proof is success criterion 4 of the
+  spec.</p>
+  <pre><code>grep -c 'hermes send --to telegram' ~/.hermes/profiles/*/SOUL.md</code></pre>
+  <p>It prints one <code>&lt;path&gt;:&lt;count&gt;</code> line for each
+  of the four profiles. Every count must read 0 after your edit.
+  Torchwood already reads 0 today, because that file holds no such
+  line.</p>
+  <p>The file proof shows the rule on disk. This second command shows
+  the rule inside a live chat.</p>
+  <pre><code>for p in peashooter sunflower crazydave; do
+  printf '%-11s ' "$p"
+  sqlite3 -readonly ~/.hermes/profiles/$p/state.db \
+    "SELECT COUNT(*) FROM sessions WHERE source='telegram' AND ended_at IS NULL
+       AND system_prompt LIKE '%hermes-report.sh%';"
+done</code></pre>
+  <p>A count of 1 or more means the new rule is live for that profile.
+  A count of 0 means either the chat still runs the old prompt, or
+  nobody sent a message after <code>/new</code>. Read the
+  <code>system_prompt</code> column to separate the two cases, because
+  <code>/new</code> leaves it NULL until the first turn.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Step 3 of the root task procedure no longer runs
+  <code>fizzy comment create</code>. Why does the card still receive one
+  comment?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">The report script writes it instead</label>
+      <div class="reveal"><p class="feedback correct">Right. Step 4
+      already calls the report script, and that script writes the same
+      comment onto the card.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Fizzy now closes cards without comments</label>
+      <div class="reveal"><p class="feedback incorrect">Fizzy card close
+      still runs in step 3. Only the comment command was removed, not
+      the close.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Crazy Dave writes the comment twice</label>
+      <div class="reveal"><p class="feedback incorrect">The edit removes
+      a duplicate, not the comment. Crazy Dave writes the comment once,
+      through the report script.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">Torchwood's <code>SOUL.md</code> holds no
+  <code>hermes send --to telegram</code> line today. Why does this
+  lesson still leave the file unchanged?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">Torchwood is not a dispatched worker profile</label>
+      <div class="reveal"><p class="feedback correct">Right. Torchwood
+      never receives a dispatched kanban task, so the reporting rule in
+      this lesson never applies to it.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">Torchwood already runs the new script itself</label>
+      <div class="reveal"><p class="feedback incorrect">Torchwood's
+      <code>SOUL.md</code> holds no <code>hermes send</code> line and no
+      report script call either.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">Torchwood reports through Crazy Dave's script instead</label>
+      <div class="reveal"><p class="feedback incorrect">Torchwood sends
+      no report of its own. Its <code>SOUL.md</code> forbids every board
+      change, including a Fizzy comment.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+
+<div class="checklist">
+  <label><input type="checkbox"> Peashooter's <code>SOUL.md</code> line
+  23 replaced with the report script call</label>
+  <label><input type="checkbox"> Sunflower's <code>SOUL.md</code> line
+  25 replaced with the report script call</label>
+  <label><input type="checkbox"> Crazy Dave's <code>SOUL.md</code> lines
+  25 and 97 replaced, and step 3 of the root task procedure edited</label>
+  <label><input type="checkbox"> <code>/new</code> sent in
+  <code>#Coding</code>, then one message sent and answered</label>
+  <label><input type="checkbox"> <code>/new</code> sent in
+  <code>#Planning</code>, then one message sent and answered</label>
+  <label><input type="checkbox"> <code>/new</code> sent in
+  <code>#General</code>, then one message sent and answered</label>
+  <label><input type="checkbox"> The file proof command printed 0 for
+  all four profiles</label>
+  <label><input type="checkbox"> The session proof command printed 1 or
+  more for peashooter, sunflower, and crazydave</label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="../learning-records/0045-a-rule-that-reached-no-session.md">Learning
+record 0045</a>, which found a soul file edit that stayed dead in one
+open Telegram session for a full day.
+<a href="0032-a-report-that-reaches-two-rooms.html">Lesson 32</a> builds
+the report script that every edit in this lesson calls.</p>
+
+<p><a href="../learning-records/0017-three-correct-rules-that-never-combined.md">Record
+0017</a> &middot;
+<a href="../learning-records/0044-a-tool-that-was-never-turned-on.md">Record
+0044</a> &middot;
+<a href="../reference/glossary.html">&rarr; Full glossary</a></p>
+
+<p class="ask-agent">Send me the output of the file proof command and
+the session proof command, after every edit and every
+<code>/new</code>. I check each count against the rule in this lesson.
+A count above 0 in the file proof is a real finding, and it earns a
+record. A count of 0 in the session proof for an edited profile is the
+same kind of finding.</p>
+
+<div class="nav">
+  <span><a href="0032-a-report-that-reaches-two-rooms.html">&larr; Lesson 32</a></span>
+  <span>Lesson 33 of Stage 5</span>
+  <span></span>
+</div>
+
+</body>
+</html>
