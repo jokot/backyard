@@ -48,4 +48,35 @@ for p in crazydave peashooter sunflower torchwood; do
             char(10)||char(13)||' ')
         != trim(readfile('$soul'), char(10)||char(13)||' ');" 2>/dev/null
 done
+# 5. Every checked soul file names the report script, and names no
+#    `hermes send` command. Records 0017 and 0043. Torchwood is absent on
+#    purpose, because it reports through Crazy Dave.
+# 6. Every reference to the report script writes the path in full. Record
+#    0051. A path that starts with `~` or with $HOME is not a path yet, so
+#    the security scanner cannot open the script and it stops the command.
+#    Both checks read only. The soul files are never written.
+REPORT='/Users/jokot/.hermes/scripts/hermes-report.sh'
+for p in crazydave peashooter sunflower; do
+  soul="$HOME/.hermes/profiles/$p/SOUL.md"
+  if [ ! -f "$soul" ]; then
+    echo "$p soul: missing $soul"
+    continue
+  fi
+  if ! grep -qF "$REPORT" "$soul"; then
+    echo "$p soul: does not name $REPORT"
+  fi
+  # The soul must not hold the string `hermes send` at all, in a command or
+  # in prose. An anchored match misses "Run hermes send --to telegram". No
+  # soul file names the command today.
+  if bad=$(grep -nE 'hermes([[:space:]]+-p[[:space:]]+[^[:space:]]+)?[[:space:]]+send([[:space:]]|$)' "$soul" | head -1); then
+    echo "$p soul: names a 'hermes send' command ($bad)"
+  fi
+  while IFS= read -r l; do
+    case "$l" in
+      *"$REPORT"*) ;;
+      *) echo "$p soul: report reference must write the path in full: $l" ;;
+    esac
+  done < <(grep -n 'hermes-report\.sh' "$soul")
+done
+
 exit 0

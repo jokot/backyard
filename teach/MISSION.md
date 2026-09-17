@@ -20,14 +20,15 @@ laptop.
   Hermes kanban board. The board runs, Crazy Dave dispatches work, and
   learning record 0044 opened the kanban tool. **Met in Stage 4.**
 - Give every rule that the roster obeys a command that fails when the
-  rule is broken. **Four rules are enforced in Stage 5.** The script
-  `roster-audit.sh` checks the rules of records 0043, 0044, 0045 and
-  0046, and a cron job runs it each day at 09:00. Check 4 now compares
-  the stored prompt of every open Telegram session against the current
-  soul file, so it tests the rule of record 0045 and no longer counts
-  days. The criterion stays open, because two rules that Stage 5 wrote
-  have no check: a soul file must name the report script and no send
-  command, and a report that does not send must be retried.
+  rule is broken. **Met in Stage 5.** The script `roster-audit.sh` holds
+  six checks, and a cron job runs it each day at 09:00. The checks cover
+  the rules of records 0043, 0044, 0045, 0046, 0017 and 0051. Check 4
+  compares the stored prompt of every open Telegram session against the
+  current soul file. Check 5 requires that a soul file names the report
+  script and names no send command. Check 6 requires that every report
+  call writes the path in full. One rule of Stage 5 has no check, and it
+  cannot have one: a report that does not send must be retried, and only
+  the agent that made the call can see that the call failed.
 - Move all four profiles to a server, and prove that each one answers
   from there. **Open.**
 - Run work that Jokot never started. **The cron half is met in Stage 5.**

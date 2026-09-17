@@ -3,9 +3,11 @@
 **Date:** 2026-09-17
 **Stage:** 5, cron and the Fizzy comment path
 **Specification:** [2026-09-17 Stage 5 design](../../docs/superpowers/specs/2026-09-17-stage5-cron-and-the-fizzy-comment-path-design.md)
-**Score:** 6 of 7 criteria pass. Criterion 7 is a partial pass: two of
-the three reports of the job reached the card, and the closing report of
-Crazy Dave reached nothing.
+**Score:** 7 of 7 criteria pass. Criterion 7 took three jobs. The first
+job lost one report of three to an approval prompt, and section 4 holds
+the cause. The second job proved the repair on four live reports, and
+section 5 holds it. The third job ran clean end to end, and section 6
+holds it.
 
 ## Section 0 — The seven criteria, scored
 
@@ -125,7 +127,7 @@ home channel: 2 distinct values across profiles, expected 1
 The file was restored, and the sha256 sum matched the sum from before
 the change. The audit then printed nothing again.
 
-### 7. A real decomposed job produces one comment for each report. PARTIAL
+### 7. A real decomposed job produces one comment for each report. PASS
 
 Jokot sent one real request to Crazy Dave in the `#General` topic at
 20:15. Crazy Dave created the root task `t_a9030408`, opened Fizzy card
@@ -150,9 +152,20 @@ lost to an approval prompt that nobody answered.
 A second job ran after the repair, and four reports reached both rooms
 with no approval prompt. That job still lost one report, because
 Sunflower had finished its task 45 minutes before the fix was written,
-and a completed task never runs again. So no job has yet run end to end
-on the repaired path. Section 5 holds the second job. The criterion stays
-PARTIAL until one clean job closes it.
+and a completed task never runs again. Section 5 holds the second job.
+
+A third job, on 17 September at 23:10, ran end to end on the repaired
+path. Card 22 carries three comments, the group carries the same three
+messages, and each comment names its writer:
+
+```
+Peashooter: Soul-rule-checks.sh drafted and verified ...
+Peashooter: Proved both soul-rule checks with negative controls ...
+Crazy Dave: The standalone soul-rule checker is complete ...
+```
+
+Three reports, three messages, three comments. No approval prompt, and no
+duplicate. Section 6 holds that job. The criterion is met.
 
 ## Section 1 — The rule that the audit could not see
 
@@ -671,15 +684,101 @@ The test fixture is not committed. It was a copy of the live kanban
 board, so it held 90 real tasks with real titles and real comment text.
 A fixture that is a copy of production data carries production data.
 
-## Section 6 — What Stage 5 delivered
+## Section 6 — The clean job, and the two rules it closed
+
+The mission asks for a command that fails when a rule is broken. Two
+rules of Stage 5 had no such command, and the criterion stayed open for
+them. The third job wrote both checks.
+
+The job ran clean. Crazy Dave opened card 22, decomposed the work into
+two worker tasks, and every report reached both rooms under its own
+name. This is the job that criterion 7 asks for.
+
+### Sunflower had no task, and that is correct
+
+The second job gave Sunflower the specification task. The third job gave
+Sunflower nothing, and the board shows only two worker tasks, both held
+by Peashooter.
+
+The cause is the request, not the roster. The request for the second job
+asked for a script and left the design open, so a design task existed and
+Sunflower took it. The request for the third job carried the design
+already. It stated both rules, the output shape, the exit code, the two
+file paths, and the method of the negative control. Nothing was left to
+plan, so Crazy Dave had no planning work to give away.
+
+A specialist is idle when the request already holds its work. That is a
+property of the request. The roster is only wrong when it gives planning
+work to a profile that does not plan, or when it invents a task to keep a
+profile busy.
+
+### A defect I introduced, and then removed
+
+The check for `hermes send` matched anywhere on a line. I judged that a
+defect, because a soul file states its rules in prose, and the clearest
+way to state this rule is to name the command that it forbids. So I
+anchored the match to the start of the line.
+
+The anchor was wrong, and the test fixtures showed it. A line that reads
+`Run hermes send --to telegram` is a real violation, and the anchor let
+it through. I had traded a real gap for a false alarm that no file
+produced: no soul file names the command today, in prose or in a command.
+
+The match is unanchored again, as it was delivered. A file that wants to
+state the rule can say "the raw sender" instead of naming the command.
+The broader rule is the simpler rule, and it has no gap.
+
+The lesson is about the order of the two steps. I changed the check, then
+looked at the fixtures. The fixtures held the case that my change broke,
+and they had been written before my change. Read the tests that exist
+before you decide that the code under them is wrong.
+
+### Both checks proved against the live audit
+
+The two checks are now check 5 and check 6 of `roster-audit.sh`. One
+control ran against the live roster. A `hermes send` line was added to
+the soul file of Sunflower, and the audit answered with two lines:
+
+```
+prompt-drift: sunflower session 20260917_223702_72fdc231 runs a prompt
+that does not match the current SOUL.md
+sunflower soul: names a 'hermes send' command (61:  hermes send --to telegram "control")
+```
+
+Two lines are correct. Check 5 saw the new command. Check 4 saw that the
+open session of Sunflower no longer matches its soul file, which is true
+the moment the file changes. The file was restored, the sha256 sum
+matched the sum before the change, and the audit printed nothing again.
+
+Six controls ran against the checks, on a scratch copy of the profiles
+tree. A soul that does not name the report script, a soul that holds a
+`hermes send` command, the same command written with the `-p` flag, the
+same command inside a sentence, a call written with a tilde, and a call
+written with `$HOME`. Each named the right profile. The unmodified copy
+printed nothing.
+
+### What stays open
+
+One rule of Stage 5 still has no check, and it cannot have one. A report
+that does not send must be retried. Only the agent that made the call can
+see that the call failed, and the failure leaves no record that a later
+command could read. The rule lives in the soul files, and nothing else
+enforces it.
+
+This is a real limit, not an omission. A rule is checkable when it leaves
+a trace. This rule governs a moment that leaves none.
+
+## Section 7 — What Stage 5 delivered
 
 - `~/.hermes/scripts/hermes-report.sh`, mode 755. One script
   carries every report. The profile name is the first argument. Telegram
   receives the message first, so a Fizzy defect never costs a report.
 - `~/.hermes/profiles/crazydave/scripts/roster-audit.sh`, mode 755.
-  Four checks, one line for each failure, silence on success. Check 4
+  Six checks, one line for each failure, silence on success. Check 4
   compares the stored prompt of every open Telegram session against the
-  current soul file.
+  current soul file. Check 5 requires that a soul file names the report
+  script and names no send command. Check 6 requires that every report
+  call writes the path in full.
 - `~/.hermes/profiles/crazydave/scripts/blocked-watch.sh`, 1062 bytes,
   mode 755. One line for each task that stayed blocked for more than
   3600 seconds.
@@ -692,7 +791,7 @@ A fixture that is a copy of production data carries production data.
 - Lessons 32 through 35.
 - Records 0050 and 0051.
 
-## Section 7 — What generalizes
+## Section 8 — What generalizes
 
 **A scheduled job needs a reason to stay silent.** Both jobs print
 nothing when the roster is healthy. A job that speaks on every run
