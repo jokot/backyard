@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 34 — A Job That Speaks Only on Failure</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 34 of the Stage 5 build</p>
+<h1>A scheduled script checks four rules, and speaks only when one breaks</h1>
+<p class="lede"><a href="../learning-records/0043-a-report-that-went-to-the-wrong-room.md">Record
+0043</a>, <a href="../learning-records/0044-a-tool-that-was-never-turned-on.md">0044</a>,
+<a href="../learning-records/0045-a-rule-that-reached-no-session.md">0045</a>, and
+<a href="../learning-records/0046-a-button-that-answered-a-wider-question.md">0046</a>
+each produced a check command that a person had to remember and run by hand.
+This lesson combines those four checks into one script,
+<code>roster-audit.sh</code>. A cron job runs the script every day. The
+script follows one rule. When every check holds, the script prints nothing.
+When one check fails, the script prints exactly one line naming the broken
+rule.</p>
+
+<h2>A check nobody remembers to run</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Each record above named a rule that broke once, and each record
+  produced a check command Jokot could run by hand. A command run by hand
+  works only when somebody remembers it. A scheduled command needs no
+  memory, because the machine runs it every day without a request.</p>
+  <p>This script obeys one design rule. When every check holds, the script
+  prints nothing. When one check fails, the script prints exactly one line
+  for that check. Silence is the pass result. A delivered message always
+  names a real defect.</p>
+</div>
+
+<h2>Three facts about cron</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <ul>
+    <li>The scheduler runs inside the gateway process. It checks the clock
+    once every 60 seconds.</li>
+    <li>The flag <code>--no-agent</code> skips the model, so a job created
+    with it costs no tokens.</li>
+    <li>The help text for <code>hermes cron create</code> states the rule
+    in four words: <code>Empty stdout = silent.</code></li>
+  </ul>
+</div>
+
+<h2>The script in full</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>Write this file at <code>~/.hermes/scripts/roster-audit.sh</code>.
+  Copy every line, including every comment:</p>
+  <pre><code>#!/usr/bin/env bash
+# Check four roster rules. Print one line for each rule that fails. Print
+# nothing when every rule holds, so a healthy run delivers no message.
+#
+# Each check names the learning record that found the defect.
+set -uo pipefail
+
+# 1. Every profile speaks into the same room. Record 0043.
+n=$(grep -h '^TELEGRAM_HOME_CHANNEL=' "$HOME"/.hermes/profiles/*/.env 2&gt;/dev/null \
+      | sort -u | wc -l | tr -d ' ')
+[ "$n" = "1" ] || echo "home channel: $n distinct values across profiles, expected 1"
+
+# 2. The allowlist of Crazy Dave holds exactly three entries. Record 0046.
+n=$(hermes -p crazydave config get command_allowlist 2&gt;/dev/null | grep -c '^- ')
+[ "$n" = "3" ] || echo "allowlist: crazydave holds $n entries, expected 3"
+
+# 3. Crazy Dave keeps the kanban toolset. Record 0044.
+hermes -p crazydave config get toolsets 2&gt;/dev/null | grep -q '^- kanban$' \
+  || echo "toolsets: crazydave is missing kanban"
+
+# 4. No Telegram session runs on a prompt older than 7 days. Record 0045.
+for db in "$HOME"/.hermes/profiles/*/state.db; do
+  p=$(basename "$(dirname "$db")")
+  old=$(sqlite3 "$db" "SELECT COUNT(*) FROM sessions WHERE source='telegram'
+          AND ended_at IS NULL
+          AND started_at &lt; strftime('%s','now') - 604800;" 2&gt;/dev/null)
+  [ -n "$old" ] &amp;&amp; [ "$old" != "0" ] \
+    &amp;&amp; echo "session: $p holds $old telegram session(s) older than 7 days"
+done
+exit 0</code></pre>
+</div>
+
+<h2>What the first run found</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The script above was tested against the live machine on 17 September
+  2026, before any cron job existed. That run printed exactly one line:</p>
+  <pre><code>session: sunflower holds 3 telegram session(s) older than 7 days</code></pre>
+  <p>The audit found a real defect on its first run, on that date.
+  <a href="0033-one-command-in-three-soul-files.html">Lesson 33</a> sends a
+  <code>/new</code> message inside the <code>#Planning</code> topic for
+  Sunflower. That message ends the three Sunflower sessions this script
+  counts. A reader who has already completed Lesson 33 runs this same
+  script today. That reader sees no line at all.</p>
+</div>
+
+<h2>Install and test</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>Install the script under Crazy Dave's scripts folder, then make it
+  executable.</p>
+  <pre><code>chmod +x ~/.hermes/scripts/roster-audit.sh
+~/.hermes/scripts/roster-audit.sh; echo "exit=$?"</code></pre>
+  <p>Expect <code>exit=0</code>. Expect the one line above if Sunflower's
+  old sessions still exist. Expect no line at all if Lesson 33 has already
+  ended them.</p>
+</div>
+
+<h2>Prove the check actually works</h2>
+
+<div class="box warning">
+  <span class="box-label">This test edits a real profile file</span>
+  <p>This step proves the job is worth having. Change one value, run the
+  script, and change the value back.</p>
+  <pre><code>cp ~/.hermes/profiles/torchwood/.env ~/torchwood-env.bak
+# Change TELEGRAM_HOME_CHANNEL in ~/.hermes/profiles/torchwood/.env to -1
+~/.hermes/scripts/roster-audit.sh
+# Expected: home channel: 2 distinct values across profiles, expected 1
+cp ~/torchwood-env.bak ~/.hermes/profiles/torchwood/.env
+~/.hermes/scripts/roster-audit.sh
+# Expected: line gone</code></pre>
+  <p>A broken check that stays silent during this test is not ready for a
+  cron job.</p>
+</div>
+
+<h2>Create the cron job</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <pre><code>hermes -p crazydave cron create '0 9 * * *' \
+  --name roster-audit \
+  --script roster-audit.sh \
+  --no-agent \
+  --deliver telegram</code></pre>
+  <p>The flag <code>--script</code> documents a path under
+  <code>~/.hermes/scripts/</code>, so try the basename first. Run
+  <code>hermes -p crazydave cron list</code> and report the stored value.
+  If the job shows no script or fails, retry with the absolute path.</p>
+</div>
+
+<h2>Force one run today</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>A daily job proves nothing today. Force one run now.</p>
+  <pre><code>hermes -p crazydave cron run roster-audit
+hermes -p crazydave cron runs roster-audit</code></pre>
+  <p>The first command runs the job immediately. The second command lists
+  that run and its result.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">The script runs today and prints nothing on stdout. What
+  does that silence mean?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Every roster rule holds</label>
+      <div class="reveal"><p class="feedback correct">Right. Silence is
+      the pass result, so a healthy roster sends no message.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">The cron job stalled</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. A stalled
+      job would appear in <code>cron runs</code>, not as silence.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">No checks were written</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. All four
+      checks ran. Silence just means each one held.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does the deliberate break test change
+  <code>TELEGRAM_HOME_CHANNEL</code> and then restore it?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">It proves the check detects breaks</label>
+      <div class="reveal"><p class="feedback correct">Right. A break that
+      produces no line means the check does not work.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">It proves the script runs faster</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. Speed is
+      not the property this test checks at all.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">It proves Telegram delivery still works</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. Telegram
+      delivery is not part of what this script checks.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+
+<div class="checklist">
+  <label><input type="checkbox"> You made <code>roster-audit.sh</code>
+  executable with <code>chmod +x</code></label>
+  <label><input type="checkbox"> You ran the script once and read
+  <code>exit=0</code></label>
+  <label><input type="checkbox"> You changed
+  <code>TELEGRAM_HOME_CHANNEL</code> and saw the <code>home channel: 2</code>
+  line</label>
+  <label><input type="checkbox"> You restored the file and saw the line
+  disappear</label>
+  <label><input type="checkbox"> You created the cron job with
+  <code>hermes -p crazydave cron create</code></label>
+  <label><input type="checkbox"> You forced one run and read the result
+  with <code>cron runs</code></label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="../learning-records/0045-a-rule-that-reached-no-session.md">Learning
+record 0045</a> names the session rule that produced the one line this
+script found on 17 September 2026.
+<a href="../learning-records/0043-a-report-that-went-to-the-wrong-room.md">Record
+0043</a>, <a href="../learning-records/0044-a-tool-that-was-never-turned-on.md">Record
+0044</a>, and <a href="../learning-records/0046-a-button-that-answered-a-wider-question.md">Record
+0046</a> back the other three checks in the script.</p>
+
+<p><a href="../learning-records/0043-a-report-that-went-to-the-wrong-room.md">Record
+0043</a> &middot;
+<a href="../learning-records/0044-a-tool-that-was-never-turned-on.md">Record
+0044</a> &middot;
+<a href="../learning-records/0045-a-rule-that-reached-no-session.md">Record
+0045</a> &middot;
+<a href="../learning-records/0046-a-button-that-answered-a-wider-question.md">Record
+0046</a> &middot;
+<a href="../reference/glossary.html">&rarr; Full glossary</a></p>
+
+<p class="ask-agent">Send me the exit code from the healthy run, and the
+exact line from the deliberate break test. Send me the stored script path
+that <code>cron list</code> reports, too. I check each value against the
+rule in this lesson. A break that produces no line is a real finding, and
+it earns a record. A job that cron reports as failed is the same kind of
+finding.</p>
+
+<div class="nav">
+  <span><a href="0033-one-command-in-three-soul-files.html">&larr; Lesson 33</a></span>
+  <span>Lesson 34 of Stage 5</span>
+  <span></span>
+</div>
+
+</body>
+</html>
