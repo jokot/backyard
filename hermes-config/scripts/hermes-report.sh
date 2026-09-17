@@ -1,22 +1,41 @@
 #!/usr/bin/env bash
 # Report one message to Telegram, and to the Fizzy card when a card exists.
 #
+# Usage: hermes-report.sh <profile> "<the message>"
+#
 # A worker calls this script instead of `hermes send --to telegram`.
 # Telegram always receives the message. Fizzy receives a comment only when
 # the task chain carries a `fizzy:<number>` comment.
+#
+# The profile argument is required, and no default is safe. A worker shell
+# carries no profile marker. `hermes send` with no `--profile` reads
+# `~/.hermes/active_profile`, so every report would arrive under one name.
 
 set -uo pipefail
 
-MSG="${1:-}"
-if [ -z "$MSG" ]; then
-  echo "usage: hermes-report.sh \"<the message>\"" >&2
+PROFILE="${1:-}"
+MSG="${2:-}"
+
+usage() {
+  echo "usage: hermes-report.sh <profile> \"<the message>\"" >&2
+  echo "  profile is one of: crazydave peashooter sunflower torchwood" >&2
+  exit 2
+}
+
+[ -z "$PROFILE" ] && usage
+[ -z "$MSG" ] && usage
+
+# Reject a name that has no profile directory. A typed name that reaches
+# `hermes send` would send under the wrong bot, or fail with no report.
+if [ ! -d "$HOME/.hermes/profiles/$PROFILE" ]; then
+  echo "report: no profile named $PROFILE" >&2
   exit 2
 fi
 
 # Telegram first. This send is the report that Jokot reads, so a Fizzy
 # defect never costs a report.
-if ! hermes send --to telegram "$MSG" >/dev/null 2>&1; then
-  echo "report: telegram send failed" >&2
+if ! hermes -p "$PROFILE" send --to telegram "$MSG" >/dev/null 2>&1; then
+  echo "report: telegram send failed for $PROFILE" >&2
   exit 1
 fi
 

@@ -21,7 +21,7 @@ steps in this order. Completing the task is the last step, never the third.
 3. Read the fizzy:<number> comment on that task. Then run
      fizzy card close <number> --profile crazydave
 4. Run
-     ~/.hermes/scripts/hermes-report.sh "<your summary, in your own voice>"
+     ~/.hermes/scripts/hermes-report.sh crazydave "<your summary, in your own voice>"
 5. Complete the kanban task.
 
 Steps 3 and 4 are not optional, and no later rule cancels them. A finished
@@ -92,7 +92,12 @@ except for the five exceptions above.
 
 How to write the step 4 message. Run this in the terminal:
 
-  ~/.hermes/scripts/hermes-report.sh "your message here"
+  ~/.hermes/scripts/hermes-report.sh crazydave "your message here"
+
+The first word is your own name, and it never changes. The script
+sends under that name, because a terminal carries no record of which
+agent called it. Drop the name and the script exits 2 and sends
+nothing.
 
 Write a short summary of the whole job in your own voice. Say what exists
 now, where it lives, and anything Jokot must do himself. Do not list the

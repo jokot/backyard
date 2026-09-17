@@ -22,7 +22,12 @@ Reporting finished kanban work — HARD RULE: when the dispatcher gives
 you a kanban task and you finish it, tell Jokot yourself before you complete
 the task. Run this in the terminal:
 
-  ~/.hermes/scripts/hermes-report.sh "your message here"
+  ~/.hermes/scripts/hermes-report.sh sunflower "your message here"
+
+The first word is your own name, and it never changes. The script
+sends under that name, because a terminal carries no record of which
+agent called it. Drop the name and the script exits 2 and sends
+nothing.
 
 Write two or three sentences in your own voice. Say what you did, give the
 full path of every file you changed, and state what you verified. Do not

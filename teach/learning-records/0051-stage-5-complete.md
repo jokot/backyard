@@ -14,13 +14,26 @@ passes only when the real output appears under it.
 
 ```bash
 unset HERMES_KANBAN_TASK
-~/.hermes/scripts/hermes-report.sh "Stage 5 criterion 1: one Telegram message, no Fizzy card."
+~/.hermes/scripts/hermes-report.sh sunflower "Criterion 1 again: this should arrive under the Sunflower name."
 echo "exit=$?"
 ```
 
 The script printed nothing and returned `exit=0`. The message arrived in
 the group. A silent run is the correct result, because the script writes
 to standard error only when a send fails.
+
+The first run of this criterion used the script as Lesson 32 shipped it,
+with one argument and no profile name. That run passed, and it sent the
+message under the wrong bot. Section 3 holds the defect and the repair.
+The output above comes from the second run, with the corrected script.
+Only sunflower recorded a row:
+
+```
+  torchwood   0
+  peashooter  0
+  sunflower   1 Criterion 1 again: this should arrive under the Sunflow
+  crazydave   0
+```
 
 ### 2. With a kanban task set, the same command comments on the card. PASS
 
@@ -30,12 +43,16 @@ through the child probe.
 
 ```bash
 HERMES_KANBAN_TASK=t_33a76257 \
-  ~/.hermes/scripts/hermes-report.sh "Stage 5 criterion 2: this report reaches Telegram and card 15."
+  ~/.hermes/scripts/hermes-report.sh peashooter "Criterion 2 again: Peashooter name, Telegram plus card 15."
 ```
 
 Card 15 held 2 comments before the run and 3 after it. The new comment
-`03gvvgxm28fg9bj242g6bi1n5` held the exact message text. The test
-comment was then deleted, and the card returned to 2 comments.
+`03gvvo6k6t4g5razpogas13c0` held the exact message text. The test
+comment was then deleted, and the card returned to 2 comments. The same
+message count ran across the four databases, and only peashooter
+recorded a row.
+
+This criterion also ran twice, for the reason given under criterion 1.
 
 The child probe was checked against the whole board first. Ten worker
 tasks resolved to a card through a root task, and every resolution named
@@ -224,11 +241,90 @@ because the comparison needs one marker string for each rule, and the
 roster has no marker convention yet. The gap is named here so that a
 later stage can close it.
 
-## Section 3 — What Stage 5 delivered
+## Section 3 — Every report arrived under one name
 
-- `~/.hermes/scripts/hermes-report.sh`, 1830 bytes, mode 755. One script
-  carries every report. Telegram receives the message first, so a Fizzy
-  defect never costs a report.
+Jokot read the group and saw two messages from Torchwood. Both messages
+were the criterion tests of this record, and neither test ran as
+Torchwood. Torchwood writes prompts. Torchwood sends no report at all.
+
+### What the machine shows
+
+`hermes-report.sh` called `hermes send --to telegram "$MSG"` with no
+`--profile` flag. With no flag, `hermes send` reads the file
+`~/.hermes/active_profile`. That file holds `torchwood`, and it was last
+written on 11 September 2026. So every report of every agent arrived
+under the Torchwood name.
+
+Two live tests separate the two candidate fixes. The first ran against
+the script as Lesson 32 shipped it, with one argument:
+
+```bash
+# Ignored. The row landed in the torchwood messages table.
+HERMES_PROFILE=peashooter ~/.hermes/scripts/hermes-report.sh "test"
+
+# Correct. The row landed in the peashooter messages table.
+hermes -p peashooter send --to telegram "test"
+```
+
+The environment variable is not the path. The flag is.
+
+### A worker cannot supply its own name
+
+The four gateways each start with the profile name as a command line
+flag, in the form `python -m hermes_cli.main --profile peashooter gateway`.
+`HERMES_PROFILE` is absent from all four gateway process environments,
+and no code outside the test suite assigns it. `tools/code_execution_tool.py:1343`
+builds the child environment with `_scrub_child_env(os.environ)`, and the
+allow list at `:164` does name `HERMES_PROFILE`. An allow list can only
+pass through a variable that already exists.
+
+So a worker shell holds no record of the agent that started it. The name
+must arrive as an argument, or it does not arrive.
+
+### The repair
+
+The script now takes the profile as a required first argument. Three
+paths reject a call, and each one exits 2 before any send:
+
+```
+=== no args ===          usage: hermes-report.sh <profile> "<the message>"
+=== profile only ===     usage: hermes-report.sh <profile> "<the message>"
+=== unknown profile ===  report: no profile named wallnut
+```
+
+The directory test is the third guard. A typed name with no directory
+under `~/.hermes/profiles/` would otherwise reach `hermes send` and send
+under the fallback name again.
+
+Three soul files carry the new call, and each call names its own profile.
+Each file also carries a four line note that states why the first word
+never changes.
+
+### This defect is older than Stage 5
+
+The Stage 2 soul files said `hermes send --to telegram` with no profile
+flag as well. Every report of every agent since 11 September 2026 arrived
+under the Torchwood name. Stage 5 did not cause the defect. Stage 5 put
+every report through one script, and one script is a place a defect can
+be fixed one time.
+
+The cron path never carried the defect. Both jobs run in the mode
+`no-agent (script stdout delivered directly)`, and the gateway of Crazy
+Dave delivers that text. No message row appeared in any of the four
+databases during the forced audit run.
+
+### The room has the same cause
+
+Every profile sets `TELEGRAM_HOME_CHANNEL=-1004371805465`, with no topic
+suffix. A send with no topic reaches the group root, and Telegram renders
+the group root as `#General`. So the wrong name and the wrong room are
+one defect with two symptoms, and the topic half stays open.
+
+## Section 4 — What Stage 5 delivered
+
+- `~/.hermes/scripts/hermes-report.sh`, 2529 bytes, mode 755. One script
+  carries every report. The profile name is the first argument. Telegram
+  receives the message first, so a Fizzy defect never costs a report.
 - `~/.hermes/profiles/crazydave/scripts/roster-audit.sh`, 1395 bytes,
   mode 755. Four checks, one line for each failure, silence on success.
 - `~/.hermes/profiles/crazydave/scripts/blocked-watch.sh`, 1062 bytes,
@@ -240,7 +336,7 @@ later stage can close it.
 - Lessons 32 through 35.
 - Records 0050 and 0051.
 
-## Section 4 — What generalizes
+## Section 5 — What generalizes
 
 **A scheduled job needs a reason to stay silent.** Both jobs print
 nothing when the roster is healthy. A job that speaks on every run
@@ -256,6 +352,12 @@ the file. Record 0050 holds the full account.
 **A threshold is not the rule it stands for.** Check 4 counts days
 because days are easy to count. The rule is about stale text. Section 2
 holds the session that passes the check and breaks the rule.
+
+**A default is a decision that nobody made.** `hermes send` with no
+`--profile` flag never failed. It read one file and it sent the message.
+The report looked correct on every screen except the one that shows the
+sender name. A fallback that always succeeds hides the question it
+answers.
 
 **Test a soft verb before you trust it.** The name `archive` suggests
 that a session retires. The source shows one column change and no effect

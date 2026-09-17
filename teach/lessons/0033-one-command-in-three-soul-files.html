@@ -14,8 +14,8 @@
 their own, and skip the new report script from Lesson 32. Fizzy never
 receives a comment when that call runs alone, because only the report
 script resolves a card. This lesson replaces four lines and removes
-one, across three files, and adds the delivery step that lets a live
-chat see the change.</p>
+one, across three files, adds a note to each file, and adds the delivery
+step that lets a live chat see the change.</p>
 
 <h2>The rule that record 0017 forced</h2>
 
@@ -45,11 +45,16 @@ chat see the change.</p>
   <code>~/.hermes/profiles/</code>, not the copy inside the repository.
   Copy the file first. The section below gives the command and the
   reason.</p>
-  <pre><code># Find this line
+  <pre><code># Find this line, in both files
   hermes send --to telegram "your message here"
 
-# Replace it with
-  ~/.hermes/scripts/hermes-report.sh "your message here"</code></pre>
+# Peashooter gets this line
+  ~/.hermes/scripts/hermes-report.sh peashooter "your message here"
+
+# Sunflower gets this line
+  ~/.hermes/scripts/hermes-report.sh sunflower "your message here"</code></pre>
+  <p>The two lines differ by one word, and that word is the profile name.
+  The next section states why the name cannot be left out.</p>
   <p>The surrounding paragraph does not change. It keeps three rules
   exactly as they are today:</p>
   <ul>
@@ -75,13 +80,37 @@ chat see the change.</p>
   <p>Line 97 takes the same replacement as the two worker files:</p>
   <pre><code>  hermes send --to telegram "your message here"
 
-  ~/.hermes/scripts/hermes-report.sh "your message here"</code></pre>
+  ~/.hermes/scripts/hermes-report.sh crazydave "your message here"</code></pre>
   <p>Line 25 takes the same call, with the wording of Crazy Dave. Keep
   the five leading spaces, because the indent keeps the line inside the
   list item.</p>
   <pre><code>     hermes send --to telegram "&lt;your summary, in your own voice&gt;"
 
-     ~/.hermes/scripts/hermes-report.sh "&lt;your summary, in your own voice&gt;"</code></pre>
+     ~/.hermes/scripts/hermes-report.sh crazydave "&lt;your summary, in your own voice&gt;"</code></pre>
+</div>
+
+<h2>Each file names itself, and the file says why</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>A soul file is the only place an agent reads the call, so the file
+  must also carry the reason for the first word.
+  <a href="0032-a-report-that-reaches-two-rooms.html">Lesson 32</a> holds
+  the full account: a worker shell carries no profile marker, and
+  <code>hermes send</code> with no <code>--profile</code> flag reads the
+  machine wide file <code>~/.hermes/active_profile</code> instead.</p>
+  <p>Add these four lines to all three files, beside the command that you
+  just edited. Change no word of them:</p>
+  <pre><code>The first word is your own name, and it never changes. The script
+sends under that name, because a terminal carries no record of which
+agent called it. Drop the name and the script exits 2 and sends
+nothing.</code></pre>
+  <p>Put the note after the command block in Peashooter and in Sunflower.
+  Put it before the sentence <code>Write a short summary of the whole job
+  in your own voice.</code> in Crazy Dave.</p>
+  <p>The note tells the agent what to do when the rule and the moment
+  disagree. An agent that reads "use your own name" writes its own name.
+  An agent that reads only an example line copies the example.</p>
 </div>
 
 <h2>Step 3 of the root task procedure loses one command</h2>
@@ -182,6 +211,14 @@ chat see the change.</p>
   the live sessions. The file proof is success criterion 4 of the
   spec.</p>
   <pre><code>grep -c 'hermes send --to telegram' ~/.hermes/profiles/*/SOUL.md</code></pre>
+<p>A second grep proves that each file names itself. Read the first word
+after the script path on every line.</p>
+<pre><code>grep -n 'hermes-report.sh' ~/.hermes/profiles/*/SOUL.md</code></pre>
+<p>Peashooter prints one line, and that line reads
+<code>peashooter</code>. Sunflower prints one line, and that line reads
+<code>sunflower</code>. Crazy Dave prints two lines, and both read
+<code>crazydave</code>. A line that names another profile sends every
+report of that agent under the wrong bot.</p>
   <p>It prints one <code>&lt;path&gt;:&lt;count&gt;</code> line for each
   of the four profiles. Every count must read 0 after your edit.
   Torchwood already reads 0 today, because that file holds no such
@@ -263,9 +300,11 @@ done</code></pre>
 
 <div class="checklist">
   <label><input type="checkbox"> You replaced line 23 of Peashooter's
-  <code>SOUL.md</code> with the report script call</label>
+  <code>SOUL.md</code> with the report script call, and the call names
+  <code>peashooter</code></label>
   <label><input type="checkbox"> You replaced line 25 of Sunflower's
-  <code>SOUL.md</code> with the report script call</label>
+  <code>SOUL.md</code> with the report script call, and the call names
+  <code>sunflower</code></label>
   <label><input type="checkbox"> You replaced lines 25 and 97 of Crazy
   Dave's <code>SOUL.md</code>, and edited step 3 of the root task
   procedure</label>
@@ -275,8 +314,12 @@ done</code></pre>
   <code>#Planning</code>, then sent one message and read the reply</label>
   <label><input type="checkbox"> You sent <code>/new</code> in
   <code>#General</code>, then sent one message and read the reply</label>
+  <label><input type="checkbox"> You added the four line note to all
+  three files</label>
   <label><input type="checkbox"> The file proof command printed 0 for
   all four profiles</label>
+  <label><input type="checkbox"> The name proof printed four lines, and
+  every line named its own profile</label>
   <label><input type="checkbox"> The session proof command printed 1 or
   more for peashooter, sunflower, and crazydave</label>
 </div>

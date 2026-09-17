@@ -56,6 +56,37 @@ t_29e6cbb8  worker  parents: ['t_3ce59841']     children: [..., 't_e6f5dc9f']</c
   inside its <code>parents</code> list.</p>
 </div>
 
+<h2>A shell carries no name</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The first argument of the script is the profile name, and the script
+  exits 2 without it. The reason is a real defect, found while this stage
+  was tested.</p>
+  <p>A dispatched worker runs inside an ordinary shell. That shell holds
+  no record of the agent that started it. The four gateways each receive
+  the profile name as a command line flag, and none of them export
+  <code>HERMES_PROFILE</code>, so no child process inherits a name.</p>
+  <p>A <code>hermes send</code> with no <code>--profile</code> flag then
+  falls back to the file <code>~/.hermes/active_profile</code>. That file
+  holds one name for the whole machine, and it was last written on
+  11 September 2026. Two live tests settle the point:</p>
+  <pre><code># The environment variable is ignored. The message lands under torchwood.
+HERMES_PROFILE=peashooter hermes send --to telegram "test"
+
+# The flag works. The message lands under peashooter.
+hermes -p peashooter send --to telegram "test"</code></pre>
+  <p>So every report of every agent arrived under the name inside
+  <code>active_profile</code>. Jokot saw Torchwood post a Peashooter
+  report in <code>#General</code>, and that is how the defect surfaced.
+  The fix gives the caller no choice: the name is an argument, and a
+  missing name stops the script.</p>
+  <p>The same fallback also explains the room. Each profile sets
+  <code>TELEGRAM_HOME_CHANNEL</code> to the group id with no topic
+  suffix, so a script send reaches the group root. Telegram shows the
+  group root as <code>#General</code>.</p>
+</div>
+
 <h2>Do this now — write the script</h2>
 
 <div class="box skill">
@@ -65,22 +96,41 @@ t_29e6cbb8  worker  parents: ['t_3ce59841']     children: [..., 't_e6f5dc9f']</c
   <pre><code>#!/usr/bin/env bash
 # Report one message to Telegram, and to the Fizzy card when a card exists.
 #
+# Usage: hermes-report.sh &lt;profile&gt; "&lt;the message&gt;"
+#
 # A worker calls this script instead of `hermes send --to telegram`.
 # Telegram always receives the message. Fizzy receives a comment only when
 # the task chain carries a `fizzy:&lt;number&gt;` comment.
+#
+# The profile argument is required, and no default is safe. A worker shell
+# carries no profile marker. `hermes send` with no `--profile` reads
+# `~/.hermes/active_profile`, so every report would arrive under one name.
 
 set -uo pipefail
 
-MSG="${1:-}"
-if [ -z "$MSG" ]; then
-  echo "usage: hermes-report.sh \"&lt;the message&gt;\"" &gt;&amp;2
+PROFILE="${1:-}"
+MSG="${2:-}"
+
+usage() {
+  echo "usage: hermes-report.sh &lt;profile&gt; \"&lt;the message&gt;\"" &gt;&amp;2
+  echo "  profile is one of: crazydave peashooter sunflower torchwood" &gt;&amp;2
+  exit 2
+}
+
+[ -z "$PROFILE" ] &amp;&amp; usage
+[ -z "$MSG" ] &amp;&amp; usage
+
+# Reject a name that has no profile directory. A typed name that reaches
+# `hermes send` would send under the wrong bot, or fail with no report.
+if [ ! -d "$HOME/.hermes/profiles/$PROFILE" ]; then
+  echo "report: no profile named $PROFILE" &gt;&amp;2
   exit 2
 fi
 
 # Telegram first. This send is the report that Jokot reads, so a Fizzy
 # defect never costs a report.
-if ! hermes send --to telegram "$MSG" &gt;/dev/null 2&gt;&amp;1; then
-  echo "report: telegram send failed" &gt;&amp;2
+if ! hermes -p "$PROFILE" send --to telegram "$MSG" &gt;/dev/null 2&gt;&amp;1; then
+  echo "report: telegram send failed for $PROFILE" &gt;&amp;2
   exit 1
 fi
 
@@ -122,11 +172,13 @@ fi
 exit 0</code></pre>
 </div>
 
-<h2>Three rules the script obeys</h2>
+<h2>Four rules the script obeys</h2>
 
 <div class="box knowledge">
   <span class="box-label">Knowledge</span>
   <ul>
+    <li>The profile name is the first argument, because a worker shell
+    carries no name of its own.</li>
     <li>Telegram runs first, because that send is the report Jokot
     reads.</li>
     <li>A Fizzy failure never changes the exit code, so a Fizzy defect
@@ -149,20 +201,39 @@ chmod +x ~/.hermes/scripts/hermes-report.sh</code></pre>
 
   <p><strong>Step 2.</strong> Test the Telegram half with no card.</p>
   <pre><code>unset HERMES_KANBAN_TASK
-~/.hermes/scripts/hermes-report.sh "stage 5 test one, telegram only"
+~/.hermes/scripts/hermes-report.sh sunflower "stage 5 test one, telegram only"
 echo "exit=$?"</code></pre>
-  <p>Expect one message in the group, and <code>exit=0</code>.</p>
+  <p>Expect one message in the group, and <code>exit=0</code>. Read the
+  sender name on the message. It must read Sunflower.</p>
 
-  <p><strong>Step 3.</strong> Test the empty argument.</p>
-  <pre><code>~/.hermes/scripts/hermes-report.sh; echo "exit=$?"</code></pre>
-  <p>Expect the usage line on standard error, and <code>exit=2</code>.</p>
+  <p><strong>Step 3.</strong> Test the three rejections. Each one must
+  print <code>exit=2</code> and send nothing.</p>
+  <pre><code>~/.hermes/scripts/hermes-report.sh; echo "exit=$?"
+~/.hermes/scripts/hermes-report.sh sunflower; echo "exit=$?"
+~/.hermes/scripts/hermes-report.sh wallnut "x"; echo "exit=$?"</code></pre>
+  <p>The first two print the usage line. The third prints
+  <code>report: no profile named wallnut</code>, because no directory
+  <code>~/.hermes/profiles/wallnut</code> exists.</p>
 
   <p><strong>Step 4.</strong> Test the card lookup against a finished job.
   Use the worker task <code>t_8e9c7cfb</code>, which belongs to root task
   <code>t_7e862706</code> and card 17.</p>
   <pre><code>HERMES_KANBAN_TASK=t_8e9c7cfb \
-  ~/.hermes/scripts/hermes-report.sh "stage 5 test three, card lookup"</code></pre>
+  ~/.hermes/scripts/hermes-report.sh peashooter "stage 5 test three, card lookup"</code></pre>
   <p>Expect one Telegram message, and one new comment on Fizzy card 17.</p>
+
+  <p><strong>Step 5.</strong> Prove the sender name from the database,
+  because a bot name on a phone screen is easy to misread. Each profile
+  records its own sends in its own <code>messages</code> table.</p>
+  <pre><code>for p in crazydave peashooter sunflower torchwood; do
+  printf '%-11s ' "$p"
+  sqlite3 -readonly ~/.hermes/profiles/$p/state.db \
+    "SELECT COUNT(*) FROM messages
+       WHERE timestamp &gt; strftime('%s','now') - 600;"
+done</code></pre>
+  <p>Step 2 adds one row under <code>sunflower</code> alone. Step 4 adds
+  one row under <code>peashooter</code> alone. A row under any other name
+  means the profile argument never reached <code>hermes send</code>.</p>
 
   <p>If that task is archived by the time you run this lesson, this query
   lists every root task that carries a card, and the worker task of
@@ -229,17 +300,48 @@ WHERE c.body LIKE 'fizzy:%';"</code></pre>
   </div>
 </div>
 
+<div class="quiz">
+  <p class="q">A worker runs the script with no profile argument. Which
+  name does the Telegram message carry?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q3" id="q3a">
+      <label for="q3a">No message is sent at all</label>
+      <div class="reveal"><p class="feedback correct">Right. The script
+      prints the usage line and exits 2 before the send. Without that
+      guard the name would come from <code>active_profile</code>.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q3" id="q3b">
+      <label for="q3b">The name of the calling agent</label>
+      <div class="reveal"><p class="feedback incorrect">The shell holds no
+      name. The gateway takes the profile as a flag, and it exports no
+      <code>HERMES_PROFILE</code> for a child to read.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q3" id="q3c">
+      <label for="q3c">The name of the first profile</label>
+      <div class="reveal"><p class="feedback incorrect">The fallback reads
+      <code>~/.hermes/active_profile</code>, which holds one name chosen
+      by hand, not the first name in alphabetical order.</p></div>
+    </div>
+  </div>
+</div>
+
 <h2>Checkpoint</h2>
 
 <div class="checklist">
   <label><input type="checkbox"> <code>chmod +x</code> run on
   <code>~/.hermes/scripts/hermes-report.sh</code></label>
-  <label><input type="checkbox"> Test 1 printed <code>exit=0</code>, and
-  the message appeared in the group</label>
-  <label><input type="checkbox"> Test 2 printed the usage line on
-  standard error, and <code>exit=2</code></label>
-  <label><input type="checkbox"> Test 3 added a comment on Fizzy card
+  <label><input type="checkbox"> Step 2 printed <code>exit=0</code>, and
+  the message appeared in the group under the Sunflower name</label>
+  <label><input type="checkbox"> All three rejections in step 3 printed
+  <code>exit=2</code></label>
+  <label><input type="checkbox"> Step 4 added a comment on Fizzy card
   17</label>
+  <label><input type="checkbox"> Step 5 counted one row under
+  <code>sunflower</code>, one under <code>peashooter</code>, and zero
+  elsewhere</label>
 </div>
 
 <p><strong>Primary source:</strong>
@@ -252,11 +354,13 @@ record 0043</a>, which lists the two tasks that blocked on 14 September
 0048</a> &middot;
 <a href="../reference/glossary.html">&rarr; Full glossary</a></p>
 
-<p class="ask-agent">Send me the exit code and the group message from test
-1, and the exit code from test 2. Send me a link to the card 17 comment
-from test 3, too. I check each exit code against the rules in this
-lesson. A test that returns a different code, or a comment that never
-reaches the card, is a real finding, and it earns a record.</p>
+<p class="ask-agent">Send me the exit code and the group message from
+step 2, the three exit codes from step 3, and the counts from step 5.
+Send me a link to the card 17 comment from step 4, too. I check each
+exit code and each count against the rules in this lesson. A test that
+returns a different code, a row under the wrong profile, or a comment
+that never reaches the card, is a real finding, and it earns a
+record.</p>
 
 <div class="nav">
   <span><a href="0031-a-service-that-outlives-its-agent.html">&larr; Lesson 31</a></span>
