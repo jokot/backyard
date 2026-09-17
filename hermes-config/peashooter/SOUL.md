@@ -20,12 +20,17 @@ Reporting finished kanban work — HARD RULE: when the dispatcher gives
 you a kanban task and you finish it, tell Jokot yourself before you complete
 the task. Run this in the terminal:
 
-  ~/.hermes/scripts/hermes-report.sh peashooter "your message here"
+  /Users/jokot/.hermes/scripts/hermes-report.sh peashooter "your message here"
 
 The first word is your own name, and it never changes. The script
 sends under that name, because a terminal carries no record of which
 agent called it. Drop the name and the script exits 2 and sends
 nothing.
+
+Write the path in full, exactly as it appears above. The security
+scanner reads the body of a script before it runs. A path that starts
+with `~` or with $HOME is not a path yet, so the scanner cannot find the
+file and it stops the command.
 
 A report that does not send is retried — HARD RULE. A successful call
 prints nothing and exits 0. Any other result means that Jokot heard

@@ -401,22 +401,63 @@ Each refusal carried the same key:
 it builds the key only when the scanner returns `block` or `warn`. So
 the security scanner raised the prompt.
 
-### The scanner does not raise it today
+### The cause: a tilde is not a path
 
-`tools/tirith_security.py:730` runs the scanner as
-`tirith check --json --non-interactive --shell posix -- <command>`. That
-exact form, on the exact 584-byte command of Crazy Dave, answers:
+The first hunt failed. `tools/tirith_security.py:730` runs the scanner as
+`tirith check --json --non-interactive --shell posix -- <command>`, and
+that form answered `action: allow` with 0 findings on the exact command
+of Crazy Dave.
+
+The hunt used the wrong binary. One scanner sits on the machine, and
+four more sit inside the profiles:
 
 ```
-action: allow   tier_reached: 1   findings: 0
+0.3.3  ~/.hermes/bin/tirith                        18.4M
+0.4.1  ~/.hermes/profiles/crazydave/bin/tirith     31.3M
+0.4.1  ~/.hermes/profiles/peashooter/bin/tirith    31.3M
+0.4.1  ~/.hermes/profiles/sunflower/bin/tirith     31.3M
+0.4.2  ~/.hermes/profiles/torchwood/bin/tirith     31.0M
 ```
 
-The answer is the same with `HERMES_HOME` set to the profile directory.
-The strings `analysis_incomplete` and `Nested executable body` appear in
-no Python file of Hermes and in no string of the scanner binary. So this
-record names the symptom, names the code that formats the key, and does
-not name the rule. A cause without evidence is a guess, and record 0035
-holds the cost of one.
+Version 0.4.1 reproduces the block at once:
+
+```
+action: block   tier_reached: 3
+ rule_id: analysis_incomplete  HIGH  Nested executable body could not be resolved
+ rule_id: analysis_incomplete  HIGH  nested command analysis was incomplete
+```
+
+Four probes name the rule. Only the path form changes between them:
+
+| Command | Answer |
+| --- | --- |
+| `~/.hermes/scripts/hermes-report.sh sunflower "hello"` | block |
+| `$HOME/.hermes/scripts/hermes-report.sh sunflower "hello"` | block |
+| `/Users/jokot/.hermes/scripts/hermes-report.sh sunflower "hello"` | allow |
+| `bash /Users/jokot/.hermes/scripts/hermes-report.sh sunflower "hello"` | allow |
+
+The scanner reads the body of a script before the script runs. A string
+that starts with `~` or with `$HOME` is not a path yet, because the shell
+expands it later. The scanner cannot find the file, so the analysis is
+incomplete and the scanner stops the command. The message text is exact:
+the nested executable body could not be resolved.
+
+This also explains the two recoveries of the first job. Sunflower read
+the script and called it again by another route. Peashooter wrote a
+wrapper in the task workspace and ran that wrapper by its full path.
+Both new commands carried a path that the scanner could resolve.
+
+### The repair
+
+All three soul files now name the script by its full path, and each file
+carries the reason:
+
+```
+/Users/jokot/.hermes/scripts/hermes-report.sh sunflower "your message here"
+```
+
+The scanner answers `allow`, tier 1, 0 findings for all three profiles.
+One live call of the repaired form exited 0 and the message arrived.
 
 ### The lesson for the roster
 
