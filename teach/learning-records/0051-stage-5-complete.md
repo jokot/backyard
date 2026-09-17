@@ -147,6 +147,13 @@ The closing report of Crazy Dave reached neither Telegram nor the card.
 Section 4 holds the reason. The path works, and one of three reports was
 lost to an approval prompt that nobody answered.
 
+A second job ran after the repair, and four reports reached both rooms
+with no approval prompt. That job still lost one report, because
+Sunflower had finished its task 45 minutes before the fix was written,
+and a completed task never runs again. So no job has yet run end to end
+on the repaired path. Section 5 holds the second job. The criterion stays
+PARTIAL until one clean job closes it.
+
 ## Section 1 — The rule that the audit could not see
 
 Check 4 of the audit reported the same line for the whole day:
@@ -554,9 +561,119 @@ and the audit printed nothing again.
 Check 4 now tests the rule that record 0045 states, and it no longer
 counts days. The gap that Section 2 named is closed.
 
-## Section 5 — What Stage 5 delivered
+## Section 5 — The repair proved on a second job
 
-- `~/.hermes/scripts/hermes-report.sh`, 3139 bytes, mode 755. One script
+The first job lost one report of three. Section 4 found the cause and
+repaired it. A repair that is not tested on the live roster is a claim,
+so a second job ran after the fix.
+
+Jokot sent one request to Crazy Dave in `#General` at 22:30, and sent
+`/new` in the three topics first, so that every session was born with the
+repaired soul text. Crazy Dave opened Fizzy card 21 and decomposed the
+work into three worker tasks. The job asked the roster to remove the
+duplicate lines that the `blocked-watch` job prints, and it named
+`teach/drafts/` as the only place to write. The live cron script was
+named as off limits, because a roster that edits a running job while the
+job is scheduled can break the job between two runs.
+
+Four reports ran after the fix, and four reached both rooms:
+
+```
+Peashooter: blocked-watch-dedup.sh is complete and approved
+Peashooter: blocked-watch-dedup.sh reviewed and approved — completing.
+Peashooter: Validated blocked-watch-dedup.sh against a seeded DB copy
+Crazy Dave: Deduplication work is complete: the specification is at ...
+```
+
+No report met an approval prompt. Every comment on card 21 carries the
+name of its writer, so the card now reads the way the group reads.
+
+### One report of the job did not reach the card
+
+Sunflower finished its task at 21:51:06, which is 45 minutes before the
+path fix was written. That report met the same approval prompt as the
+first job, and Sunflower took the fallback that the new rule states: it
+wrote the report as a kanban comment and completed the task. A completed
+task never runs again, so the fix could not reach it.
+
+```
+21:51:06  sunflower   t_bbfe307d completed   <- fallback comment, old path
+~22:20    the path fix reaches the three soul files
+22:36     /new in the three topics, sessions rebuilt
+22:41:56  t_4370e930 unblocked
+22:43:33  peashooter  t_4370e930 completed
+22:48:09  peashooter  t_0949c9e5 completed
+22:49:15  crazydave   t_b9849715 completed
+```
+
+This is why criterion 7 stays PARTIAL. Neither job ran end to end on the
+repaired path. The first job ran entirely before the fix. The second job
+started before it and finished after it. The cause is found, repaired,
+and proved on four live reports, but a criterion is met by a job, not by
+a repair. One clean job closes it.
+
+### One task sent two reports
+
+Peashooter reported task `t_4370e930` twice. The state database of the
+profile holds the reason, at 22:43:23:
+
+> That call had a stray trailing argument. Re-running the report cleanly.
+
+The agent quoted its message wrongly, so the shell split it into more
+than two arguments. The script read only `$1` and `$2`. It never counted
+them. So the malformed call still sent, and it sent only the first word
+of the message. The agent saw a wrong message, corrected the call, and
+sent a second report for one task.
+
+The script now counts its arguments first:
+
+```bash
+if [ "$#" -ne 2 ]; then
+  echo "report: expected 2 arguments, got $#" >&2
+  echo "  quote the whole message as one argument" >&2
+  usage
+fi
+```
+
+Tested both ways. Three arguments print `report: expected 2 arguments,
+got 3` and exit 2. Two arguments send one message and exit 0.
+
+The lesson is narrow and it is worth stating. A script that reads `$1`
+and `$2` accepts `$3` in silence. Silence is the defect. The caller had
+no way to learn that the call was wrong except by reading the message it
+sent, and by then it had already sent it. A wrong call must fail before
+the side effect, not after it.
+
+### The work that the second job produced
+
+The drafts were reviewed, not merely accepted. The specification answers
+the one question that the script's behavior raises: when the blocked set
+changes, the job prints every current member, not only the new one. That
+is deliberate, and section 3 and section 4 of the spec both state it, so
+each message stands on its own.
+
+Review found two defects in the degraded path of the script, and both
+are repaired:
+
+- A failed redirection printed a second message. The shell writes that
+  message itself, before `printf` starts, so the `2>/dev/null` on the
+  `printf` could never suppress it. The job runs in `no-agent` mode, so
+  both lines reached Telegram. The subshell now discards its own stderr.
+- The failure message named the temporary file, not the state file.
+
+The reviewer replayed every path on a fresh state file. The first run
+emits and writes state at mode 0600. The second run is silent. A
+malformed state file logs one line and rebuilds. An unwritable state file
+degrades to always-notify and still exits 0. A missing database exits 0
+in silence.
+
+The test fixture is not committed. It was a copy of the live kanban
+board, so it held 90 real tasks with real titles and real comment text.
+A fixture that is a copy of production data carries production data.
+
+## Section 6 — What Stage 5 delivered
+
+- `~/.hermes/scripts/hermes-report.sh`, mode 755. One script
   carries every report. The profile name is the first argument. Telegram
   receives the message first, so a Fizzy defect never costs a report.
 - `~/.hermes/profiles/crazydave/scripts/roster-audit.sh`, mode 755.
@@ -569,11 +686,13 @@ counts days. The gap that Section 2 named is closed.
 - Two cron jobs. `roster-audit` runs at `0 9 * * *`. `blocked-watch`
   runs `every 60m`.
 - Three soul files that name the report script and name no send command.
-  Each file carries the name rule and the retry rule.
+  Each file carries the name rule, the path rule, and the retry rule.
+  Every call writes the path in full, because the security scanner cannot
+  open a path that starts with a tilde.
 - Lessons 32 through 35.
 - Records 0050 and 0051.
 
-## Section 6 — What generalizes
+## Section 7 — What generalizes
 
 **A scheduled job needs a reason to stay silent.** Both jobs print
 nothing when the roster is healthy. A job that speaks on every run
@@ -606,3 +725,9 @@ answers.
 **Test a soft verb before you trust it.** The name `archive` suggests
 that a session retires. The source shows one column change and no effect
 on reuse. The verb that matched the intent was the destructive one.
+
+### A script that reads `$1` and `$2` accepts `$3` in silence
+
+A caller learns that a call was wrong by reading the effect it had. That
+is too late when the effect is a message to a human. Count the arguments
+before the side effect, and the wrong call costs nothing.

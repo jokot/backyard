@@ -120,6 +120,16 @@ usage() {
 [ -z "$PROFILE" ] &amp;&amp; usage
 [ -z "$MSG" ] &amp;&amp; usage
 
+# Reject a third argument. The script read only $1 and $2 before, so a
+# message that lost its quotation marks still sent, and it sent only the
+# first word. The caller then saw a malformed call, corrected it, and sent
+# a second message for one task. A wrong call must fail before it sends.
+if [ "$#" -ne 2 ]; then
+  echo "report: expected 2 arguments, got $#" &gt;&amp;2
+  echo "  quote the whole message as one argument" &gt;&amp;2
+  usage
+fi
+
 # Reject a name that has no profile directory. A typed name that reaches
 # `hermes send` would send under the wrong bot, or fail with no report.
 if [ ! -d "$HOME/.hermes/profiles/$PROFILE" ]; then
@@ -242,10 +252,12 @@ echo "exit=$?"</code></pre>
   print <code>exit=2</code> and send nothing.</p>
   <pre><code>~/.hermes/scripts/hermes-report.sh; echo "exit=$?"
 ~/.hermes/scripts/hermes-report.sh sunflower; echo "exit=$?"
-~/.hermes/scripts/hermes-report.sh wallnut "x"; echo "exit=$?"</code></pre>
+~/.hermes/scripts/hermes-report.sh wallnut "x"; echo "exit=$?"
+~/.hermes/scripts/hermes-report.sh sunflower "two words" extra; echo "exit=$?"</code></pre>
   <p>The first two print the usage line. The third prints
   <code>report: no profile named wallnut</code>, because no directory
-  <code>~/.hermes/profiles/wallnut</code> exists.</p>
+  <code>~/.hermes/profiles/wallnut</code> exists. The fourth prints
+  <code>report: expected 2 arguments, got 3</code>.</p>
 
   <p><strong>Step 4.</strong> Test the card lookup against a finished job.
   Use the worker task <code>t_8e9c7cfb</code>, which belongs to root task

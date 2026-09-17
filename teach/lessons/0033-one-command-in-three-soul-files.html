@@ -49,10 +49,10 @@ step that lets a live chat see the change.</p>
   hermes send --to telegram "your message here"
 
 # Peashooter gets this line
-  ~/.hermes/scripts/hermes-report.sh peashooter "your message here"
+  /Users/jokot/.hermes/scripts/hermes-report.sh peashooter "your message here"
 
 # Sunflower gets this line
-  ~/.hermes/scripts/hermes-report.sh sunflower "your message here"</code></pre>
+  /Users/jokot/.hermes/scripts/hermes-report.sh sunflower "your message here"</code></pre>
   <p>The two lines differ by one word, and that word is the profile name.
   The next section states why the name cannot be left out.</p>
   <p>The surrounding paragraph does not change. It keeps three rules
@@ -80,13 +80,13 @@ step that lets a live chat see the change.</p>
   <p>Line 97 takes the same replacement as the two worker files:</p>
   <pre><code>  hermes send --to telegram "your message here"
 
-  ~/.hermes/scripts/hermes-report.sh crazydave "your message here"</code></pre>
+  /Users/jokot/.hermes/scripts/hermes-report.sh crazydave "your message here"</code></pre>
   <p>Line 25 takes the same call, with the wording of Crazy Dave. Keep
   the five leading spaces, because the indent keeps the line inside the
   list item.</p>
   <pre><code>     hermes send --to telegram "&lt;your summary, in your own voice&gt;"
 
-     ~/.hermes/scripts/hermes-report.sh crazydave "&lt;your summary, in your own voice&gt;"</code></pre>
+     /Users/jokot/.hermes/scripts/hermes-report.sh crazydave "&lt;your summary, in your own voice&gt;"</code></pre>
 </div>
 
 <h2>Each file names itself, and the file says why</h2>
@@ -111,6 +111,46 @@ nothing.</code></pre>
   <p>The note tells the agent what to do when the rule and the moment
   disagree. An agent that reads "use your own name" writes its own name.
   An agent that reads only an example line copies the example.</p>
+</div>
+
+<h2>A tilde is not a path yet</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Every call above writes the path in full. The first version of these
+  three files wrote <code>~/.hermes/scripts/hermes-report.sh</code>, and
+  that version blocked. A terminal expands the tilde before the command
+  runs, so the same line works when you type it. An agent does not get
+  that far.</p>
+
+  <p>The security scanner reads a command before the agent runs it. When
+  the command names a script, the scanner opens that script and reads the
+  body too, because a safe-looking call can hold an unsafe body. A string
+  that starts with <code>~</code> is not a path yet, so the scanner cannot
+  open the file. It does not guess. It answers <code>block</code>, with two
+  findings that both read <code>analysis_incomplete</code>:</p>
+
+  <pre><code>Nested executable body could not be resolved
+nested command analysis was incomplete</code></pre>
+
+  <p>The same four calls, tested against the scanner that the profiles
+  actually run:</p>
+
+  <table>
+    <thead><tr><th>Written as</th><th>Answer</th></tr></thead>
+    <tbody>
+      <tr><td><code>~/.hermes/scripts/hermes-report.sh</code></td><td>block</td></tr>
+      <tr><td><code>$HOME/.hermes/scripts/hermes-report.sh</code></td><td>block</td></tr>
+      <tr><td><code>/Users/jokot/.hermes/scripts/hermes-report.sh</code></td><td>allow</td></tr>
+      <tr><td><code>bash /Users/jokot/.hermes/scripts/hermes-report.sh</code></td><td>allow</td></tr>
+    </tbody>
+  </table>
+
+  <p>The scanner is not one program. Each profile carries its own copy
+  under <code>~/.hermes/profiles/&lt;name&gt;/bin/</code>, and the versions
+  differ. The copy on your shell path, if you have one, is not the copy
+  that judged the command. To test a rule, find the binary that the agent
+  runs, not the binary that your shell finds.</p>
 </div>
 
 <h2>A refused report looks like a finished report</h2>
@@ -368,6 +408,9 @@ done</code></pre>
   three files</label>
   <label><input type="checkbox"> You added the retry rule to all three
   files, and the rule proof printed 1 on each of the three lines</label>
+  <label><input type="checkbox"> Every call writes the path in full, and
+  this command printed 0 on each of the three lines:
+  <code>grep -c '~/.hermes/scripts' ~/.hermes/profiles/{crazydave,peashooter,sunflower}/SOUL.md</code></label>
   <label><input type="checkbox"> The file proof command printed 0 for
   all four profiles</label>
   <label><input type="checkbox"> The name proof printed four lines, and
