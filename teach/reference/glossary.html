@@ -293,6 +293,14 @@ possible definition.</p>
   the first scheduled job in this project.
   <span class="from">Introduced in: <a href="../lessons/0034-a-job-that-speaks-only-on-failure.html">Lesson 34</a></span></dd>
 
+  <dt>WAL sidecar file</dt>
+  <dd>One of two files, <code>-shm</code> and <code>-wal</code>, that
+  SQLite keeps beside a database file running in WAL mode. Both files
+  exist only while a writer holds the database open. A connection opened
+  <code>-readonly</code> needs both files already present, because it
+  holds no permission to create them itself.
+  <span class="from">Introduced in: <a href="../lessons/0035-the-watch-for-a-task-that-stopped.html">Lesson 35</a></span></dd>
+
 </dl>
 
 <p style="margin-top:3rem; font-family:-apple-system,sans-serif; font-size:0.85rem; color:var(--ink-soft);">

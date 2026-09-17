@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 35 — The Watch for a Task That Stopped</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 35 of the Stage 5 build</p>
+<h1>A second scheduled script reads the kanban board directly, because a worker that stops sends no report</h1>
+<p class="lede"><a href="../learning-records/0043-a-report-that-went-to-the-wrong-room.md">Record
+0043</a> named two tasks that blocked on 14 September 2026,
+<code>t_8e9c7cfb</code> and <code>t_34115dfd</code>. The kanban board held
+both blocked states correctly the whole time. This lesson adds a second
+cron job, <code>blocked-watch</code>, that reads the board directly
+instead of waiting on a worker's report. It also repairs and installs
+<code>kanban-autosubscribe.sh</code>, the third cron job of Stage 5.
+Together with <code>roster-audit</code> from
+<a href="0034-a-job-that-speaks-only-on-failure.html">Lesson 34</a>,
+three cron jobs then run on the machine.</p>
+
+<h2>The report script cannot see a worker that never speaks</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p><code>hermes-report.sh</code>, from
+  <a href="0032-a-report-that-reaches-two-rooms.html">Lesson 32</a>, runs
+  only when a worker calls it. A worker that stops before it reports sends
+  no message at all, and the task stays blocked in silence.</p>
+  <p>Record 0043 named two tasks that blocked on 14 September 2026,
+  <code>t_8e9c7cfb</code> and <code>t_34115dfd</code>. The kanban board
+  held both blocked states correctly the whole time. Only a reader was
+  missing.</p>
+</div>
+
+<h2>The SQLite precedence trap</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The wrong expression divides a string by a string:</p>
+  <pre><code>SELECT 'blocked ' || (1000 - 400)/60 || 'm';
+-- returns 0</code></pre>
+  <p>In SQLite, the <code>||</code> operator binds tighter than
+  <code>-</code> and <code>/</code>. The expression above computes
+  <code>'blocked ' || (1000 - 400)</code> first, then divides that string
+  by <code>60</code>, then concatenates <code>'m'</code>. Parentheses
+  around the arithmetic fix the order:</p>
+  <pre><code>SELECT 'blocked ' || ((1000 - 400)/60) || 'm';
+-- returns blocked 10m</code></pre>
+</div>
+
+<h2>The script in full</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>Write this file at
+  <code>~/.hermes/profiles/crazydave/scripts/blocked-watch.sh</code>.
+  Copy every line, including every comment:</p>
+  <pre><code>#!/usr/bin/env bash
+# Print one line for each kanban task that stayed blocked for more than 60
+# minutes. Print nothing otherwise, so a healthy run delivers no message.
+#
+# The script opens kanban.db without `-readonly`. A read-only connection to
+# a WAL database fails when the -shm and -wal sidecar files are absent, and
+# those files exist only while a writer holds the database open. This query
+# is a SELECT and changes nothing.
+set -uo pipefail
+DB="${HERMES_KANBAN_DB:-$HOME/.hermes/kanban.db}"
+[ -f "$DB" ] || exit 0
+sqlite3 "$DB" &lt;&lt;'SQL' 2&gt;/dev/null
+SELECT 'blocked ' || ((strftime('%s','now') - e.created_at)/60) || 'm: '
+       || t.id || ' (' || COALESCE(t.assignee,'unassigned') || ') '
+       || substr(COALESCE(json_extract(e.payload,'$.reason'),''),1,120)
+FROM tasks t
+JOIN task_events e ON e.task_id = t.id AND e.kind = 'blocked'
+WHERE t.status = 'blocked'
+  AND e.created_at = (SELECT MAX(created_at) FROM task_events
+                      WHERE task_id = t.id AND kind = 'blocked')
+  AND e.created_at &lt; strftime('%s','now') - 3600;
+SQL
+exit 0</code></pre>
+  <p>Make the file executable:</p>
+  <pre><code>chmod +x ~/.hermes/profiles/crazydave/scripts/blocked-watch.sh</code></pre>
+</div>
+
+<h2>Prove the formatting</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>A healthy board prints nothing, which proves little. Relax both
+  filters inside a copy, and run that copy instead of the real file:</p>
+  <pre><code>sed -e "s/t.status = 'blocked'/1=1/" \
+    -e "s/e.created_at &lt; strftime('%s','now') - 3600/1=1/" \
+    ~/.hermes/profiles/crazydave/scripts/blocked-watch.sh \
+    &gt; /tmp/blocked-watch-relaxed.sh
+bash /tmp/blocked-watch-relaxed.sh</code></pre>
+  <p>Expect six lines, one for each historical block. Each line starts
+  with <code>blocked &lt;minutes&gt;m:</code>. Two lines name
+  <code>t_8e9c7cfb</code> and <code>t_34115dfd</code>, the two tasks of
+  <a href="../learning-records/0043-a-report-that-went-to-the-wrong-room.md">record
+  0043</a>.</p>
+</div>
+
+<h2>The autosubscribe repair</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <p>Line 14 of <code>kanban-autosubscribe.sh</code> defaults to the
+  private chat. No profile sets <code>HERMES_TELEGRAM_CHAT_ID</code>, so
+  that default fires every time. Replace the line with this default
+  instead:</p>
+  <pre><code>CHAT_ID="${HERMES_TELEGRAM_CHAT_ID:--1004371805465}"</code></pre>
+  <p>Read the two dashes with care. The first dash pairs with the colon
+  to form the <code>:-</code> default operator. The second dash is the
+  sign of the negative group id, the value
+  <a href="../learning-records/0043-a-report-that-went-to-the-wrong-room.md">record
+  0043</a> established.</p>
+</div>
+
+<h2>Move the file cron can reach</h2>
+
+<div class="box warning">
+  <span class="box-label">This step moves a real file</span>
+  <p><code>kanban-autosubscribe.sh</code> sits in
+  <code>~/.hermes/scripts/</code>, the one directory a cron job never
+  reads. <a href="0034-a-job-that-speaks-only-on-failure.html">Lesson
+  34</a> already named the rule: a cron job resolves <code>--script</code>
+  only under <code>$HERMES_HOME/scripts</code>.
+  <a href="0017-workers-report-their-own-results.html">Lesson 17</a>
+  removed the profile copy of this file, and that removal left the file
+  in the one place a cron job never reads.</p>
+  <p>Move the file into the profile scripts folder:</p>
+  <pre><code>mv ~/.hermes/scripts/kanban-autosubscribe.sh \
+   ~/.hermes/profiles/crazydave/scripts/kanban-autosubscribe.sh
+ls -l ~/.hermes/profiles/crazydave/scripts/</code></pre>
+  <p>Expect three files, each with mode <code>-rwxr-xr-x</code>.</p>
+</div>
+
+<h2>Prove the default value</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <pre><code>bash -c 'set -u; CHAT_ID="${HERMES_TELEGRAM_CHAT_ID:--1004371805465}"; echo "$CHAT_ID"'</code></pre>
+  <p>Expect <code>-1004371805465</code>.</p>
+</div>
+
+<h2>Create the two cron jobs</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <pre><code>hermes -p crazydave cron create 'every 1h' \
+  --name blocked-watch --script blocked-watch.sh --no-agent --deliver telegram
+
+hermes -p crazydave cron create 'every 15m' \
+  --name kanban-autosubscribe --script kanban-autosubscribe.sh \
+  --no-agent --deliver telegram</code></pre>
+  <p>Both commands pass a bare filename, per the rule
+  <a href="0034-a-job-that-speaks-only-on-failure.html">Lesson 34</a>
+  already taught. Each filename resolves under
+  <code>$HERMES_HOME/scripts</code>, which <code>hermes -p crazydave</code>
+  sets to <code>~/.hermes/profiles/crazydave/scripts</code>.</p>
+</div>
+
+<h2>Confirm three jobs</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill — hands on</span>
+  <pre><code>hermes -p crazydave cron list</code></pre>
+  <p>Expect three jobs: <code>roster-audit</code>,
+  <code>blocked-watch</code>, and <code>kanban-autosubscribe</code>. Three
+  cron jobs then run on the machine, and success criterion 3 is
+  complete.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does <code>'blocked ' || (a - b)/60 || 'm'</code>
+  return <code>0</code> instead of a duration?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">The concatenation operator binds tighter than division</label>
+      <div class="reveal"><p class="feedback correct">Right. <code>||</code>
+      binds tighter than <code>-</code> and <code>/</code>, so the
+      expression divides a string by a number.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">The strftime function returns the wrong type</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong.
+      <code>strftime</code> returns the value the query expects. The
+      operator order is the defect.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">The kanban database stores no blocked tasks</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. The board
+      can hold blocked tasks. This trap breaks the formatting, not the
+      count.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does <code>sqlite3 -readonly</code> fail on
+  <code>kanban.db</code> but succeed on every <code>state.db</code>?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">WAL mode needs sidecar files a reader cannot create</label>
+      <div class="reveal"><p class="feedback correct">Right. The
+      <code>-shm</code> and <code>-wal</code> files exist only while a
+      writer holds the database open, and a read-only connection cannot
+      create them.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">The kanban database file lacks all read permissions today</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. File
+      permissions are not the cause. The missing sidecar files are the
+      cause.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">Every local state database disables write-ahead logging entirely today</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. Every
+      <code>state.db</code> stays open inside a running gateway process,
+      so its sidecar files already exist.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+
+<div class="checklist">
+  <label><input type="checkbox"> You made <code>blocked-watch.sh</code>
+  executable with <code>chmod +x</code></label>
+  <label><input type="checkbox"> You ran the relaxed-filter test and saw
+  six lines</label>
+  <label><input type="checkbox"> You moved <code>kanban-autosubscribe.sh</code>
+  into the profile scripts folder</label>
+  <label><input type="checkbox"> You repaired line 14 with the
+  <code>HERMES_TELEGRAM_CHAT_ID</code> default</label>
+  <label><input type="checkbox"> You ran the repair test and read
+  <code>-1004371805465</code></label>
+  <label><input type="checkbox"> You created both cron jobs</label>
+  <label><input type="checkbox"> You ran <code>cron list</code> and saw
+  three jobs</label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="../learning-records/0049-a-read-only-connection-that-could-not-read.md">Learning
+record 0049</a> records the read-only failure and the precedence defect
+that shaped this script.
+<a href="../learning-records/0043-a-report-that-went-to-the-wrong-room.md">Record
+0043</a> names the two tasks this lesson's test expects to find.</p>
+
+<p><a href="../learning-records/0043-a-report-that-went-to-the-wrong-room.md">Record
+0043</a> &middot;
+<a href="../learning-records/0049-a-read-only-connection-that-could-not-read.md">Record
+0049</a> &middot;
+<a href="../reference/glossary.html">&rarr; Full glossary</a></p>
+
+<p class="ask-agent">Send me the six lines from the relaxed-filter test.
+Send me the chat id line from the repair test. Send me the three job
+names that <code>cron list</code> reports, too. I check each value
+against the rule in this lesson.</p>
+
+<div class="nav">
+  <span><a href="0034-a-job-that-speaks-only-on-failure.html">&larr; Lesson 34</a></span>
+  <span>Lesson 35 of Stage 5</span>
+  <span></span>
+</div>
+
+</body>
+</html>
