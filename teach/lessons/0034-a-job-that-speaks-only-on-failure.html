@@ -25,7 +25,7 @@ rule.</p>
 
 <div class="box knowledge">
   <span class="box-label">Knowledge</span>
-  <p>Each record above named a rule that broke once, and each record
+  <p>Each record above named a rule that broke once. Each record also
   produced a check command Jokot could run by hand. A command run by hand
   works only when somebody remembers it. A scheduled command needs no
   memory, because the machine runs it every day without a request.</p>
@@ -53,7 +53,8 @@ rule.</p>
 
 <div class="box skill">
   <span class="box-label">Skill — hands on</span>
-  <p>Write this file at <code>~/.hermes/scripts/roster-audit.sh</code>.
+  <p>Write this file at
+  <code>~/.hermes/profiles/crazydave/scripts/roster-audit.sh</code>.
   Copy every line, including every comment:</p>
   <pre><code>#!/usr/bin/env bash
 # Check four roster rules. Print one line for each rule that fails. Print
@@ -108,26 +109,40 @@ exit 0</code></pre>
   <span class="box-label">Skill — hands on</span>
   <p>Install the script under Crazy Dave's scripts folder, then make it
   executable.</p>
-  <pre><code>chmod +x ~/.hermes/scripts/roster-audit.sh
-~/.hermes/scripts/roster-audit.sh; echo "exit=$?"</code></pre>
+  <pre><code>mkdir -p ~/.hermes/profiles/crazydave/scripts
+chmod +x ~/.hermes/profiles/crazydave/scripts/roster-audit.sh
+~/.hermes/profiles/crazydave/scripts/roster-audit.sh; echo "exit=$?"</code></pre>
   <p>Expect <code>exit=0</code>. Expect the one line above if Sunflower's
   old sessions still exist. Expect no line at all if Lesson 33 has already
   ended them.</p>
+  <p>This folder is not the obvious choice. The command
+  <code>hermes -p crazydave</code> sets <code>HERMES_HOME</code> to
+  <code>~/.hermes/profiles/crazydave</code>. A cron job resolves
+  <code>--script</code> under <code>$HERMES_HOME/scripts</code>. The job
+  never resolves <code>--script</code> under
+  <code>~/.hermes/scripts/</code>.
+  <a href="0017-workers-report-their-own-results.html">Lesson 17</a>
+  already removed a file from this same folder. The course has met this
+  folder before. The report script of
+  <a href="0032-a-report-that-reaches-two-rooms.html">Lesson 32</a> stays
+  at <code>~/.hermes/scripts/hermes-report.sh</code>. A soul file calls
+  it by its full path. No cron job resolves it. The two scripts live in
+  different folders for this reason.</p>
 </div>
 
 <h2>Prove the check actually works</h2>
 
 <div class="box warning">
   <span class="box-label">This test edits a real profile file</span>
-  <p>This step proves the job is worth having. Change one value, run the
-  script, and change the value back.</p>
+  <p>This step proves the job is worth having. Change one value. Run the
+  script. Restore the original value.</p>
   <pre><code>cp ~/.hermes/profiles/torchwood/.env ~/torchwood-env.bak
 # Change TELEGRAM_HOME_CHANNEL in ~/.hermes/profiles/torchwood/.env to -1
-~/.hermes/scripts/roster-audit.sh
+~/.hermes/profiles/crazydave/scripts/roster-audit.sh
 # Expected: home channel: 2 distinct values across profiles, expected 1
 cp ~/torchwood-env.bak ~/.hermes/profiles/torchwood/.env
-~/.hermes/scripts/roster-audit.sh
-# Expected: line gone</code></pre>
+~/.hermes/profiles/crazydave/scripts/roster-audit.sh
+# Expected: that line is gone</code></pre>
   <p>A broken check that stays silent during this test is not ready for a
   cron job.</p>
 </div>
@@ -141,10 +156,15 @@ cp ~/torchwood-env.bak ~/.hermes/profiles/torchwood/.env
   --script roster-audit.sh \
   --no-agent \
   --deliver telegram</code></pre>
-  <p>The flag <code>--script</code> documents a path under
-  <code>~/.hermes/scripts/</code>, so try the basename first. Run
-  <code>hermes -p crazydave cron list</code> and report the stored value.
-  If the job shows no script or fails, retry with the absolute path.</p>
+  <p>The validator behind <code>--script</code> rejects an absolute path.
+  The validator also rejects a leading tilde. A bare filename is the only
+  legal value. That filename resolves under
+  <code>$HERMES_HOME/scripts</code>. The command
+  <code>hermes -p crazydave</code> sets <code>HERMES_HOME</code> to
+  <code>~/.hermes/profiles/crazydave</code>. Step 5 above already
+  installed the file at that location for this reason. Run
+  <code>hermes -p crazydave cron list</code> and report the stored
+  value.</p>
 </div>
 
 <h2>Force one run today</h2>
@@ -245,8 +265,8 @@ script found on 17 September 2026.
 0046</a> &middot;
 <a href="../reference/glossary.html">&rarr; Full glossary</a></p>
 
-<p class="ask-agent">Send me the exit code from the healthy run, and the
-exact line from the deliberate break test. Send me the stored script path
+<p class="ask-agent">Send me the exit code from the healthy run. Send me
+the exact line from the deliberate break test. Send me the stored script path
 that <code>cron list</code> reports, too. I check each value against the
 rule in this lesson. A break that produces no line is a real finding, and
 it earns a record. A job that cron reports as failed is the same kind of
