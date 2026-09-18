@@ -263,3 +263,12 @@ audit query read every session instead of the open ones. In each case the
 caller could not see the failure from where it stood. Ask what the caller
 sees when the step fails, and make the failure reach the caller. Learning
 record 0051.
+
+**18 September 2026 — the `blocked-watch` job now keeps state.** The job
+ran `every 60m` and reported every still-blocked task on every run. A task
+blocked overnight produced about 12 identical messages. The installed
+script now compares the current set of blocked tasks against the set of
+the last run that spoke, and it prints nothing when the two sets match.
+State lives at `~/.hermes/profiles/crazydave/scripts/.blocked-watch-state.json`,
+mode 0600. The mirror is `hermes-config/scripts/blocked-watch.sh`. The
+backup of the old script is `~/blocked-watch.sh.bak-predup`.

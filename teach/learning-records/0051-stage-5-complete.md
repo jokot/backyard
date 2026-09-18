@@ -779,9 +779,10 @@ a trace. This rule governs a moment that leaves none.
   current soul file. Check 5 requires that a soul file names the report
   script and names no send command. Check 6 requires that every report
   call writes the path in full.
-- `~/.hermes/profiles/crazydave/scripts/blocked-watch.sh`, 1062 bytes,
+- `~/.hermes/profiles/crazydave/scripts/blocked-watch.sh`, 5207 bytes,
   mode 755. One line for each task that stayed blocked for more than
-  3600 seconds.
+  3600 seconds, but only when the set of blocked tasks changed. The
+  addendum of 18 September 2026 holds the reason.
 - Two cron jobs. `roster-audit` runs at `0 9 * * *`. `blocked-watch`
   runs `every 60m`.
 - Three soul files that name the report script and name no send command.
@@ -830,3 +831,59 @@ on reuse. The verb that matched the intent was the destructive one.
 A caller learns that a call was wrong by reading the effect it had. That
 is too late when the effect is a message to a human. Count the arguments
 before the side effect, and the wrong call costs nothing.
+
+## Addendum, 18 September 2026 — the watchdog got a memory
+
+The `blocked-watch` job ran `every 60m` and kept no state. A task that
+stayed blocked produced one identical message per hour, about 12 in a
+night and about 50 over a weekend. Nothing changed between those
+messages. The job had no way to know that it already spoke.
+
+That result contradicts the rule of Section 8 of this record. A job that
+speaks on every run teaches a person to ignore it. The job held the rule
+for the healthy case and broke it for the case that matters.
+
+The repair adds one state file beside the script,
+`.blocked-watch-state.json`, mode 0600. The file holds the exact set of
+task ids of the last run that spoke. The script compares the current set
+against the remembered set:
+
+- The two sets are equal: the script prints nothing.
+- The two sets differ: the script prints the whole current set.
+
+The script prints the whole set, and not the new member alone, so that
+each message stands on its own. A reader never needs three earlier
+messages to know the current state.
+
+A task that leaves the set is dropped from the file. A second block of
+the same task therefore reports again, because a second episode is real
+news.
+
+### Three failures that must not silence the job
+
+A watchdog that crashes is worse than a watchdog that repeats. Each
+degraded path exits 0:
+
+- The state file is unreadable: the script prints one line to stderr,
+  treats the run as the first run, and overwrites the bad file.
+- The state file is unwritable: the script prints one line to stderr and
+  reports on every run, which is the old behaviour.
+- The database is absent: the script prints nothing and writes no state
+  file. An empty answer from a database that is absent is not a baseline.
+
+### Two defects that the tests found
+
+The first defect sent a second line to Telegram. The `printf` command
+carried `2>/dev/null`, but a failed redirection prints a message from the
+shell before `printf` starts. The job runs in `no-agent` mode, so both
+lines reach Telegram. The repair moves the redirection to the subshell.
+
+The second defect wrote a duplicate name into the JSON object. Two
+`blocked` events that share one timestamp both satisfy the `MAX` test in
+the SELECT, so the id appears two times. The state build now reads the
+sorted, deduplicated list. The SELECT stays as it was, because the
+output format of this job is not part of this change.
+
+**Generalization.** A rule that a project states for its agents applies
+to the jobs of the project too. The rule said that a job must have a
+reason to speak. The only job with a repeat interval broke it.

@@ -11,3 +11,4 @@ teach/drafts/*.db
 teach/drafts/*.db-wal
 teach/drafts/*.db-shm
 teach/drafts/.test-state-*.json
+hermes-config/scripts/.blocked-watch-state.json

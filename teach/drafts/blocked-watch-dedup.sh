@@ -11,6 +11,11 @@
 #
 # State: a JSON file mapping last-notified task ids -> timestamp. Default
 # location is next to this script (drafts/), overridable via BLOCKED_WATCH_STATE.
+#
+# STATUS: this draft is installed. The running copy lives at
+# `~/.hermes/profiles/crazydave/scripts/blocked-watch.sh`, and the repo
+# mirror is `hermes-config/scripts/blocked-watch.sh`. Read those two, not
+# this one. The addendum of record 0051 holds the reason for the change.
 set -uo pipefail
 
 # Same DB resolution as the original -- overridable via HERMES_KANBAN_DB.
@@ -91,7 +96,7 @@ if [ "$NEED_WRITE" = 1 ]; then
   BUILT=""
   while IFS= read -r _id; do
     [ -n "$_id" ] && BUILT="${BUILT}\"$_id\": $NOW, "
-  done <<<"$CURRENT_HITS"
+  done <<<"$C_C"
   BUILT="${BUILT%, }"
   STATE_JSON="{\"version\": 1, \"notified\": {$BUILT}, \"updated_at\": $NOW}"
 
