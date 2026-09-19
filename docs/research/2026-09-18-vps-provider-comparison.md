@@ -159,13 +159,32 @@ The workload sends and receives almost nothing on the local network. Every packe
 
 That single fact reorders the tables.
 
-### Choose: Vultr `vc2-2c-4gb`, Singapore, $20.00/month
+### Cheapest option that still meets the bar: OVHcloud VPS-1, Singapore, $4.54/month
+
+Confirmed on the OVHcloud Asia site on 20 September 2026. The plan gives 2 vCores, 4 GB of RAM and 40 GB of NVMe disk, which matches the target spec exactly.
+
+- Singapore is selectable, so the transit advantage is the same as Vultr.
+- OVHcloud publishes a 99.9% SLA, and includes anti-DDoS protection and a daily backup.
+- The 500 GB monthly quota throttles the link to 10 Mbps. It does not stop the link. Our workload sends less than 100 GB, and 10 Mbps is about fifty times what long polling needs.
+- 40 GB of disk is 19 times the 2.1 GB payload.
+- The instance is x86-64, so the profile `bin/` and `lsp/` trees have known builds. That is the risk which rules out the Oracle ARM tier.
+
+Add premium backup at $1.40 per month for a 7-day restore window. The standard backup keeps 24 hours. `kanban.db` holds the evidence under records 0044, 0048 and 0051, so the wider window is worth $1.40. Total cost is **$5.94 per month**, which saves $168.72 per year against Vultr.
+
+Check two items in the configurator before you pay:
+
+1. The price links carry `pricing=upfront12`. The $4.54 figure is almost certainly the 12-month prepaid rate, near $54.48 per year. The month-to-month rate is higher, and the page does not state it.
+2. The price excludes GST.
+
+The trade you accept is support. OVHcloud gives self-service support and no account manager. For a roster of four bots, that trade is correct.
+
+### Best support and simplest path: Vultr `vc2-2c-4gb`, Singapore, $20.00/month
 
 - The API confirms the `sgp` region for this exact plan.
 - 80 GB of disk is 38 times the 2.1 GB payload.
 - 3 TB of transfer is far past what long polling can consume.
 - Singapore sits about 20 ms to 30 ms from WIB and holds top-tier international transit.
-- It is the cheapest row with a confirmed region and no transfer trap.
+- It is the simplest row with a confirmed region and no transfer quota at all.
 
 ### Second choice: DigitalOcean Basic, Singapore, $24.00/month
 
@@ -189,7 +208,9 @@ mtr -rwzbc 50 api.telegram.org
 
 If time to first byte to both endpoints stays under 300 ms and `mtr` shows no loss at the transit hops, Biznet Gio saves $146 per year against Vultr. If either number is poor, the $12 per month difference has bought nothing.
 
-**Ruling for Stage 6:** the design proceeds against Vultr Singapore. Nothing in the install order depends on the provider, so a later move to Biznet Gio costs one more cutover, not a redesign.
+**Ruling for Stage 6:** the design proceeds against **OVHcloud VPS-1 in Singapore**, at $4.54 per month plus $1.40 for premium backup. It matches the target spec exactly, sits in the region that the transit argument requires, and costs 30% of the Vultr plan.
+
+Nothing in the install order depends on the provider. A later move to Vultr or to Biznet Gio costs one more cutover, not a redesign.
 
 ### Rejected, with reasons
 
