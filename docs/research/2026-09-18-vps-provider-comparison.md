@@ -176,6 +176,36 @@ Check two items in the configurator before you pay:
 1. The price links carry `pricing=upfront12`. The $4.54 figure is almost certainly the 12-month prepaid rate, near $54.48 per year. The month-to-month rate is higher, and the page does not state it.
 2. The price excludes GST.
 
+**Measured on 20 September 2026: the plan is large enough.** The four gateways
+on the Mac use 181 MB of memory in total when they are idle. This is 4.5% of
+the 4 GB that VPS-1 gives. The complete install on the Mac uses 2.2 GB of
+disk. The server carries less, because the node tree of 545 MB is a lazy
+install, and the platform-bound files in each profile download again as Linux
+builds. The server needs about 1.5 GB to 2.5 GB, which is 6% of the 40 GB disk.
+
+Two limits need attention.
+
+The first limit is peak memory. The gateway runs the agent in the same
+process, so the gateway grows while it answers a message. A language server
+adds 200 MB to 500 MB while it runs. Four bots that do code work at the same
+time can use about 2 GB. Linux without swap stops a process instead of making
+it slow, so the server needs a swap file of 2 GB.
+
+The second limit is the transfer cap of 500 GB. The roster sends text to
+Telegram and to Anthropic. To reach the cap, the roster must send 16 GB each
+day. After the cap, OVHcloud reduces the speed to 10 Mbps and does not charge
+more.
+
+Measure the real peak after the move, and do not estimate it now:
+
+```bash
+systemctl --user show hermes-gateway-crazydave -p MemoryPeak
+```
+
+Run this command for all four units after one week of real traffic. If the
+four peaks together pass 2.5 GB, change the plan to VPS-2, which gives 4
+vCores and 8 GB of RAM.
+
 The trade you accept is support. OVHcloud gives self-service support and no account manager. For a roster of four bots, that trade is correct.
 
 ### Best support and simplest path: Vultr `vc2-2c-4gb`, Singapore, $20.00/month
