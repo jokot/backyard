@@ -59,8 +59,6 @@ skill lesson format.
 - The shell of the Mac is zsh. zsh does not split an unquoted variable
   into words. Hold a list of arguments in an array, and expand it with
   `"${NAME[@]}"`.
-- End every commit message with
-  `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 
 ---
 
