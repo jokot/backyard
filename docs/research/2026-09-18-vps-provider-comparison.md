@@ -226,7 +226,57 @@ Nothing in the install order depends on the provider. A later move to Vultr or t
 
 ---
 
-## 8. Sources
+## 8. OVHcloud against Hostinger, head to head
+
+Hostinger advertises the lowest headline price of any international provider in this document. This section tests that claim against the plan we chose.
+
+**Hostinger sells no Singapore region for a VPS.** The Hostinger support page lists these VPS locations: France, Germany, Lithuania, the United Kingdom, India, Indonesia, Malaysia, the United States (Phoenix and Boston), and Brazil. Singapore does not appear for any plan type. The same page states that a VPS location is fixed after install. To change it, you make a backup and install again.
+
+### Specification and price
+
+| Item | OVHcloud VPS-1 | Hostinger KVM 1 | Hostinger KVM 2 |
+|---|---|---|---|
+| vCPU | **2** | 1 | **2** |
+| RAM | **4 GB** | **4 GB** | 8 GB |
+| Disk | 40 GB NVMe | 50 GB NVMe | 100 GB NVMe |
+| Transfer | 500 GB, then 10 Mbps | 4 TB | 8 TB |
+| Region for us | **Singapore** | Indonesia | Indonesia |
+| Intro price | **$4.54/mo** | $6.49/mo | $8.99/mo |
+| Renewal price | **$4.54/mo** | $11.99/mo (+85%) | $14.99/mo (+67%) |
+| Required term | 12 months | 24 months | 24 months |
+| Published SLA | 99.9% | none published | none published |
+| Free backup | daily, 24-hour window | **weekly** | **weekly** |
+| Money back | none stated | 30 days | 30 days |
+| Change location later | no | no | no |
+
+### Total cost
+
+| Plan | Cash today | Year 1 | 2 years | 4 years |
+|---|---|---|---|---|
+| **OVHcloud VPS-1** | **$54.48** | **$54.48** | **$108.96** | **$217.92** |
+| OVHcloud VPS-1 plus premium backup | $71.28 | $71.28 | $142.56 | $285.12 |
+| Hostinger KVM 1 | $155.76 | $77.88 | $155.76 | $443.52 |
+| Hostinger KVM 2 | $215.76 | $107.88 | $215.76 | $575.52 |
+
+Measured against OVHcloud with premium backup, KVM 1 costs $158.40 more across four years. KVM 2 costs $290.40 more.
+
+### What the numbers mean
+
+The Hostinger headline price is not the price you pay. The $6.49 rate is 67% off, and it requires $155.76 in cash today for a 24-month term. The rate then rises 85% to $11.99. The OVHcloud rate asks for 12 months, near $54.48, and does not rise.
+
+KVM 1 carries 1 vCPU. We specified 2 vCPU because the language servers of `peashooter` spike. KVM 2 corrects the core count, doubles RAM that we do not need, and costs twice as much.
+
+The weekly backup is the quiet risk. `kanban.db` holds the evidence cited under records 0044, 0048 and 0051. A weekly backup can lose seven days of board state. OVHcloud backs up daily at no cost, and $1.40 extends the window to 7 days.
+
+Hostinger wins on two points. It gives a 30-day money-back guarantee, and 4 TB of transfer against a 500 GB quota. The transfer difference does not reach us. We send less than 100 GB, and OVHcloud throttles the link instead of stopping it.
+
+The region question stays open and honest. Hostinger Indonesia sits closer to Jakarta than OVHcloud Singapore. This roster talks only to `api.telegram.org` and `api.anthropic.com`, so the metric that matters is transit out of the server, not ping from the desk. Singapore is the better hop for that. Hostinger runs a global network, so its Indonesia transit probably beats a domestic Indonesian host. Nobody has measured it. The 30-day guarantee is the cheap way to measure it.
+
+**Verdict: OVHcloud VPS-1 stands.** Hostinger costs more at every horizon, requires a 24-month term, backs up seven times less often, publishes no SLA, and sells no Singapore region.
+
+---
+
+## 9. Sources
 
 - [Vultr plans API](https://api.vultr.com/v2/plans) — read 18 September 2026
 - [DigitalOcean Droplet pricing](https://www.digitalocean.com/pricing/droplets)
