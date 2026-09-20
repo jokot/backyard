@@ -55,7 +55,7 @@ done
 #    0051. A path that starts with `~` or with $HOME is not a path yet, so
 #    the security scanner cannot open the script and it stops the command.
 #    Both checks read only. The soul files are never written.
-REPORT='/Users/jokot/.hermes/scripts/hermes-report.sh'
+REPORT="${HERMES_HOME:-$HOME/.hermes}/scripts/hermes-report.sh"
 for p in crazydave peashooter sunflower; do
   soul="$HOME/.hermes/profiles/$p/SOUL.md"
   if [ ! -f "$soul" ]; then
