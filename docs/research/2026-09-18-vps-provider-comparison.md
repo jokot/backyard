@@ -272,6 +272,35 @@ Hostinger wins on two points. It gives a 30-day money-back guarantee, and 4 TB o
 
 The region question stays open and honest. Hostinger Indonesia sits closer to Jakarta than OVHcloud Singapore. This roster talks only to `api.telegram.org` and `api.anthropic.com`, so the metric that matters is transit out of the server, not ping from the desk. Singapore is the better hop for that. Hostinger runs a global network, so its Indonesia transit probably beats a domestic Indonesian host. Nobody has measured it. The 30-day guarantee is the cheap way to measure it.
 
+### The Hostinger web hosting page is a different product
+
+The Hostinger page at `hostinger.com/id/harga?plan=shared_and_cloud_grouped_short` shows much lower prices. That page sells shared hosting and cloud hosting. It does not sell a VPS, and we cannot run Hermes on it.
+
+| What Hermes needs | What shared hosting and cloud hosting give |
+|---|---|
+| `hermes gateway install` writes systemd units | no access to systemd |
+| Four Python processes that poll Telegram all day | the host stops long-running processes |
+| A private Python venv, node at 545 MB, language servers at 63 MB | an environment built around PHP and hPanel |
+| About 2.0 GB of platform-bound files | web storage, not a filesystem you control |
+| Root | no plan on that page gives root |
+
+The Hostinger page states the same limit. It directs a developer who needs back-end control and more resources to a VPS instead.
+
+The Cloud Startup plan is the trap on that page. It advertises 4 CPU cores, 4 GB of RAM and 100 GB of NVMe disk for Rp116.900 per month, which renews at Rp310.900. Those numbers look sufficient. Without root, the plan cannot start one Hermes gateway.
+
+### Buy Hostinger in IDR, not in USD
+
+The Indonesian VPS page prices the same KVM plans in rupiah. The renewal rates are cheaper than the rates on the USD page.
+
+| Plan | IDR page | USD equivalent | USD page | Difference |
+|---|---|---|---|---|
+| KVM 1 promo | Rp116.900 | $6.59 | $6.49 | +1.5% |
+| KVM 1 renewal | **Rp193.900** | **$10.93** | $11.99 | **-8.8%** |
+| KVM 2 promo | Rp155.900 | $8.79 | $8.99 | -2.2% |
+| KVM 2 renewal | **Rp232.900** | **$13.13** | $14.99 | **-12.4%** |
+
+Across four years in rupiah, KVM 1 costs $420.46 and KVM 2 costs $525.98. Both stay above the OVHcloud total of $285.12, by $135.34 and by $240.86.
+
 **Verdict: OVHcloud VPS-1 stands.** Hostinger costs more at every horizon, requires a 24-month term, backs up seven times less often, publishes no SLA, and sells no Singapore region.
 
 ---
@@ -292,6 +321,8 @@ The region question stays open and honest. Hostinger Indonesia sits closer to Ja
 - [Oracle Cloud Free Tier](https://www.oracle.com/cloud/free/)
 - [Hostinger VPS hosting](https://www.hostinger.com/vps-hosting)
 - [Hostinger server locations](https://www.hostinger.com/support/1583267-where-are-hostinger-servers-located/)
+- [Hostinger VPS pricing, Indonesia](https://www.hostinger.com/id/vps-hosting)
+- [Hostinger shared and cloud hosting pricing, Indonesia](https://www.hostinger.com/id/harga)
 - [IONOS VPS](https://www.ionos.com/servers/vps)
 - [Scaleway instance pricing](https://www.scaleway.com/en/pricing/virtual-instances/)
 - [Kamatera pricing](https://www.kamatera.com/pricing/)
