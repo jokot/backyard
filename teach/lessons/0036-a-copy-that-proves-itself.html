@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 36 &mdash; A Copy That Proves Itself</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 36 &middot; Stage 6 build</p>
+
+<h1>A copy is not finished when rsync exits. It is finished when two
+measurements of the same roster agree.</h1>
+
+<p class="lede">Stage 6 moves four profiles to a server. The payload holds
+ten SQLite databases, and every one of them carries conversation history
+that exists in no other place. This lesson builds the script that proves
+the copy. It runs on the Mac before the move and on the server after it.
+The two outputs must match. <a href="0035-the-watch-for-a-task-that-stopped.html">Lesson
+35</a> read one database to find a stopped task. This lesson reads ten to
+find a lost row.</p>
+
+<h2>A number in a document is stale before anybody reads it</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The <code>tasks</code> table in <code>kanban.db</code> held 84 rows on
+  18 September 2026. It held 90 rows on 20 September 2026. Nobody made an
+  error. The bots worked for two days.</p>
+  <p>So a verification step that compares the server against a count
+  written in a plan fails for the wrong reason. The count was correct when
+  the author wrote it, and the roster moved on.</p>
+  <p>The rule that follows: compare two measurements of the same roster.
+  Never compare a measurement against a number in a document.</p>
+</div>
+
+<h2>The script prints a count and an integrity result</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>Write this file to
+  <code>hermes-config/scripts/roster-manifest.sh</code>:</p>
+<pre><code>#!/usr/bin/env bash
+# roster-manifest.sh -- print a count and an integrity result for every
+# database that Stage 6 copies. Run on the Mac before the copy, and on the
+# server after it. The two outputs must be identical.
+#
+# Keys are relative to HERMES_HOME, so the output does not name a machine.
+set -uo pipefail
+H="${HERMES_HOME:-$HOME/.hermes}"
+
+row() {  # row &lt;key&gt; &lt;db&gt; &lt;table&gt;
+  if [ -f "$2" ]; then
+    printf '%-34s %8s  %s\n' "$1" \
+      "$(sqlite3 "$2" "SELECT COUNT(*) FROM $3;" 2&gt;/dev/null || echo ERR)" \
+      "$(sqlite3 "$2" 'PRAGMA integrity_check;' 2&gt;/dev/null | head -1)"
+  else
+    printf '%-34s %8s  %s\n' "$1" absent -
+  fi
+}
+
+row "kanban/tasks"          "$H/kanban.db" tasks
+row "kanban/task_events"    "$H/kanban.db" task_events
+row "kanban/task_comments"  "$H/kanban.db" task_comments
+row "kanban/task_links"     "$H/kanban.db" task_links
+row "kanban/task_runs"      "$H/kanban.db" task_runs
+row "root/messages"         "$H/state.db"  messages
+
+for d in "$H"/profiles/*/; do
+  p="$(basename "$d")"
+  row "$p/messages"  "$d/state.db"    messages
+  row "$p/sessions"  "$d/state.db"    sessions
+  row "$p/projects"  "$d/projects.db" projects
+done</code></pre>
+  <p>Two details carry the whole design. The keys start at
+  <code>HERMES_HOME</code>, so no row names a machine. The loop reads
+  <code>profiles/*/</code>, so the script finds the profiles instead of
+  listing them.</p>
+</div>
+
+<h2>Run it, and read the eighteen rows</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+<pre><code>bash hermes-config/scripts/roster-manifest.sh</code></pre>
+  <p>Expect 18 rows. The last column reads <code>ok</code> on every row
+  except one. The counts on 20 September 2026 were 90 for
+  <code>kanban/tasks</code>, 1059 for <code>root/messages</code>, 721 for
+  <code>crazydave/messages</code>, 1815 for
+  <code>peashooter/messages</code>, 617 for
+  <code>sunflower/messages</code>, and 290 for
+  <code>torchwood/messages</code>.</p>
+  <p>Your numbers will be larger. The bots kept working. A larger number is
+  correct, and a smaller number is a defect.</p>
+</div>
+
+<h2>The row that reads absent is the important one</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>One row prints <code>absent</code> and a dash:
+  <code>sunflower/projects</code>. Three profiles hold a 44 KB
+  <code>projects.db</code>, and sunflower holds none.</p>
+  <p>An earlier version of this loop carried no <code>[ -f ]</code> test.
+  That version did not report the missing file. It created the missing
+  file, because <code>sqlite3</code> creates an empty database at any path
+  that it cannot find.</p>
+  <p>So the loop would have manufactured a file that the roster never had,
+  and the copy would have carried the new file to the server. A check that
+  writes is not a check.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>Prove that the script writes nothing:</p>
+<pre><code>ls /Users/jokot/.hermes/profiles/sunflower/projects.db</code></pre>
+  <p>Expect <code>No such file or directory</code>. Run this after the
+  manifest, never before it. The test is worth nothing in the other
+  order.</p>
+</div>
+
+<h2>The same file must run on both machines</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+<pre><code>HERMES_HOME=/Users/jokot/.hermes bash hermes-config/scripts/roster-manifest.sh | head -3</code></pre>
+  <p>Expect the same first three rows. The script reads
+  <code>${HERMES_HOME:-$HOME/.hermes}</code>, which is the idiom that the
+  upstream installer uses at <code>setup-hermes.sh:402</code>. The server
+  runs this file with no edit.</p>
+  <p>Then install the live copy and prove that the two files match:</p>
+<pre><code>cp hermes-config/scripts/roster-manifest.sh \
+   ~/.hermes/profiles/crazydave/scripts/roster-manifest.sh
+chmod +x ~/.hermes/profiles/crazydave/scripts/roster-manifest.sh
+diff hermes-config/scripts/roster-manifest.sh \
+     ~/.hermes/profiles/crazydave/scripts/roster-manifest.sh &amp;&amp; echo IDENTICAL</code></pre>
+</div>
+
+<h2>Four gates, and the one that catches a silent failure</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The manifest feeds four gates. Each gate names what stops the
+  work.</p>
+  <ol>
+    <li><strong>Gate A</strong> runs after the copy and before any bot
+    starts. Both machines print a manifest, and <code>diff</code> compares
+    them. They must be identical.</li>
+    <li><strong>Gate B</strong> runs for each bot before the next bot
+    starts. The bot must reply, and the reply must show its own
+    history.</li>
+    <li><strong>Gate C</strong> runs after the last bot answers. The roster
+    audit must stay silent, and every count must be equal or larger.</li>
+    <li><strong>Gate D</strong> runs one week later. Four memory peaks must
+    add to less than 2.5 GB.</li>
+  </ol>
+  <p>Gate A compares files. Gate B compares behavior, and that difference
+  is the point. A gateway can report <code>running</code>, reply in
+  Telegram, and still hold no history, because it opened a database in a
+  place the copy never touched. The file test passes and the bot is empty.
+  So Gate B asks the bot about its own recent work.</p>
+</div>
+
+<div class="box knowledge">
+  <span class="box-label">Why integrity_check belongs here</span>
+  <p><code>PRAGMA integrity_check</code> answers <code>ok</code> on all ten
+  databases today. A copy taken while a write-ahead log stays hot can land
+  corrupt, and it lands without an error message.</p>
+  <p>A count alone cannot find that fault. A corrupt page can hold the
+  right number of rows. The manifest prints both values on every row for
+  this reason.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does the manifest compare two live runs instead of the
+  counts written in the plan?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Counts grow while the bots keep answering messages</label>
+      <div class="reveal"><p class="feedback correct">Right. The
+      <code>tasks</code> table moved from 84 rows to 90 rows in two days.
+      Any number written in a document is stale.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">Plans cannot store large row numbers without error</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. A document
+      holds any number correctly. The roster changes the number after the
+      author writes it.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">SQLite refuses to count rows inside copied files</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong.
+      <code>COUNT(*)</code> reads a copied database correctly. The problem
+      is the reference value, not the query.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does every database path carry a <code>[ -f ]</code>
+  test?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">sqlite3 creates an empty database at a missing path</label>
+      <div class="reveal"><p class="feedback correct">Right. Without the
+      test the loop manufactures <code>sunflower/projects.db</code>, and
+      the copy then carries a file the roster never had.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">sqlite3 returns an error and then stops the loop</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong.
+      <code>sqlite3</code> reports success, because it made the file that
+      it could not find.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">sqlite3 opens the sidecar files before the main file</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. Sidecar
+      files matter for a read-only connection, which
+      <a href="0035-the-watch-for-a-task-that-stopped.html">Lesson 35</a>
+      covers. They are not the reason for this test.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">What does Gate B prove that Gate A cannot?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q3" id="q3a">
+      <label for="q3a">The running gateway reads the history that actually crossed</label>
+      <div class="reveal"><p class="feedback correct">Right. Gate A proves
+      that the files match. A gateway can still open a database somewhere
+      else and answer with no history.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q3" id="q3b">
+      <label for="q3b">The copied file holds every row from the Mac</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. Gate A
+      already proves that, because it compares a row count on both
+      machines.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q3" id="q3c">
+      <label for="q3c">The systemd unit starts again after a server reboot</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. Linger and
+      the unit files carry that property. No gate in Stage 6 tests a
+      reboot.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+
+<div class="checklist">
+  <label><input type="checkbox"> You wrote
+  <code>roster-manifest.sh</code> into <code>hermes-config/scripts/</code></label>
+  <label><input type="checkbox"> You ran it and counted 18 rows</label>
+  <label><input type="checkbox"> You saw <code>sunflower/projects</code>
+  report <code>absent</code></label>
+  <label><input type="checkbox"> You ran <code>ls</code> after the manifest
+  and saw <code>No such file or directory</code></label>
+  <label><input type="checkbox"> You ran it again with
+  <code>HERMES_HOME</code> set and saw the same rows</label>
+  <label><input type="checkbox"> You installed the live copy and saw
+  <code>IDENTICAL</code></label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="https://www.sqlite.org/pragma.html#pragma_integrity_check">The
+SQLite documentation on <code>PRAGMA integrity_check</code></a> states what
+the check reads and what it cannot find. Read it beside
+<a href="https://www.sqlite.org/wal.html">the write-ahead log page</a>,
+which explains why a copy taken from a live database needs a checkpoint
+first.</p>
+
+<p><a href="../learning-records/0051-stage-5-complete.md">Record 0051</a>
+&middot;
+<a href="../reference/glossary.html">&rarr; Glossary</a></p>
+
+<p class="ask-agent">Send me your 18 rows. Send me the <code>ls</code>
+output for sunflower. Tell me which counts are larger than the numbers in
+this lesson, and by how much. I check each value against the rule in this
+lesson, and a smaller count is the one answer that needs work.</p>
+
+<div class="nav">
+  <span><a href="0035-the-watch-for-a-task-that-stopped.html">&larr; Lesson 35</a></span>
+  <span>Lesson 36 &middot; Stage 6</span>
+  <span></span>
+</div>
+
+</body>
+</html>
