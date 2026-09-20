@@ -199,7 +199,7 @@ Mac or writes the repository.
   relative to `HERMES_HOME`, so the output never names a machine. Tasks 4,
   5 and 6 compare two runs of this script.
 
-- [ ] **Step 1: Write the script**
+- [x] **Step 1: Write the script**
 
 Write this file to `hermes-config/scripts/roster-manifest.sh`:
 
@@ -238,7 +238,7 @@ for d in "$H"/profiles/*/; do
 done
 ```
 
-- [ ] **Step 2: Run it on the Mac**
+- [x] **Step 2: Run it on the Mac**
 
 Run: `bash hermes-config/scripts/roster-manifest.sh`
 
@@ -250,7 +250,7 @@ Expected: 18 rows. The last column reads `ok` on every row except
 grow while the bots work, so a higher number is correct and a lower
 number is a defect.
 
-- [ ] **Step 3: Prove that the script makes no file**
+- [x] **Step 3: Prove that the script makes no file**
 
 Run: `ls /Users/jokot/.hermes/profiles/sunflower/projects.db`
 
@@ -258,7 +258,7 @@ Expected: `No such file or directory`. This proves the `[ -f ]` guard.
 Without the guard, `sqlite3` creates an empty database, and the copy then
 carries a file that does not exist today.
 
-- [ ] **Step 4: Prove that the script is portable**
+- [x] **Step 4: Prove that the script is portable**
 
 Run: `HERMES_HOME=/Users/jokot/.hermes bash hermes-config/scripts/roster-manifest.sh | head -3`
 
@@ -266,7 +266,7 @@ Expected: the same first three rows as Step 2. The script reads
 `${HERMES_HOME:-$HOME/.hermes}`, which is the idiom at line 402 of
 `setup-hermes.sh`. The server runs the same file with no edit.
 
-- [ ] **Step 5: Install the live copy**
+- [x] **Step 5: Install the live copy**
 
 ```bash
 cp hermes-config/scripts/roster-manifest.sh \
@@ -279,7 +279,7 @@ bash -n ~/.hermes/profiles/crazydave/scripts/roster-manifest.sh && echo "SYNTAX 
 
 Expected: `IDENTICAL` and `SYNTAX OK`.
 
-- [ ] **Step 6: Write Lesson 36**
+- [x] **Step 6: Write Lesson 36**
 
 Write `teach/lessons/0036-a-copy-that-proves-itself.html`. The lesson
 links `../assets/style.css`. It teaches one idea: a copy is not finished
@@ -304,7 +304,7 @@ Cover these points, and cite the command that proves each one:
 Link to `0035-the-watch-for-a-task-that-stopped.html` as the previous
 lesson. End with the standing reminder to ask the teacher a question.
 
-- [ ] **Step 7: Verify the lesson**
+- [x] **Step 7: Verify the lesson**
 
 ```bash
 python3 - <<'PY'
@@ -327,7 +327,7 @@ PY
 
 Expected: `UNBALANCED: none`, and every relative link marked `OK`.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add hermes-config/scripts/roster-manifest.sh teach/lessons/0036-a-copy-that-proves-itself.html
