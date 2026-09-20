@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 37 &mdash; A Machine That Keeps Running</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 37 &middot; Stage 6 build</p>
+
+<h1>A background service on Linux needs a decision about scope, and the
+default scope has a trap that a laptop never shows you</h1>
+
+<p class="lede">This lesson prepares the server before any bot moves to it.
+You run every command here yourself, because each one changes a machine
+that this roster will depend on. Nothing stops on the Mac while you work.
+All four bots keep answering Telegram throughout.
+<a href="0031-a-service-that-outlives-its-agent.html">Lesson 31</a> taught
+the same subject on the Mac, where <code>launchd</code> holds the service.
+Linux answers the question differently, and the difference can stop four
+bots at once.</p>
+
+<h2>Buy the machine</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>Buy <strong>OVHcloud VPS-1</strong> in the <strong>Singapore</strong>
+  region, with <strong>Ubuntu 24.04 LTS</strong>. The plan gives 2 vCores,
+  4 GB of RAM and 40 GB of NVMe storage, at $4.54 each month. Add premium
+  backup at $1.40 each month.</p>
+  <p>The comparison of 26 plans lives in
+  <code>docs/research/2026-09-18-vps-provider-comparison.md</code>. Read
+  section 8 if you want the reason this plan beat the cheaper headline
+  price from Hostinger.</p>
+  <p>Write down the IP address. Every command below writes
+  <code>SERVER</code> where that address belongs.</p>
+</div>
+
+<h2>The trap: a user service stops when you log out</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Hermes installs its systemd unit in user scope by default. Line 1184
+  of <code>gateway.py</code> holds the line that chooses:</p>
+<pre><code>systemctl_prefix = "systemctl " if system else "systemctl --user "</code></pre>
+  <p>System scope is the other option. Line 1813 writes the unit to
+  <code>/etc/systemd/system</code>, and line 1829 states that system scope
+  needs root.</p>
+  <p>User scope avoids root, and it carries one condition. Linux stops a
+  user scope unit when the last session of that user closes. You start four
+  bots over SSH, you close the terminal, and all four stop. The server
+  keeps running, and the roster goes silent.</p>
+  <p><strong>Linger</strong> removes that condition. It keeps a user
+  manager alive with no session open.</p>
+</div>
+
+<div class="box knowledge">
+  <span class="box-label">Hermes already knows this</span>
+  <p>Hermes does not wait for you to find the trap. Line 1955 of
+  <code>gateway.py</code> runs the command itself:</p>
+<pre><code>["loginctl", "enable-linger", username],</code></pre>
+  <p>The docstring at line 1922 states the condition. The command works
+  without root when polkit permits it. When polkit denies it, lines 1965,
+  1987 and 1996 all answer with the same fix:
+  <code>sudo loginctl enable-linger &lt;user&gt;</code>.</p>
+  <p>So why run it yourself in this lesson? Because the automatic attempt
+  happens during <code>gateway install</code> in Task 3. A denied attempt
+  there stops the install, and you then debug two things at once. Running
+  it now removes that path. The command changes nothing when linger is
+  already on.</p>
+</div>
+
+<h2>Make the user, and keep its services alive</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+<pre><code>sudo adduser --disabled-password --gecos "" hermes
+sudo loginctl enable-linger hermes
+loginctl show-user hermes | grep Linger</code></pre>
+  <p>Expect <code>Linger=yes</code>. That one line is the whole proof. If
+  it reads <code>Linger=no</code>, stop and report, because every later
+  task depends on it.</p>
+  <p>The account takes no password. You reach it with
+  <code>sudo -u hermes -i</code> from your own account, and rsync reaches
+  it over SSH.</p>
+</div>
+
+<h2>Four profiles become four independent units</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p><code>get_service_name()</code> at line 1797 builds the unit name from
+  <code>HERMES_HOME</code>. Its own docstring states the rule:</p>
+<pre><code>Default ``~/.hermes`` returns ``hermes-gateway`` (backward compatible).
+Profile ``~/.hermes/profiles/coder`` returns ``hermes-gateway-coder``.</code></pre>
+  <p>So this roster becomes four units:
+  <code>hermes-gateway-crazydave</code>,
+  <code>hermes-gateway-peashooter</code>,
+  <code>hermes-gateway-sunflower</code> and
+  <code>hermes-gateway-torchwood</code>.</p>
+  <p>Four units, not one, is what lets Task 5 start the bots one at a time
+  and stop after the first failure. It is also what lets you restart one
+  bot later while the other three keep answering.</p>
+</div>
+
+<h2>Swap is not a speed setting</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Four gateways idle at 181 MB together on the Mac. The measured values
+  are 50.2, 45.1, 43.7 and 42.1 MB. That is 4.5% of 4 GB, and it looks like
+  plenty of room.</p>
+  <p>Idle is not the number that matters. The gateway runs the agent inside
+  the same process, so memory grows while a bot answers. A language server
+  adds 200 MB to 500 MB while it runs. Four bots doing code work at the
+  same time can reach about 2 GB.</p>
+  <p>Linux with no swap does not become slow when memory runs out. It stops
+  a process. The kernel picks the process, and it tends to pick the largest
+  one, which here is a bot in the middle of answering.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+<pre><code>sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+free -h</code></pre>
+  <p>Expect the <code>Swap:</code> row to read <code>2.0Gi</code> in the
+  total column. The line added to <code>/etc/fstab</code> is what brings
+  the swap file back after a reboot.</p>
+  <p>The <code>chmod 600</code> is not decoration. <code>swapon</code>
+  refuses a swap file that other users can read.</p>
+</div>
+
+<h2>Install the one package the installer asks for by name</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+<pre><code>sudo apt-get update &amp;&amp; sudo apt-get install -y git curl ripgrep
+rg --version</code></pre>
+  <p>Expect a version line. Line 291 of <code>setup-hermes.sh</code> reads
+  <code>sudo apt install -y ripgrep &amp;&amp; INSTALLED=true</code>, so the
+  installer asks for this package by name. Install it first and the
+  installer in Task 3 has one less thing to do.</p>
+  <p>Nothing here installs Python. Line 36 of the installer pins
+  <code>PYTHON_VERSION="3.11"</code>, and uv downloads that version itself.
+  The version that Ubuntu ships has no effect.</p>
+</div>
+
+<h2>Prove the server can reach the two hosts that matter</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+<pre><code>curl -s -o /dev/null -w '%{http_code} %{time_total}s\n' https://api.telegram.org
+curl -s -o /dev/null -w '%{http_code} %{time_total}s\n' https://api.anthropic.com</code></pre>
+  <p>Expect an HTTP code and a time for each host. Both endpoints sit
+  outside Indonesia, and the quality of international transit is the real
+  thing this purchase buys.</p>
+  <p><strong>This is a stop condition.</strong> A time of more than 1
+  second to either host means you stop and report before Task 3. A slow
+  path here becomes a slow reply from every bot, every time, and no later
+  step repairs it.</p>
+</div>
+
+<h2>The tripwire you read one week later</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Gate D closes Stage 6 seven days after the move:</p>
+<pre><code>systemctl --user show hermes-gateway-crazydave -p MemoryPeak</code></pre>
+  <p>Read the value for all four units and add them. Less than 2.5 GB means
+  the plan stands. More than 2.5 GB means you change to VPS-2, which gives
+  4 vCores and 8 GB of RAM, and OVHcloud changes the plan in place.</p>
+  <p>Gate D changes the size of the machine. It is never a reason to roll
+  back, because a bot that answers correctly on a machine that is too small
+  has proved the move worked.</p>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does a user scope systemd unit need linger on a
+  server?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">Linux stops user services when the last session closes</label>
+      <div class="reveal"><p class="feedback correct">Right. You close the
+      SSH terminal and all four bots stop. Linger keeps a user manager
+      alive with no session open.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">User scope units cannot read files owned by root</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. File
+      permissions are a separate subject. The unit stops because the
+      session ends, not because a read fails.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">Systemd refuses to start more than one user unit</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. This roster
+      runs four user units at once. Line 1797 gives each profile its own
+      name.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">Hermes runs <code>enable-linger</code> itself at line 1955.
+  Why run it by hand first?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">A denied attempt during install stops the install itself</label>
+      <div class="reveal"><p class="feedback correct">Right. Polkit can
+      deny the non-root attempt. Running it now means Task 3 fails for one
+      reason at a time, never two.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">The version inside Hermes enables linger for root</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. Line 1955
+      passes <code>username</code>, which is the account that runs the
+      gateway.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">Running it twice makes the setting survive a reboot</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. Linger
+      survives a reboot after one run. The second run changes
+      nothing.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">Four gateways idle at 181 MB on 4 GB of RAM. Why add 2 GB of
+  swap?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q3" id="q3a">
+      <label for="q3a">Linux with no swap stops a process instead of slowing</label>
+      <div class="reveal"><p class="feedback correct">Right. The gateway
+      runs the agent in the same process, so memory grows while a bot
+      answers. The kernel stops the largest process.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q3" id="q3b">
+      <label for="q3b">Swap makes the SQLite databases read and write faster</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. Swap is
+      slower than RAM in every case. It buys survival, never
+      speed.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q3" id="q3c">
+      <label for="q3c">The idle figure of 181 MB was measured on the wrong machine</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. The figure
+      is correct for the Mac and for idle. Idle is simply not the number
+      that decides this.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+
+<div class="checklist">
+  <label><input type="checkbox"> You bought VPS-1 in Singapore with Ubuntu
+  24.04 and wrote down the IP address</label>
+  <label><input type="checkbox"> <code>loginctl show-user hermes</code>
+  reports <code>Linger=yes</code></label>
+  <label><input type="checkbox"> <code>free -h</code> reports
+  <code>2.0Gi</code> of swap</label>
+  <label><input type="checkbox"> You added the
+  <code>/swapfile</code> line to <code>/etc/fstab</code></label>
+  <label><input type="checkbox"> <code>rg --version</code> prints a version
+  line</label>
+  <label><input type="checkbox"> Both <code>curl</code> checks answer in
+  less than 1 second</label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="https://www.freedesktop.org/software/systemd/man/latest/loginctl.html">The
+<code>loginctl</code> manual page</a> defines
+<code>enable-linger</code> in its own words. Read it beside
+<a href="https://www.freedesktop.org/software/systemd/man/latest/user@.service.html">the
+page for <code>user@.service</code></a>, which is the unit that linger
+keeps alive.</p>
+
+<p><a href="0036-a-copy-that-proves-itself.html">Lesson 36</a>
+&middot;
+<a href="0031-a-service-that-outlives-its-agent.html">Lesson 31</a>
+&middot;
+<a href="../reference/glossary.html">&rarr; Glossary</a></p>
+
+<p class="ask-agent">Send me the <code>Linger</code> line, the
+<code>free -h</code> output, and both <code>curl</code> timings. The
+timings are the ones I want most, because they decide whether Task 3 starts
+at all. Ask me anything that this lesson left unclear before you buy the
+machine, not after.</p>
+
+<div class="nav">
+  <span><a href="0036-a-copy-that-proves-itself.html">&larr; Lesson 36</a></span>
+  <span>Lesson 37 &middot; Stage 6</span>
+  <span></span>
+</div>
+
+</body>
+</html>

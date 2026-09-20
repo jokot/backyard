@@ -96,8 +96,10 @@ becomes four units named `hermes-gateway-<profile>`.
 **User scope is the default, and it needs linger.** Line 1184 of
 `gateway.py` reads
 `systemctl_prefix = "systemctl " if system else "systemctl --user "`.
-Line 2006 names the fix for a missing user session:
-`sudo loginctl enable-linger <user>`.
+Hermes tries to enable linger itself. Line 1955 runs
+`loginctl enable-linger <user>`, which works without root when polkit
+permits it. Lines 1965, 1987 and 1996 name `sudo loginctl enable-linger
+<user>` as the fix when that attempt fails.
 
 **The gateway runs the cron scheduler.** Line 4799 of `gateway.py` prints
 `Messaging platforms + cron scheduler`. crazydave owns both jobs, which
@@ -377,8 +379,12 @@ Expected: `Linger=yes`.
 
 A unit in user scope stops when the user logs out, unless linger is on.
 Line 1184 of `gateway.py` shows that user scope is the default, and line
-2006 names `sudo loginctl enable-linger` as the fix. Without this step,
-all four bots stop when the SSH session closes.
+1955 runs `loginctl enable-linger` during `gateway install`, and lines
+1965, 1987 and 1996 name the `sudo` form as the fix when that attempt is
+denied. Run the command here anyway. It removes a failure path from Task
+3, because a denied attempt there stops the install.
+
+Without linger, all four bots stop when the SSH session closes.
 
 - [ ] **Step 3: Add the swap file**
 
@@ -437,8 +443,9 @@ Cover these points:
   holds the line that chooses. Line 1813 shows that system scope writes to
   `/etc/systemd/system`, and line 1829 shows that system scope needs root.
 - A unit in user scope stops at logout. `loginctl enable-linger` keeps the
-  user session alive, and line 2006 of `gateway.py` names that command in
-  its own error text.
+  user session alive. Line 1955 of `gateway.py` shows that Hermes runs
+  `loginctl enable-linger` itself, and lines 1965, 1987 and 1996 name the
+  `sudo` form as the fix when polkit denies the attempt.
 - `get_service_name()` at line 1797 builds the unit name from
   `HERMES_HOME`, so four profiles become four independent units. One bot
   can restart while three keep answering.
