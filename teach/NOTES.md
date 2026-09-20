@@ -216,6 +216,12 @@ installed three scripts, created two cron jobs and edited three soul
 files. The constraint still stands for later stages until Jokot lifts it
 again.
 
+Stage 6 scoped that constraint to the server on 20 September 2026. Jokot
+runs every command that changes the server. The controller runs commands
+on the Mac and in the repository without asking first. The project now
+has two machines, so the word "machine" no longer names one thing. See
+record 0052.
+
 A path that starts with a tilde is not a path yet. The security scanner
 opens a nested script before the command runs, so it must resolve the
 path itself. A shell expands the tilde, and an agent never gets that far.

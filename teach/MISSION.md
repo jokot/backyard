@@ -38,8 +38,10 @@ laptop.
 ## Constraints
 - Build the real thing. Every lesson produces a working piece of the
   `plants` roster, never a toy exercise.
-- Jokot runs every command that changes the machine, then reports the
-  output. A lesson states what output proves the step.
+- Jokot runs every command that changes the server, then reports the
+  output. Claude runs commands on the Mac and in the repository without
+  asking first. A lesson states what output proves the step. Record 0052
+  holds the reason for the two scopes.
 - Ground every claim in real output or real source. A diagnosis without
   evidence is a guess, and learning record 0035 shows the cost.
 - Turn every defect into a fix and a learning record. Never write a
