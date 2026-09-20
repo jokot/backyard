@@ -114,13 +114,20 @@ So the gateways stop first. Then each database gets a checkpoint. Only then
 does the copy run:
 
 ```bash
-sqlite3 ~/.hermes/state.db 'PRAGMA wal_checkpoint(TRUNCATE);'
-sqlite3 ~/.hermes/kanban.db 'PRAGMA wal_checkpoint(TRUNCATE);'
-for p in crazydave peashooter sunflower torchwood; do
-  sqlite3 ~/.hermes/profiles/$p/state.db 'PRAGMA wal_checkpoint(TRUNCATE);'
-  sqlite3 ~/.hermes/profiles/$p/projects.db 'PRAGMA wal_checkpoint(TRUNCATE);'
+for db in ~/.hermes/state.db ~/.hermes/kanban.db \
+          ~/.hermes/profiles/*/state.db ~/.hermes/profiles/*/projects.db; do
+  [ -f "$db" ] && sqlite3 "$db" 'PRAGMA wal_checkpoint(TRUNCATE);'
 done
 ```
+
+Test each path with `[ -f ]` first. sunflower has no `projects.db`, and
+`sqlite3` makes an empty database at any path that it cannot find. Without
+the test, the checkpoint creates a file that does not exist today and then
+the copy carries it to the server.
+
+The databases are `state.db` and `kanban.db` at the root, `state.db` in all
+four profiles, and `projects.db` in three profiles. crazydave holds 10 MB,
+peashooter 21 MB, sunflower 10 MB and torchwood 5.1 MB of `state.db`.
 
 Stopping the gateways first also opens the window that the Telegram cutover
 needs. Section 5 gives the reason.
@@ -294,116 +301,180 @@ A file from this group tells a new gateway on Linux that it already runs.
 
 ## Section 5 — The cutover sequence
 
-### The constraint that shapes this section
+**The decision is one sitting.** All four bots move in one window. An
+earlier draft ran torchwood alone for one day first.
+
+### What the constraint is, and what the decision costs
 
 `kanban.db` is one shared file that holds 84 rows in the `tasks` table.
 peashooter owns 40, sunflower owns 23, crazydave owns 21, and 6 have no
-owner. The file is local SQLite with no remote access.
+owner. The file is local SQLite with no remote access. So crazydave on the
+server and peashooter on the Mac write to two different copies, and the
+board splits with no way to merge it. **The three bots that write to the
+board cannot run on two machines at once.**
 
-So crazydave on the server and peashooter on the Mac write to two different
-copies, and the board splits with no way to merge it. **The three bots that
-write to the board cannot run on two machines at once.**
+torchwood owns 0 rows, runs no cron job, and its SOUL.md never names the
+report script. torchwood stays the first bot to start, and it is the gate
+for the other three.
 
-torchwood owns 0 rows. This makes torchwood the pilot.
+One sitting costs the soak. A day of one bot on the server finds the faults
+that take hours to appear: memory that grows, a systemd unit that stops
+after some time, or transit that gets worse at a different hour. In one
+sitting these faults appear with all four bots on the server and not with
+one. The rollback path is the answer to this cost, and the last part of this
+section keeps it armed.
 
 ### Two facts that make the move safe
 
 **A report crosses machines.** The line `hermes-report.sh:49` calls
 `hermes -p "$PROFILE" send --to telegram`. The report goes out through the
 Telegram API under the bot token of the profile, and not through a local
-channel. A bot on the server reports correctly while the others stay on the
-Mac.
+channel.
 
 **An accidental overlap repairs itself.** Two gateways on one bot token
 produce a Telegram 409. Hermes finds this at `adapter.py:1312`, and the log
 line at `adapter.py:2295` states the result: the gateway stays alive while
-the retry for the conflict runs. The second gateway does not stop. It retries
-and it takes over when the first one stops. Every step below reverses when
-one side stops.
+the retry for the conflict runs. The second gateway does not stop. It
+retries and it takes over when the first one stops.
 
-### Phase 1 — torchwood, the pilot
+**No cron job fires during the window.** The gateway runs the cron
+scheduler, which `gateway.py:4799` states. crazydave owns the only two jobs,
+which are `roster-audit` at 09:00 each day and `blocked-watch` every 60
+minutes. Both stop when the gateway of crazydave stops.
 
-torchwood carries 7 MB, owns 0 rows on the board, runs no cron job, and its
-SOUL.md never names the report script. So torchwood needs no rewrite of a
-path.
+### Step 0 — The warm pass, before anything stops
+
+49.6 MB of the 109 MB payload is static. It is `profiles/sunflower/skills`
+at 43 MB and the root `skills` at 6.6 MB. Skills do not change while a bot
+answers, so this bulk crosses while all four bots still run:
 
 ```bash
-# 1. Mac: stop it, which releases the Telegram token
-hermes -p torchwood gateway stop
+rsync -av -e ssh ~/.hermes/skills hermes@SERVER:~/.hermes/
+rsync -av -e ssh ~/.hermes/profiles/sunflower/skills \
+  hermes@SERVER:~/.hermes/profiles/sunflower/
+```
 
-# 2. Mac: checkpoint the databases of this profile (Section 2)
-sqlite3 ~/.hermes/profiles/torchwood/state.db 'PRAGMA wal_checkpoint(TRUNCATE);'
-sqlite3 ~/.hermes/profiles/torchwood/projects.db 'PRAGMA wal_checkpoint(TRUNCATE);'
+This step takes 45% of the payload out of the window. rsync sends only the
+changes on a second pass over the same path, so the cold copy below stays
+short. Nothing stops, and nothing breaks in Telegram.
 
-# 3. Mac to server: copy the payload
-rsync -av -e ssh \
-  --exclude='bin/' --exclude='lsp/' --exclude='logs/' --exclude='cache/' \
-  --exclude='models_dev_cache.json' --exclude='cron/output/' \
-  --exclude='gateway.lock' --exclude='gateway.pid' --exclude='gateway_state.json' \
-  --exclude='processes.json' --exclude='.curator_state' \
-  ~/.hermes/profiles/torchwood/ hermes@SERVER:~/.hermes/profiles/torchwood/
+Section 3 also completes before the window. The server runs Hermes with zero
+profiles and holds no secret.
 
-# 4. Server: install the unit and start it
+### Step 1 — Stop all four
+
+Stop all four together, so that the board cannot split:
+
+```bash
+for p in crazydave peashooter sunflower torchwood; do
+  hermes -p "$p" gateway stop
+done
+```
+
+The roster is now silent. The window starts here.
+
+### Step 2 — Checkpoint every database
+
+Run the loop from Section 2. This must come after the stop and before the
+copy.
+
+### Step 3 — The cold copy
+
+```bash
+EX=(--exclude='bin/' --exclude='lsp/' --exclude='logs/' --exclude='cache/'
+    --exclude='models_dev_cache.json' --exclude='cron/output/'
+    --exclude='gateway.lock' --exclude='gateway.pid'
+    --exclude='gateway_state.json' --exclude='processes.json'
+    --exclude='.curator_state')
+
+# The shared files at the root
+rsync -av -e ssh ~/.hermes/kanban.db ~/.hermes/kanban ~/.hermes/state.db \
+  ~/.hermes/scripts ~/.hermes/memories ~/.hermes/config.yaml \
+  ~/.hermes/SOUL.md ~/.hermes/.env ~/.hermes/auth.json \
+  hermes@SERVER:~/.hermes/
+
+# Each profile
+for p in crazydave peashooter sunflower torchwood; do
+  rsync -av -e ssh "${EX[@]}" ~/.hermes/profiles/$p/ \
+    hermes@SERVER:~/.hermes/profiles/$p/
+done
+```
+
+**Hold the excludes in an array, and expand the array with `"${EX[@]}"`.**
+A plain string with `$EX` fails on this Mac. The shell of the Mac is zsh,
+and zsh does not split an unquoted variable into separate words. Eleven
+excludes then arrive at rsync as one argument, and rsync ignores all of
+them. A test of the string form copied `bin/`, `lsp/` and `gateway.pid`,
+which are three of the paths that it must exclude. The same string works in
+bash, so the command gives one result on the Mac and a different result on
+the server. The array gives the same correct result in both shells.
+
+This copy runs on the Mac. The string form sends the 2.0 GB of arm64 files
+that Section 2 keeps on the Mac, and those files cannot run on Linux.
+
+Write no slash at the end of a directory in the first command. A slash at
+the end of `kanban/` copies the contents of `kanban` into `~/.hermes/`, and
+it does not copy the directory. The copy of one profile is different,
+because a slash at the end of both sides is correct there.
+
+Use `rsync -a` and never `rsync -r`. The archive flag keeps the mode `0600`
+on `.env` and on `auth.json`. Do not use `--delete`, because the server
+holds the warm pass from Step 0.
+
+### Step 4 — Rewrite the four paths, on the server
+
+```bash
+sed -i 's#/Users/jokot/\.hermes/#/home/hermes/.hermes/#g' \
+  ~/.hermes/profiles/{crazydave,peashooter,sunflower}/SOUL.md
+bash ~/.hermes/profiles/crazydave/scripts/roster-audit.sh   # silence is a pass
+```
+
+The audit builds `$REPORT` from the machine that runs it, so the audit
+passes on the server only after a correct rewrite. Section 4 holds the
+reason that these four lines keep the full path.
+
+### Step 5 — Start torchwood, and gate on it
+
+```bash
 hermes -p torchwood gateway install
 hermes -p torchwood gateway start
-
-# 5. Server: prove that it is alive
 hermes -p torchwood gateway status
 ```
+
+Then send torchwood a message in Telegram and wait for the reply. **Do not
+start another bot until that reply arrives.** torchwood proves the install,
+the systemd unit, the path to Telegram and the quality of the transit, and
+it owns 0 rows on the board. A failure here costs nothing.
 
 The subcommands `install`, `start`, `stop` and `status` are all in
 `hermes gateway --help` on the Mac today.
 
-Then send torchwood a message in Telegram and confirm the reply.
+### Step 6 — Start the other three, one at a time
 
-Use `rsync -a` and never `rsync -r`. The archive flag keeps the mode `0600`
-on `.env` and on `auth.json`.
+Confirm each bot in Telegram before the next one starts:
 
-Run torchwood alone for one day. This proves the install, the systemd unit,
-the path to Telegram and the quality of the transit, before anything that
-owns a task board moves.
+1. **crazydave**, because it owns the board and both cron jobs.
+2. **peashooter**.
+3. **sunflower**.
 
-### Phase 2 — The three bots of the board, in one window
-
-Stop all three together, so that the board cannot split. Then start them one
-at a time, so that a failure stays easy to find.
-
-```bash
-# Mac: stop all three
-hermes -p crazydave gateway stop && hermes -p peashooter gateway stop \
-  && hermes -p sunflower gateway stop
-
-# Mac: checkpoint every database (Section 2 gives the full loop)
-
-# Mac to server: the shared files, then each profile with the excludes above
-rsync -av -e ssh ~/.hermes/kanban.db ~/.hermes/kanban ~/.hermes/state.db \
-  ~/.hermes/skills ~/.hermes/scripts ~/.hermes/memories \
-  ~/.hermes/config.yaml ~/.hermes/SOUL.md ~/.hermes/.env ~/.hermes/auth.json \
-  hermes@SERVER:~/.hermes/
-```
-
-Write no slash at the end of a directory in this command. A slash at the end
-of `kanban/` copies the contents of `kanban` into `~/.hermes/` and it does
-not copy the directory. The copy of one profile in Phase 1 is different,
-because a slash at the end of both sides is correct there.
-
-On the server, run the rewrite from Section 4 and its check. Then start the
-bots in this order, and confirm each one in Telegram before the next one:
-**crazydave**, because it owns the board and the cron jobs, then
-**peashooter**, then **sunflower**.
+One at a time keeps a failure easy to find. The window closes when
+sunflower answers.
 
 ### One effect to expect
 
 An edit to a SOUL.md file makes every running session report `prompt-drift`
-until its gateway restarts. The effect is harmless, and it fixes the order of
-the steps. Copy first, rewrite second, start the gateway third. Never rewrite
-a SOUL.md file under a running bot.
+until its gateway restarts. The effect is harmless, and it fixes the order
+of the steps. Copy first, rewrite second, start the gateway third. Never
+rewrite a SOUL.md file under a running bot.
 
-### What stays on the Mac
+### What stays armed
 
-Every gateway stays installed and stopped. This is the path for a rollback.
+Every gateway on the Mac stays installed and stopped. No file on the Mac is
+deleted in this stage. To roll back one bot, stop it on the server and start
+it on the Mac.
 
----
+Section 6 holds the test that decides a rollback, and the rule for the
+board. It is not designed yet.
 
 ## Section 6 — Verification and rollback
 
