@@ -1,7 +1,6 @@
 # Stage 6 — The server move, design
 
-**Status: in progress.** Sections 1 to 5 are approved. Section 6, which
-covers verification and rollback, is not designed yet.
+**Status: complete.** Sections 1 to 6 are written and approved.
 
 **Goal.** Move all four Hermes profiles from the Mac to a rented server.
 The profiles are crazydave, peashooter, sunflower and torchwood.
@@ -306,9 +305,11 @@ earlier draft ran torchwood alone for one day first.
 
 ### What the constraint is, and what the decision costs
 
-`kanban.db` is one shared file that holds 84 rows in the `tasks` table.
-peashooter owns 40, sunflower owns 23, crazydave owns 21, and 6 have no
-owner. The file is local SQLite with no remote access. So crazydave on the
+`kanban.db` is one shared file. On 20 September 2026 it held 90 rows in the
+`tasks` table. peashooter owns 40, sunflower owns 23, crazydave owns 21, and
+6 have no owner. The count grows while the bots work, so Section 6 captures
+it on the day of the move and does not read it from this page. The file is
+local SQLite with no remote access. So crazydave on the
 server and peashooter on the Mac write to two different copies, and the
 board splits with no way to merge it. **The three bots that write to the
 board cannot run on two machines at once.**
@@ -473,9 +474,186 @@ Every gateway on the Mac stays installed and stopped. No file on the Mac is
 deleted in this stage. To roll back one bot, stop it on the server and start
 it on the Mac.
 
-Section 6 holds the test that decides a rollback, and the rule for the
-board. It is not designed yet.
+Section 6 holds the gate that each step must pass, and the rule for the
+board during a rollback.
 
 ## Section 6 — Verification and rollback
 
-Not designed yet.
+### Capture the counts, and do not write them down in advance
+
+The `tasks` table held 84 rows on 18 September 2026 and holds 90 rows on
+20 September 2026. The bots keep working, so every count in this design is
+stale on the day somebody reads it.
+
+So verification compares two measurements of the same roster. It never
+compares a measurement against a number in a document.
+
+### The manifest script
+
+This script prints one row for each database that Stage 6 copies. Keys are
+relative to `HERMES_HOME`, so the output never names a machine. The script
+tests each path with `[ -f ]` first, which is the same guard that the
+checkpoint loop in Section 2 needs:
+
+```bash
+#!/usr/bin/env bash
+# roster-manifest.sh -- print a count and an integrity result for every
+# database that Stage 6 copies. Run on the Mac before the copy, and on the
+# server after it. The two outputs must be identical.
+#
+# Keys are relative to HERMES_HOME, so the output does not name a machine.
+set -uo pipefail
+H="${HERMES_HOME:-$HOME/.hermes}"
+
+row() {  # row <key> <db> <table>
+  if [ -f "$2" ]; then
+    printf '%-34s %8s  %s\n' "$1" \
+      "$(sqlite3 "$2" "SELECT COUNT(*) FROM $3;" 2>/dev/null || echo ERR)" \
+      "$(sqlite3 "$2" 'PRAGMA integrity_check;' 2>/dev/null | head -1)"
+  else
+    printf '%-34s %8s  %s\n' "$1" absent -
+  fi
+}
+
+row "kanban/tasks"          "$H/kanban.db" tasks
+row "kanban/task_events"    "$H/kanban.db" task_events
+row "kanban/task_comments"  "$H/kanban.db" task_comments
+row "kanban/task_links"     "$H/kanban.db" task_links
+row "kanban/task_runs"      "$H/kanban.db" task_runs
+row "root/messages"         "$H/state.db"  messages
+
+for d in "$H"/profiles/*/; do
+  p="$(basename "$d")"
+  row "$p/messages"  "$d/state.db"    messages
+  row "$p/sessions"  "$d/state.db"    sessions
+  row "$p/projects"  "$d/projects.db" projects
+done
+```
+
+The script ran on the Mac on 20 September 2026 and gave 18 rows. The row
+`sunflower/projects` printed `absent`, and the script made no file at that
+path. The output of `HERMES_HOME=/Users/jokot/.hermes` was identical, which
+shows that the script carries to the server.
+
+### Gate A — the copy is faithful
+
+Run Gate A after Step 3 of Section 5, and before any bot starts.
+
+```bash
+# Mac, after the checkpoint in Step 2
+bash ~/roster-manifest.sh > ~/manifest-mac.txt
+
+# Server, after the cold copy in Step 3
+bash ~/roster-manifest.sh > ~/manifest-server.txt
+
+# Mac
+scp hermes@SERVER:~/manifest-server.txt ~/
+diff ~/manifest-mac.txt ~/manifest-server.txt && echo "GATE A PASS"
+```
+
+The two files must be identical. A difference in a count means that the copy
+lost rows. A result other than `ok` in the last column means that the copy is
+corrupt. Both faults are cheap here, because no bot has started.
+
+### Gate B — each bot answers, and each bot remembers
+
+Run Gate B once for each bot, in Step 5 and in Step 6, before the next bot
+starts.
+
+1. Run `hermes -p <profile> gateway status` and read the running state.
+2. Send the bot a message in Telegram and wait for the reply.
+3. Ask the bot about its own recent work.
+
+Step 3 is the one that matters. A bot that answers but does not remember has
+an empty `state.db`, and the copy of that file failed. crazydave holds 721
+messages, peashooter 1815, sunflower 617 and torchwood 290. A reply that
+shows no history means that Gate B failed, whatever the gateway status says.
+
+**If Gate B fails, do not start the next bot.**
+
+### Gate C — the roster is whole
+
+Run Gate C after sunflower answers in Step 6.
+
+```bash
+bash ~/.hermes/profiles/crazydave/scripts/roster-audit.sh   # silence is a pass
+bash ~/roster-manifest.sh
+```
+
+The audit checks the soul files and the report script, so it also proves the
+rewrite in Step 4. Compare the manifest against `manifest-mac.txt` by hand.
+Do not use `diff` here. The bots now answer real messages, so each count must
+be equal to the count on the Mac or more than it. A count that is less than
+the count on the Mac means lost history.
+
+Then wait 60 minutes and confirm that `blocked-watch` fired. crazydave owns
+both cron jobs, and the gateway runs the cron scheduler.
+
+### Gate D — one week later
+
+```bash
+for p in crazydave peashooter sunflower torchwood; do
+  systemctl --user show hermes-gateway-$p -p MemoryPeak
+done
+```
+
+Add the four peaks. A sum of more than 2.5 GB means that the plan changes to
+VPS-2, which gives 4 vCores and 8 GB of RAM. Section 1 holds the reason.
+This result changes the plan, and it is not a reason for a rollback.
+
+### Rollback, case 1 — inside the window
+
+Case 1 applies while no bot has answered a real message. The state on the
+server is a copy, and nothing on the server is worth keeping.
+
+```bash
+# Server
+for p in crazydave peashooter sunflower torchwood; do
+  hermes -p "$p" gateway stop
+done
+
+# Mac
+for p in crazydave peashooter sunflower torchwood; do
+  hermes -p "$p" gateway start
+done
+```
+
+Copy nothing back. A failure of Gate A is the common reason to be here.
+
+### Rollback, case 2 — after the window
+
+Case 2 applies after any bot answers a real message. The server now holds
+messages and board rows that the Mac does not have. **The server is the
+authority, and the Mac is stale.**
+
+A rollback is then the same procedure as Section 5, in the other direction.
+Stop the bots on the server, run the checkpoint loop on the server, copy the
+databases to the Mac, and start the bots on the Mac. Gate A runs again, with
+the two files in the other order.
+
+The error to avoid is a start of the Mac gateways without a copy. That
+action does not roll back. That action creates a second roster that answers
+from old history, and it forks the board.
+
+### The rule for the board during a rollback
+
+**The three bots that write to the board roll back together.** These bots are
+crazydave, peashooter and sunflower.
+
+`kanban.db` is one file with no remote access. A rollback of one of these
+bots, while the other two stay on the server, is the same split that
+Section 5 exists to prevent. A rollback is not an exception to that rule.
+
+**torchwood rolls back alone.** torchwood owns 0 of the 90 rows in `tasks`.
+torchwood is named in 2 of the 884 rows in `task_events`, and another bot
+wrote both of those rows. So torchwood moves in either direction on its own.
+
+### What each failure costs
+
+| Failure | Action |
+|---|---|
+| Gate A fails | Case 1. Copy nothing back. Find the fault and copy again. |
+| Gate B fails for torchwood | Stop torchwood on the server. The other three stay on the Mac. |
+| Gate B fails for a board bot | Case 1 or case 2 for all three board bots together. |
+| Gate C finds a count that is too low | Case 2. The server lost rows that the Mac still holds. |
+| Gate D sums to more than 2.5 GB | Change the plan to VPS-2. Do not roll back. |
