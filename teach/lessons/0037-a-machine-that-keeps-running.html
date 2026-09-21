@@ -10,118 +10,141 @@
 
 <p class="kicker">Lesson 37 &middot; Stage 6 build</p>
 
-<h1>A background service on Linux needs a decision about scope, and the
-default scope has a trap that a laptop never shows you</h1>
+<h1>Prepare the server, and keep the services alive after you
+disconnect</h1>
 
-<p class="lede">This lesson prepares the server before any bot moves to it.
-You run every command here yourself, because each one changes a machine
-that this roster will depend on. Nothing stops on the Mac while you work.
-All four bots keep answering Telegram throughout.
-<a href="0031-a-service-that-outlives-its-agent.html">Lesson 31</a> taught
-the same subject on the Mac, where <code>launchd</code> holds the service.
-Linux answers the question differently, and the difference can stop four
-bots at once.</p>
+<p class="lede">This lesson prepares the server before the move of any
+bot. You run every command yourself, because each command changes the
+server. Nothing stops on the Mac. All four bots continue to answer
+Telegram while you work.
+<a href="0031-a-service-that-outlives-its-agent.html">Lesson 31</a>
+taught the same subject on the Mac, where <code>launchd</code> holds the
+service. Linux gives a different answer. The difference can stop four
+bots at the same time.</p>
 
 <h2>Buy the machine</h2>
 
 <div class="box skill">
   <span class="box-label">Skill &mdash; hands on</span>
   <p>Buy <strong>OVHcloud VPS-1</strong> in the <strong>Singapore</strong>
-  region, with <strong>Ubuntu 24.04 LTS</strong>. The plan gives 2 vCores,
-  4 GB of RAM and 40 GB of NVMe storage, at $4.54 each month. Add premium
-  backup at $1.40 each month.</p>
+  region. Select <strong>Ubuntu 24.04 LTS</strong> as the image. The plan
+  gives 2 vCores, 4 GB of RAM and 40 GB of NVMe storage. The price is
+  $4.54 each month. Add premium backup at $1.40 each month.</p>
   <p>The comparison of 26 plans lives in
   <code>docs/research/2026-09-18-vps-provider-comparison.md</code>. Read
-  section 8 if you want the reason this plan beat the cheaper headline
-  price from Hostinger.</p>
-  <p>Write down the IP address. Every command below writes
-  <code>SERVER</code> where that address belongs.</p>
+  section 8 for the reason that this plan wins against the lower price
+  from Hostinger.</p>
+</div>
+
+<h2>The word SERVER is a placeholder</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The commands in this lesson show the word <code>SERVER</code>. The
+  word <code>SERVER</code> is a placeholder. Replace the word
+  <code>SERVER</code> with the IPv4 address of your VPS each time that you
+  type a command.</p>
+  <p>An example makes the rule concrete. The IPv4 address
+  <code>51.79.200.14</code> gives this command:</p>
+<pre><code>ssh ubuntu@51.79.200.14</code></pre>
+  <p>The same rule applies to <code>PASTE-THE-KEY-LINE-HERE</code> in the
+  section about the SSH key. Both words are placeholders, and neither word
+  works as typed.</p>
 </div>
 
 <h2>Where each command runs</h2>
 
 <div class="box knowledge">
   <span class="box-label">Knowledge</span>
-  <p>One command in this lesson runs on the Mac. It is the
-  <code>ssh</code> that opens a session on the server. Every other
-  command runs inside that session, on the server.</p>
-  <p>The commands below write <code>sudo</code>, which the
-  <code>ubuntu</code> account needs. Remove the word <code>sudo</code>
-  from each line when you log in as <code>root</code>.</p>
-  <p>The two <code>curl</code> checks measure the route from Singapore to
-  Telegram and from Singapore to Anthropic. A run on the Mac measures your
-  home connection instead, and that number decides nothing.</p>
+  <p>One command in this lesson runs on the Mac. That command is the
+  <code>ssh</code> that opens a session on the server. Every other command
+  runs inside that session, on the server.</p>
+  <p>Most commands in this lesson start with <code>sudo</code>. The
+  <code>ubuntu</code> account needs <code>sudo</code>. The
+  <code>root</code> account does not. Remove the word <code>sudo</code>
+  from each command when you connect as <code>root</code>.</p>
+  <p>The two <code>curl</code> commands measure the route from Singapore
+  to Telegram, and the route from Singapore to Anthropic. A
+  <code>curl</code> command on the Mac measures your home connection
+  instead. The home number decides nothing.</p>
 </div>
 
 <h2>Reach the server, step by step</h2>
 
 <div class="box skill">
   <span class="box-label">Skill &mdash; hands on</span>
-  <p>Do these steps in order, in a terminal on the Mac.</p>
+  <p>Do these seven steps in order, in a terminal on the Mac:</p>
   <ol>
     <li><strong>Find the address.</strong> Open the OVHcloud control panel
-    at <code>www.ovh.com/manager</code>, select <strong>Bare Metal Cloud
-    &rarr; Virtual Private Servers</strong>, and select your VPS. The
-    summary page shows <strong>IPv4</strong>. Write that address down.
-    Everything below writes <code>SERVER</code> where the address
-    belongs.</li>
+    at <code>www.ovh.com/manager</code>. Select <strong>Bare Metal Cloud
+    &rarr; Virtual Private Servers</strong>, then select your VPS. The
+    summary page shows a field with the name <strong>IPv4</strong>. Record
+    that address.</li>
 
-    <li><strong>Find the login.</strong> OVHcloud sends one mail with the
-    subject <em>Your VPS is ready</em>. The account is <code>ubuntu</code>
-    when you gave an SSH key at order time. The account is
-    <code>root</code> with a password in that mail when you did not.</li>
+    <li><strong>Find the account name.</strong> OVHcloud sends one mail
+    with the subject <em>Your VPS is ready</em>. The account is
+    <code>ubuntu</code> when you gave an SSH key at order time. The
+    account is <code>root</code> when you did not. The mail holds the
+    password for the <code>root</code> account.</li>
 
     <li><strong>Open the first session.</strong> Run one of these two
-    commands, and use the account from step 2:
+    commands. Use the account from step 2:
 <pre><code>ssh ubuntu@SERVER
 ssh root@SERVER</code></pre>
     </li>
 
-    <li><strong>Accept the host key, once.</strong> The first connection
-    prints a fingerprint and asks a question:
+    <li><strong>Accept the host key.</strong> The first connection prints
+    a fingerprint and asks a question:
 <pre><code>The authenticity of host 'SERVER' can't be established.
 ED25519 key fingerprint is SHA256:&hellip;
 Are you sure you want to continue connecting (yes/no/[fingerprint])?</code></pre>
     Type <code>yes</code> and press Return. SSH writes the key into
-    <code>~/.ssh/known_hosts</code> and never asks again for this server.
-    A typed <code>y</code> is not enough, because SSH wants the whole
-    word.</li>
+    <code>~/.ssh/known_hosts</code>. SSH does not ask the question again
+    for this server. A single letter <code>y</code> does not answer the
+    question, because SSH reads the full word.</li>
 
-    <li><strong>Change the root password, when the mail gave you
-    one.</strong> Ubuntu asks for the old password and then for a new one
-    twice. Save the new password in your password manager before you go
-    on, because no later step can recover it.</li>
+    <li><strong>Change the password of the root account.</strong> Do this
+    step only when the mail gave you a password. Ubuntu asks for the old
+    password, then for a new password two times. Save the new password in
+    your password manager. No later step can recover a lost
+    password.</li>
 
-    <li><strong>Confirm the machine.</strong> Run these two commands and
-    read the answers:
+    <li><strong>Confirm the machine.</strong> Run these two commands:
 <pre><code>hostname -I
 lsb_release -d</code></pre>
-    Expect your own IPv4 address, and expect a description line that
-    names <code>Ubuntu 24.04</code>. A different version means the order
-    used the wrong image, and you stop here.</li>
+    The first command prints your own IPv4 address. The second command
+    prints a line that names <code>Ubuntu 24.04</code>. A different
+    version means that the order used the wrong image. Stop at this step
+    and report the version.</li>
 
-    <li><strong>Leave the session open.</strong> Every later command in
-    this lesson runs in this session. The next section adds your Mac key,
-    and you test that key from a <em>second</em> terminal while this first
-    session stays open.</li>
+    <li><strong>Keep the session open.</strong> Every later command in
+    this lesson runs in this session. The next section adds your Mac key
+    to the server. You test that key from a second terminal, and the first
+    session stays open during the test.</li>
   </ol>
-  <p>A closed session plus a wrong permission on
-  <code>authorized_keys</code> locks you out of the machine. The rescue
-  path exists in the OVHcloud panel, under <strong>Rescue mode</strong>,
-  and it costs a reboot and about 20 minutes. Keeping one session open
-  costs nothing.</p>
+  <p><strong>CAUTION:</strong> Do not close the last session before the
+  test of the SSH key succeeds. A wrong permission on
+  <code>authorized_keys</code> locks you out of the server. The recovery
+  path is <strong>Rescue mode</strong> in the OVHcloud panel, and it costs
+  one reboot and about 20 minutes.</p>
 </div>
 
-<h2>Keep a way back in before you disconnect</h2>
+<h2>Give the hermes account your Mac key</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Task 5 copies 109 MB over rsync during a live window. All four bots
+  stay down during that window. A password prompt in the middle of the
+  window costs time. An SSH key removes the prompt.</p>
+</div>
 
 <div class="box skill">
   <span class="box-label">Skill &mdash; hands on</span>
-  <p>Task 5 copies 109 MB over rsync during a live window. A password
-  prompt in the middle of that window costs time you do not have, so give
-  the <code>hermes</code> account your Mac key now.</p>
-  <p>On the Mac, read the public key. Run <code>ssh-keygen -t
-  ed25519</code> first when the file does not exist:</p>
+  <p>On the Mac, print the public key:</p>
 <pre><code>cat ~/.ssh/id_ed25519.pub</code></pre>
+  <p>The file is absent on a Mac with no key. In that condition, run
+  <code>ssh-keygen -t ed25519</code> first, then run the
+  <code>cat</code> command again.</p>
   <p>On the server, as <code>root</code>, write that one line into the
   file that SSH reads:</p>
 <pre><code>mkdir -p /home/hermes/.ssh
@@ -129,48 +152,49 @@ echo 'PASTE-THE-KEY-LINE-HERE' &gt; /home/hermes/.ssh/authorized_keys
 chown -R hermes:hermes /home/hermes/.ssh
 chmod 700 /home/hermes/.ssh
 chmod 600 /home/hermes/.ssh/authorized_keys</code></pre>
-  <p>SSH refuses a key file that other users can write, so the two
-  <code>chmod</code> commands are a condition, not a precaution.</p>
-  <p>Test from the Mac in a second terminal, and keep the first session
-  open while you test:</p>
+  <p>SSH refuses a key file that other users can write. The two
+  <code>chmod</code> commands are a condition of the login, not a
+  precaution.</p>
+  <p>Open a second terminal on the Mac. Keep the first session open. Then
+  test the key:</p>
 <pre><code>ssh hermes@SERVER 'whoami'</code></pre>
-  <p>Expect <code>hermes</code>. An open session is what lets you correct
-  a mistake here. Close it first and a wrong permission locks you out of
-  the machine you just bought.</p>
+  <p>The command prints <code>hermes</code> and asks for no password. A
+  password prompt means that one of the five commands failed.
+  Correct the error from the first session.</p>
 </div>
 
-<h2>The trap: a user service stops when you log out</h2>
+<h2>A user service stops when the last session closes</h2>
 
 <div class="box knowledge">
   <span class="box-label">Knowledge</span>
   <p>Hermes installs its systemd unit in user scope by default. Line 1184
-  of <code>gateway.py</code> holds the line that chooses:</p>
+  of <code>gateway.py</code> holds the line that decides the scope:</p>
 <pre><code>systemctl_prefix = "systemctl " if system else "systemctl --user "</code></pre>
-  <p>System scope is the other option. Line 1813 writes the unit to
-  <code>/etc/systemd/system</code>, and line 1829 states that system scope
+  <p>System scope is the other option. Line 1813 writes the unit into
+  <code>/etc/systemd/system</code>. Line 1829 states that system scope
   needs root.</p>
-  <p>User scope avoids root, and it carries one condition. Linux stops a
-  user scope unit when the last session of that user closes. You start four
-  bots over SSH, you close the terminal, and all four stop. The server
-  keeps running, and the roster goes silent.</p>
-  <p><strong>Linger</strong> removes that condition. It keeps a user
-  manager alive with no session open.</p>
+  <p>User scope avoids root, and user scope carries one condition. Linux
+  stops a unit in user scope when the last session of that user closes.
+  You start four bots over SSH, then you close the terminal. All four bots
+  stop. The server continues to run, and the roster goes silent.</p>
+  <p><strong>Linger</strong> removes that condition. Linger keeps a user
+  manager alive with no open session.</p>
 </div>
 
 <div class="box knowledge">
-  <span class="box-label">Hermes already knows this</span>
+  <span class="box-label">Hermes already knows this condition</span>
   <p>Hermes does not wait for you to find the trap. Line 1955 of
   <code>gateway.py</code> runs the command itself:</p>
 <pre><code>["loginctl", "enable-linger", username],</code></pre>
   <p>The docstring at line 1922 states the condition. The command works
-  without root when polkit permits it. When polkit denies it, lines 1965,
-  1987 and 1996 all answer with the same fix:
+  without root when polkit permits the command. When polkit denies the
+  command, lines 1965, 1987 and 1996 give the same fix:
   <code>sudo loginctl enable-linger &lt;user&gt;</code>.</p>
-  <p>So why run it yourself in this lesson? Because the automatic attempt
-  happens during <code>gateway install</code> in Task 3. A denied attempt
-  there stops the install, and you then debug two things at once. Running
-  it now removes that path. The command changes nothing when linger is
-  already on.</p>
+  <p>One question stays open. Why run the command by hand? Hermes runs the
+  automatic attempt during <code>gateway install</code> in Task 3. A
+  denied attempt stops that install, and you then debug two problems at
+  the same time. The manual command removes that failure path. The command
+  changes nothing when linger is already active.</p>
 </div>
 
 <h2>Make the user, and keep its services alive</h2>
@@ -180,20 +204,21 @@ chmod 600 /home/hermes/.ssh/authorized_keys</code></pre>
 <pre><code>sudo adduser --disabled-password --gecos "" hermes
 sudo loginctl enable-linger hermes
 loginctl show-user hermes | grep Linger</code></pre>
-  <p>Expect <code>Linger=yes</code>. That one line is the whole proof. If
-  it reads <code>Linger=no</code>, stop and report, because every later
-  task depends on it.</p>
-  <p>The account takes no password. You reach it with
-  <code>sudo -u hermes -i</code> from your own account, and rsync reaches
-  it over SSH.</p>
+  <p>The third command prints <code>Linger=yes</code>. That one line is
+  the whole proof. When the line reads <code>Linger=no</code>, stop and
+  report the line. Every later task depends on the value
+  <code>yes</code>.</p>
+  <p>The <code>hermes</code> account takes no password. You reach the
+  account with <code>sudo -u hermes -i</code> from your own account. Rsync
+  reaches the account over SSH.</p>
 </div>
 
 <h2>Four profiles become four independent units</h2>
 
 <div class="box knowledge">
   <span class="box-label">Knowledge</span>
-  <p><code>get_service_name()</code> at line 1797 builds the unit name from
-  <code>HERMES_HOME</code>. Its own docstring states the rule:</p>
+  <p><code>get_service_name()</code> at line 1797 builds the unit name
+  from <code>HERMES_HOME</code>. Its own docstring states the rule:</p>
 <pre><code>Default ``~/.hermes`` returns ``hermes-gateway`` (backward compatible).
 Profile ``~/.hermes/profiles/coder`` returns ``hermes-gateway-coder``.</code></pre>
   <p>So this roster becomes four units:
@@ -201,9 +226,9 @@ Profile ``~/.hermes/profiles/coder`` returns ``hermes-gateway-coder``.</code></p
   <code>hermes-gateway-peashooter</code>,
   <code>hermes-gateway-sunflower</code> and
   <code>hermes-gateway-torchwood</code>.</p>
-  <p>Four units, not one, is what lets Task 5 start the bots one at a time
-  and stop after the first failure. It is also what lets you restart one
-  bot later while the other three keep answering.</p>
+  <p>Four units let Task 5 start the bots one at a time, and stop after
+  the first failure. Four units also let you restart one bot later. The
+  other three bots continue to answer during that restart.</p>
 </div>
 
 <h2>Swap is not a speed setting</h2>
@@ -211,15 +236,15 @@ Profile ``~/.hermes/profiles/coder`` returns ``hermes-gateway-coder``.</code></p
 <div class="box knowledge">
   <span class="box-label">Knowledge</span>
   <p>Four gateways idle at 181 MB together on the Mac. The measured values
-  are 50.2, 45.1, 43.7 and 42.1 MB. That is 4.5% of 4 GB, and it looks like
-  plenty of room.</p>
-  <p>Idle is not the number that matters. The gateway runs the agent inside
-  the same process, so memory grows while a bot answers. A language server
-  adds 200 MB to 500 MB while it runs. Four bots doing code work at the
-  same time can reach about 2 GB.</p>
-  <p>Linux with no swap does not become slow when memory runs out. It stops
-  a process. The kernel picks the process, and it tends to pick the largest
-  one, which here is a bot in the middle of answering.</p>
+  are 50.2, 45.1, 43.7 and 42.1 MB. That total is 4.5% of 4 GB, and it
+  looks like sufficient room.</p>
+  <p>The idle total is not the number that decides the swap size. The
+  gateway runs the agent inside the same process, so the memory grows
+  while a bot answers. A language server adds 200 MB to 500 MB. Four bots
+  that do code work at the same time can reach about 2 GB.</p>
+  <p>Linux with no swap does not become slow when the memory runs out.
+  Linux stops a process. The kernel selects the largest process, which
+  here is a bot in the middle of an answer.</p>
 </div>
 
 <div class="box skill">
@@ -230,71 +255,73 @@ sudo mkswap /swapfile
 sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 free -h</code></pre>
-  <p>Expect the <code>Swap:</code> row to read <code>2.0Gi</code> in the
-  total column. The line added to <code>/etc/fstab</code> is what brings
-  the swap file back after a reboot.</p>
+  <p>The <code>Swap:</code> row of <code>free -h</code> reads
+  <code>2.0Gi</code> in the total column. The new line in
+  <code>/etc/fstab</code> restores the swap file after a reboot.</p>
   <p>The <code>chmod 600</code> is not decoration. <code>swapon</code>
   refuses a swap file that other users can read.</p>
 </div>
 
-<h2>Install the one package the installer asks for by name</h2>
+<h2>Install the one package that the installer asks for by name</h2>
 
 <div class="box skill">
   <span class="box-label">Skill &mdash; hands on</span>
 <pre><code>sudo apt-get update &amp;&amp; sudo apt-get install -y git curl ripgrep
 rg --version</code></pre>
-  <p>Expect a version line. Line 291 of <code>setup-hermes.sh</code> reads
+  <p>The second command prints a version line. Line 291 of
+  <code>setup-hermes.sh</code> reads
   <code>sudo apt install -y ripgrep &amp;&amp; INSTALLED=true</code>, so the
-  installer asks for this package by name. Install it first and the
-  installer in Task 3 has one less thing to do.</p>
-  <p>Nothing here installs Python. Line 36 of the installer pins
-  <code>PYTHON_VERSION="3.11"</code>, and uv downloads that version itself.
-  The version that Ubuntu ships has no effect.</p>
+  installer asks for this package by name. An early install gives the
+  installer in Task 3 less work.</p>
+  <p>No command here installs Python. Line 36 of the installer sets
+  <code>PYTHON_VERSION="3.11"</code>, and uv downloads that version
+  itself. The version that Ubuntu ships has no effect.</p>
 </div>
 
-<h2>Prove the server can reach the two hosts that matter</h2>
+<h2>Measure the route to the two hosts that matter</h2>
 
 <div class="box skill">
   <span class="box-label">Skill &mdash; hands on</span>
 <pre><code>curl -s -o /dev/null -w '%{http_code} %{time_total}s\n' https://api.telegram.org
 curl -s -o /dev/null -w '%{http_code} %{time_total}s\n' https://api.anthropic.com</code></pre>
-  <p>Expect an HTTP code and a time for each host. Both endpoints sit
-  outside Indonesia, and the quality of international transit is the real
-  thing this purchase buys.</p>
-  <p><strong>This is a stop condition.</strong> A time of more than 1
-  second to either host means you stop and report before Task 3. A slow
-  path here becomes a slow reply from every bot, every time, and no later
-  step repairs it.</p>
+  <p>Each command prints an HTTP code and a time. Both hosts sit outside
+  Indonesia. The quality of the international route is the real product of
+  this purchase.</p>
+  <p><strong>CAUTION:</strong> A time of more than 1 second to either host
+  is a stop condition. Stop before Task 3 and report both times. A slow
+  route gives a slow answer from every bot, every time, and no later step
+  repairs the route.</p>
 </div>
 
-<h2>The tripwire you read one week later</h2>
+<h2>The tripwire that you read one week later</h2>
 
 <div class="box knowledge">
   <span class="box-label">Knowledge</span>
   <p>Gate D closes Stage 6 seven days after the move:</p>
 <pre><code>systemctl --user show hermes-gateway-crazydave -p MemoryPeak</code></pre>
-  <p>Read the value for all four units and add them. Less than 2.5 GB means
-  the plan stands. More than 2.5 GB means you change to VPS-2, which gives
-  4 vCores and 8 GB of RAM, and OVHcloud changes the plan in place.</p>
-  <p>Gate D changes the size of the machine. It is never a reason to roll
-  back, because a bot that answers correctly on a machine that is too small
-  has proved the move worked.</p>
+  <p>Read the value for all four units, then add the four values. A total
+  of less than 2.5 GB keeps the plan. A total of more than 2.5 GB changes
+  the plan to VPS-2, which gives 4 vCores and 8 GB of RAM. OVHcloud
+  changes the plan in place.</p>
+  <p>Gate D changes the size of the machine. Gate D is never a reason to
+  reverse the move. A bot that answers correctly on a small machine has
+  already proved that the move worked.</p>
 </div>
 
 <div class="quiz">
-  <p class="q">Why does a user scope systemd unit need linger on a
+  <p class="q">Why does a systemd unit in user scope need linger on a
   server?</p>
   <div class="choices">
     <div>
       <input type="radio" name="q1" id="q1a">
-      <label for="q1a">Linux stops user services when the last session closes</label>
-      <div class="reveal"><p class="feedback correct">Right. You close the
-      SSH terminal and all four bots stop. Linger keeps a user manager
-      alive with no session open.</p></div>
+      <label for="q1a">Linux stops a user service when the session closes</label>
+      <div class="reveal"><p class="feedback correct">Correct. You close
+      the SSH terminal, and all four bots stop. Linger keeps a user
+      manager alive with no open session.</p></div>
     </div>
     <div>
       <input type="radio" name="q1" id="q1b">
-      <label for="q1b">User scope units cannot read files owned by root</label>
+      <label for="q1b">User scope units cannot read files that root owns</label>
       <div class="reveal"><p class="feedback incorrect">Wrong. File
       permissions are a separate subject. The unit stops because the
       session ends, not because a read fails.</p></div>
@@ -303,33 +330,33 @@ curl -s -o /dev/null -w '%{http_code} %{time_total}s\n' https://api.anthropic.co
       <input type="radio" name="q1" id="q1c">
       <label for="q1c">Systemd refuses to start more than one user unit</label>
       <div class="reveal"><p class="feedback incorrect">Wrong. This roster
-      runs four user units at once. Line 1797 gives each profile its own
-      name.</p></div>
+      runs four units in user scope. Line 1797 gives each profile its own
+      unit name.</p></div>
     </div>
   </div>
 </div>
 
 <div class="quiz">
   <p class="q">Hermes runs <code>enable-linger</code> itself at line 1955.
-  Why run it by hand first?</p>
+  Why run the command by hand first?</p>
   <div class="choices">
     <div>
       <input type="radio" name="q2" id="q2a">
-      <label for="q2a">A denied attempt during install stops the install itself</label>
-      <div class="reveal"><p class="feedback correct">Right. Polkit can
-      deny the non-root attempt. Running it now means Task 3 fails for one
-      reason at a time, never two.</p></div>
+      <label for="q2a">A denied attempt during the install stops that install</label>
+      <div class="reveal"><p class="feedback correct">Correct. Polkit can
+      deny the attempt without root. An early command means that Task 3
+      fails for one reason, never two.</p></div>
     </div>
     <div>
       <input type="radio" name="q2" id="q2b">
-      <label for="q2b">The version inside Hermes enables linger for root</label>
+      <label for="q2b">The command inside Hermes enables linger for root users</label>
       <div class="reveal"><p class="feedback incorrect">Wrong. Line 1955
       passes <code>username</code>, which is the account that runs the
       gateway.</p></div>
     </div>
     <div>
       <input type="radio" name="q2" id="q2c">
-      <label for="q2c">Running it twice makes the setting survive a reboot</label>
+      <label for="q2c">A second run makes the setting survive every reboot</label>
       <div class="reveal"><p class="feedback incorrect">Wrong. Linger
       survives a reboot after one run. The second run changes
       nothing.</p></div>
@@ -338,29 +365,29 @@ curl -s -o /dev/null -w '%{http_code} %{time_total}s\n' https://api.anthropic.co
 </div>
 
 <div class="quiz">
-  <p class="q">Four gateways idle at 181 MB on 4 GB of RAM. Why add 2 GB of
-  swap?</p>
+  <p class="q">Four gateways idle at 181 MB on 4 GB of RAM. Why add 2 GB
+  of swap?</p>
   <div class="choices">
     <div>
       <input type="radio" name="q3" id="q3a">
-      <label for="q3a">Linux with no swap stops a process instead of slowing</label>
-      <div class="reveal"><p class="feedback correct">Right. The gateway
-      runs the agent in the same process, so memory grows while a bot
+      <label for="q3a">Linux with no swap stops a process, not slows it</label>
+      <div class="reveal"><p class="feedback correct">Correct. The gateway
+      runs the agent in the same process, so the memory grows while a bot
       answers. The kernel stops the largest process.</p></div>
     </div>
     <div>
       <input type="radio" name="q3" id="q3b">
-      <label for="q3b">Swap makes the SQLite databases read and write faster</label>
+      <label for="q3b">Swap gives the SQLite database a faster read and write</label>
       <div class="reveal"><p class="feedback incorrect">Wrong. Swap is
-      slower than RAM in every case. It buys survival, never
+      slower than RAM in every condition. Swap buys survival, never
       speed.</p></div>
     </div>
     <div>
       <input type="radio" name="q3" id="q3c">
-      <label for="q3c">The idle figure of 181 MB was measured on the wrong machine</label>
-      <div class="reveal"><p class="feedback incorrect">Wrong. The figure
-      is correct for the Mac and for idle. Idle is simply not the number
-      that decides this.</p></div>
+      <label for="q3c">The idle total of 181 MB came from another machine</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. The total
+      is correct for the Mac, and correct for idle. The idle total is not
+      the number that decides the swap size.</p></div>
     </div>
   </div>
 </div>
@@ -369,25 +396,27 @@ curl -s -o /dev/null -w '%{http_code} %{time_total}s\n' https://api.anthropic.co
 
 <div class="checklist">
   <label><input type="checkbox"> You bought VPS-1 in Singapore with Ubuntu
-  24.04 and wrote down the IP address</label>
+  24.04, and you recorded the IPv4 address</label>
+  <label><input type="checkbox"> <code>lsb_release -d</code> names
+  <code>Ubuntu 24.04</code></label>
   <label><input type="checkbox"> <code>ssh hermes@SERVER 'whoami'</code>
-  answers <code>hermes</code> with no password prompt</label>
+  prints <code>hermes</code> and asks for no password</label>
   <label><input type="checkbox"> <code>loginctl show-user hermes</code>
-  reports <code>Linger=yes</code></label>
-  <label><input type="checkbox"> <code>free -h</code> reports
-  <code>2.0Gi</code> of swap</label>
-  <label><input type="checkbox"> You added the
-  <code>/swapfile</code> line to <code>/etc/fstab</code></label>
-  <label><input type="checkbox"> <code>rg --version</code> prints a version
-  line</label>
-  <label><input type="checkbox"> Both <code>curl</code> checks answer in
+  prints <code>Linger=yes</code></label>
+  <label><input type="checkbox"> <code>free -h</code> shows
+  <code>2.0Gi</code> in the total column of the swap row</label>
+  <label><input type="checkbox"> <code>/etc/fstab</code> holds the new
+  <code>/swapfile</code> line</label>
+  <label><input type="checkbox"> <code>rg --version</code> prints a
+  version line</label>
+  <label><input type="checkbox"> Both <code>curl</code> commands answer in
   less than 1 second</label>
 </div>
 
 <p><strong>Primary source:</strong>
 <a href="https://www.freedesktop.org/software/systemd/man/latest/loginctl.html">The
-<code>loginctl</code> manual page</a> defines
-<code>enable-linger</code> in its own words. Read it beside
+manual page for <code>loginctl</code></a> defines
+<code>enable-linger</code> in its own words. Read that page with
 <a href="https://www.freedesktop.org/software/systemd/man/latest/user@.service.html">the
 page for <code>user@.service</code></a>, which is the unit that linger
 keeps alive.</p>
@@ -398,11 +427,10 @@ keeps alive.</p>
 &middot;
 <a href="../reference/glossary.html">&rarr; Glossary</a></p>
 
-<p class="ask-agent">Send me the <code>Linger</code> line, the
-<code>free -h</code> output, and both <code>curl</code> timings. The
-timings are the ones I want most, because they decide whether Task 3 starts
-at all. Ask me anything that this lesson left unclear before you buy the
-machine, not after.</p>
+<p class="ask-agent">Send me the <code>Linger</code> line, the output of
+<code>free -h</code>, and both <code>curl</code> times. The two times
+matter most, because the times decide the start of Task 3. Ask me about
+any unclear part of this lesson before you buy the machine.</p>
 
 <div class="nav">
   <span><a href="0036-a-copy-that-proves-itself.html">&larr; Lesson 36</a></span>
