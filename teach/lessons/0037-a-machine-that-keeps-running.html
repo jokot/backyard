@@ -45,16 +45,71 @@ bots at once.</p>
   <p>One command in this lesson runs on the Mac. It is the
   <code>ssh</code> that opens a session on the server. Every other
   command runs inside that session, on the server.</p>
-  <p>OVHcloud mails you the address and the login. The account is
-  <code>ubuntu</code> when you gave an SSH key at order time, and
-  <code>root</code> with a password when you did not.</p>
-<pre><code>ssh ubuntu@SERVER     # or: ssh root@SERVER</code></pre>
   <p>The commands below write <code>sudo</code>, which the
   <code>ubuntu</code> account needs. Remove the word <code>sudo</code>
   from each line when you log in as <code>root</code>.</p>
   <p>The two <code>curl</code> checks measure the route from Singapore to
   Telegram and from Singapore to Anthropic. A run on the Mac measures your
   home connection instead, and that number decides nothing.</p>
+</div>
+
+<h2>Reach the server, step by step</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>Do these steps in order, in a terminal on the Mac.</p>
+  <ol>
+    <li><strong>Find the address.</strong> Open the OVHcloud control panel
+    at <code>www.ovh.com/manager</code>, select <strong>Bare Metal Cloud
+    &rarr; Virtual Private Servers</strong>, and select your VPS. The
+    summary page shows <strong>IPv4</strong>. Write that address down.
+    Everything below writes <code>SERVER</code> where the address
+    belongs.</li>
+
+    <li><strong>Find the login.</strong> OVHcloud sends one mail with the
+    subject <em>Your VPS is ready</em>. The account is <code>ubuntu</code>
+    when you gave an SSH key at order time. The account is
+    <code>root</code> with a password in that mail when you did not.</li>
+
+    <li><strong>Open the first session.</strong> Run one of these two
+    commands, and use the account from step 2:
+<pre><code>ssh ubuntu@SERVER
+ssh root@SERVER</code></pre>
+    </li>
+
+    <li><strong>Accept the host key, once.</strong> The first connection
+    prints a fingerprint and asks a question:
+<pre><code>The authenticity of host 'SERVER' can't be established.
+ED25519 key fingerprint is SHA256:&hellip;
+Are you sure you want to continue connecting (yes/no/[fingerprint])?</code></pre>
+    Type <code>yes</code> and press Return. SSH writes the key into
+    <code>~/.ssh/known_hosts</code> and never asks again for this server.
+    A typed <code>y</code> is not enough, because SSH wants the whole
+    word.</li>
+
+    <li><strong>Change the root password, when the mail gave you
+    one.</strong> Ubuntu asks for the old password and then for a new one
+    twice. Save the new password in your password manager before you go
+    on, because no later step can recover it.</li>
+
+    <li><strong>Confirm the machine.</strong> Run these two commands and
+    read the answers:
+<pre><code>hostname -I
+lsb_release -d</code></pre>
+    Expect your own IPv4 address, and expect a description line that
+    names <code>Ubuntu 24.04</code>. A different version means the order
+    used the wrong image, and you stop here.</li>
+
+    <li><strong>Leave the session open.</strong> Every later command in
+    this lesson runs in this session. The next section adds your Mac key,
+    and you test that key from a <em>second</em> terminal while this first
+    session stays open.</li>
+  </ol>
+  <p>A closed session plus a wrong permission on
+  <code>authorized_keys</code> locks you out of the machine. The rescue
+  path exists in the OVHcloud panel, under <strong>Rescue mode</strong>,
+  and it costs a reboot and about 20 minutes. Keeping one session open
+  costs nothing.</p>
 </div>
 
 <h2>Keep a way back in before you disconnect</h2>
