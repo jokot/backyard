@@ -38,6 +38,52 @@ bots at once.</p>
   <code>SERVER</code> where that address belongs.</p>
 </div>
 
+<h2>Where each command runs</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>One command in this lesson runs on the Mac. It is the
+  <code>ssh</code> that opens a session on the server. Every other
+  command runs inside that session, on the server.</p>
+  <p>OVHcloud mails you the address and the login. The account is
+  <code>ubuntu</code> when you gave an SSH key at order time, and
+  <code>root</code> with a password when you did not.</p>
+<pre><code>ssh ubuntu@SERVER     # or: ssh root@SERVER</code></pre>
+  <p>The commands below write <code>sudo</code>, which the
+  <code>ubuntu</code> account needs. Remove the word <code>sudo</code>
+  from each line when you log in as <code>root</code>.</p>
+  <p>The two <code>curl</code> checks measure the route from Singapore to
+  Telegram and from Singapore to Anthropic. A run on the Mac measures your
+  home connection instead, and that number decides nothing.</p>
+</div>
+
+<h2>Keep a way back in before you disconnect</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>Task 5 copies 109 MB over rsync during a live window. A password
+  prompt in the middle of that window costs time you do not have, so give
+  the <code>hermes</code> account your Mac key now.</p>
+  <p>On the Mac, read the public key. Run <code>ssh-keygen -t
+  ed25519</code> first when the file does not exist:</p>
+<pre><code>cat ~/.ssh/id_ed25519.pub</code></pre>
+  <p>On the server, as <code>root</code>, write that one line into the
+  file that SSH reads:</p>
+<pre><code>mkdir -p /home/hermes/.ssh
+echo 'PASTE-THE-KEY-LINE-HERE' &gt; /home/hermes/.ssh/authorized_keys
+chown -R hermes:hermes /home/hermes/.ssh
+chmod 700 /home/hermes/.ssh
+chmod 600 /home/hermes/.ssh/authorized_keys</code></pre>
+  <p>SSH refuses a key file that other users can write, so the two
+  <code>chmod</code> commands are a condition, not a precaution.</p>
+  <p>Test from the Mac in a second terminal, and keep the first session
+  open while you test:</p>
+<pre><code>ssh hermes@SERVER 'whoami'</code></pre>
+  <p>Expect <code>hermes</code>. An open session is what lets you correct
+  a mistake here. Close it first and a wrong permission locks you out of
+  the machine you just bought.</p>
+</div>
+
 <h2>The trap: a user service stops when you log out</h2>
 
 <div class="box knowledge">
@@ -269,6 +315,8 @@ curl -s -o /dev/null -w '%{http_code} %{time_total}s\n' https://api.anthropic.co
 <div class="checklist">
   <label><input type="checkbox"> You bought VPS-1 in Singapore with Ubuntu
   24.04 and wrote down the IP address</label>
+  <label><input type="checkbox"> <code>ssh hermes@SERVER 'whoami'</code>
+  answers <code>hermes</code> with no password prompt</label>
   <label><input type="checkbox"> <code>loginctl show-user hermes</code>
   reports <code>Linger=yes</code></label>
   <label><input type="checkbox"> <code>free -h</code> reports
