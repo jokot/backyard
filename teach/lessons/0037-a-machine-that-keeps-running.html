@@ -142,9 +142,26 @@ lsb_release -d</code></pre>
   <span class="box-label">Skill &mdash; hands on</span>
   <p>On the Mac, print the public key:</p>
 <pre><code>cat ~/.ssh/id_ed25519.pub</code></pre>
-  <p>The file is absent on a Mac with no key. In that condition, run
-  <code>ssh-keygen -t ed25519</code> first, then run the
-  <code>cat</code> command again.</p>
+  <p>One line of output ends the step. Go to the paragraph about the
+  server. A message that reads <code>No such file or directory</code>
+  means that this Mac holds no key, and the next paragraph makes one.</p>
+  <p><strong>CAUTION:</strong> Do not run <code>ssh-keygen</code> on a
+  path that already holds a key. The command offers to overwrite the
+  private key, and a typed <code>y</code> destroys that key. Every server
+  that trusts the old key then refuses your login.</p>
+  <p>Run <code>ssh-keygen</code> with a new path, so that the command
+  cannot touch an existing key. Press Return two times at the passphrase
+  prompt:</p>
+<pre><code>ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_vps -C "hermes-vps"
+cat ~/.ssh/id_ed25519_vps.pub</code></pre>
+  <p>The <code>-C</code> option sets the comment at the end of the public
+  key. The comment is a label, and the comment plays no part in the
+  login. A default comment reads <code>user@hostname</code>, which records
+  the hostname of the Mac at the time of the command. A comment such as
+  <code>hermes-vps</code> names the purpose instead.</p>
+  <p>Use the path of the key that you printed for the rest of this
+  lesson. The next paragraph writes one of these two public keys into the
+  file on the server.</p>
   <p>On the server, as <code>root</code>, write that one line into the
   file that SSH reads:</p>
 <pre><code>mkdir -p /home/hermes/.ssh
@@ -159,8 +176,19 @@ chmod 600 /home/hermes/.ssh/authorized_keys</code></pre>
   test the key:</p>
 <pre><code>ssh hermes@SERVER 'whoami'</code></pre>
   <p>The command prints <code>hermes</code> and asks for no password. A
-  password prompt means that one of the five commands failed.
-  Correct the error from the first session.</p>
+  password prompt means that one of the five commands failed. Correct the
+  error from the first session.</p>
+  <p>A Mac with several keys needs one more step. A file at
+  <code>~/.ssh/config</code> can force a different key for a host, so name
+  the key and the server in one block:</p>
+<pre><code>Host hermes-vps
+  HostName SERVER
+  User hermes
+  IdentityFile ~/.ssh/id_ed25519_vps
+  IdentitiesOnly yes</code></pre>
+  <p>The command <code>ssh hermes-vps</code> then replaces
+  <code>ssh hermes@SERVER</code>. Task 5 uses the same short name for
+  rsync.</p>
 </div>
 
 <h2>A user service stops when the last session closes</h2>
