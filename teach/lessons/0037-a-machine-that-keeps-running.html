@@ -118,8 +118,8 @@ lsb_release -d</code></pre>
     and report the version.</li>
 
     <li><strong>Keep the session open.</strong> Every later command in
-    this lesson runs in this session. The next section adds your Mac key
-    to the server. You test that key from a second terminal, and the first
+    this lesson runs in this session. A later section adds your Mac key to
+    the server. You test that key from a second terminal, and the first
     session stays open during the test.</li>
   </ol>
   <p><strong>CAUTION:</strong> Do not close the last session before the
@@ -127,68 +127,6 @@ lsb_release -d</code></pre>
   <code>authorized_keys</code> locks you out of the server. The recovery
   path is <strong>Rescue mode</strong> in the OVHcloud panel, and it costs
   one reboot and about 20 minutes.</p>
-</div>
-
-<h2>Give the hermes account your Mac key</h2>
-
-<div class="box knowledge">
-  <span class="box-label">Knowledge</span>
-  <p>Task 5 copies 109 MB over rsync during a live window. All four bots
-  stay down during that window. A password prompt in the middle of the
-  window costs time. An SSH key removes the prompt.</p>
-</div>
-
-<div class="box skill">
-  <span class="box-label">Skill &mdash; hands on</span>
-  <p>On the Mac, print the public key:</p>
-<pre><code>cat ~/.ssh/id_ed25519.pub</code></pre>
-  <p>One line of output ends the step. Go to the paragraph about the
-  server. A message that reads <code>No such file or directory</code>
-  means that this Mac holds no key, and the next paragraph makes one.</p>
-  <p><strong>CAUTION:</strong> Do not run <code>ssh-keygen</code> on a
-  path that already holds a key. The command offers to overwrite the
-  private key, and a typed <code>y</code> destroys that key. Every server
-  that trusts the old key then refuses your login.</p>
-  <p>Run <code>ssh-keygen</code> with a new path, so that the command
-  cannot touch an existing key. Press Return two times at the passphrase
-  prompt:</p>
-<pre><code>ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_vps -C "hermes-vps"
-cat ~/.ssh/id_ed25519_vps.pub</code></pre>
-  <p>The <code>-C</code> option sets the comment at the end of the public
-  key. The comment is a label, and the comment plays no part in the
-  login. A default comment reads <code>user@hostname</code>, which records
-  the hostname of the Mac at the time of the command. A comment such as
-  <code>hermes-vps</code> names the purpose instead.</p>
-  <p>Use the path of the key that you printed for the rest of this
-  lesson. The next paragraph writes one of these two public keys into the
-  file on the server.</p>
-  <p>On the server, as <code>root</code>, write that one line into the
-  file that SSH reads:</p>
-<pre><code>mkdir -p /home/hermes/.ssh
-echo 'PASTE-THE-KEY-LINE-HERE' &gt; /home/hermes/.ssh/authorized_keys
-chown -R hermes:hermes /home/hermes/.ssh
-chmod 700 /home/hermes/.ssh
-chmod 600 /home/hermes/.ssh/authorized_keys</code></pre>
-  <p>SSH refuses a key file that other users can write. The two
-  <code>chmod</code> commands are a condition of the login, not a
-  precaution.</p>
-  <p>Open a second terminal on the Mac. Keep the first session open. Then
-  test the key:</p>
-<pre><code>ssh hermes@SERVER 'whoami'</code></pre>
-  <p>The command prints <code>hermes</code> and asks for no password. A
-  password prompt means that one of the five commands failed. Correct the
-  error from the first session.</p>
-  <p>A Mac with several keys needs one more step. A file at
-  <code>~/.ssh/config</code> can force a different key for a host, so name
-  the key and the server in one block:</p>
-<pre><code>Host hermes-vps
-  HostName SERVER
-  User hermes
-  IdentityFile ~/.ssh/id_ed25519_vps
-  IdentitiesOnly yes</code></pre>
-  <p>The command <code>ssh hermes-vps</code> then replaces
-  <code>ssh hermes@SERVER</code>. Task 5 uses the same short name for
-  rsync.</p>
 </div>
 
 <h2>A user service stops when the last session closes</h2>
@@ -239,6 +177,76 @@ loginctl show-user hermes | grep Linger</code></pre>
   <p>The <code>hermes</code> account takes no password. You reach the
   account with <code>sudo -u hermes -i</code> from your own account. Rsync
   reaches the account over SSH.</p>
+</div>
+
+<h2>Give the hermes account your Mac key</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Task 5 copies 109 MB over rsync during a live window. All four bots
+  stay down during that window. A password prompt in the middle of the
+  window costs time. An SSH key removes the prompt.</p>
+  <p>The <code>hermes</code> account must exist before this section. The
+  previous section makes the account. A <code>chown</code> against an
+  absent account fails with the message
+  <code>chown: invalid user</code>.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>On the Mac, print the public key:</p>
+<pre><code>cat ~/.ssh/id_ed25519.pub</code></pre>
+  <p>One line of output ends the step. Go to the paragraph about the
+  server. A message that reads <code>No such file or directory</code>
+  means that this Mac holds no key, and the next paragraph makes one.</p>
+  <p><strong>CAUTION:</strong> Do not run <code>ssh-keygen</code> on a
+  path that already holds a key. The command offers to overwrite the
+  private key, and a typed <code>y</code> destroys that key. Every server
+  that trusts the old key then refuses your login.</p>
+  <p>Run <code>ssh-keygen</code> with a new path, so that the command
+  cannot touch an existing key. Press Return two times at the passphrase
+  prompt:</p>
+<pre><code>ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_vps -C "hermes-vps"
+cat ~/.ssh/id_ed25519_vps.pub</code></pre>
+  <p>The <code>-C</code> option sets the comment at the end of the public
+  key. The comment is a label, and the comment plays no part in the
+  login. A default comment reads <code>user@hostname</code>, which records
+  the hostname of the Mac at the time of the command. A comment such as
+  <code>hermes-vps</code> names the purpose instead.</p>
+  <p>Use the path of the key that you printed for the rest of this
+  lesson. The next paragraph writes one of these two public keys into the
+  file on the server.</p>
+  <p>On the server, as <code>root</code>, write that one line into the
+  file that SSH reads:</p>
+<pre><code>mkdir -p /home/hermes/.ssh
+echo 'PASTE-THE-KEY-LINE-HERE' &gt; /home/hermes/.ssh/authorized_keys
+chown -R hermes:hermes /home/hermes/.ssh
+chmod 700 /home/hermes/.ssh
+chmod 600 /home/hermes/.ssh/authorized_keys
+ls -ld /home/hermes/.ssh</code></pre>
+  <p>The last command shows <code>hermes hermes</code> as the owner, and
+  it shows <code>drwx------</code> as the mode. A different owner makes
+  the login fail with no message on the server.</p>
+  <p>SSH refuses a key file that other users can write. The two
+  <code>chmod</code> commands are a condition of the login, not a
+  precaution.</p>
+  <p>Open a second terminal on the Mac. Keep the first session open. Then
+  test the key:</p>
+<pre><code>ssh hermes@SERVER 'whoami'</code></pre>
+  <p>The command prints <code>hermes</code> and asks for no password. A
+  password prompt means that one of the five commands failed. Correct the
+  error from the first session.</p>
+  <p>A Mac with several keys needs one more step. A file at
+  <code>~/.ssh/config</code> can force a different key for a host, so name
+  the key and the server in one block:</p>
+<pre><code>Host hermes-vps
+  HostName SERVER
+  User hermes
+  IdentityFile ~/.ssh/id_ed25519_vps
+  IdentitiesOnly yes</code></pre>
+  <p>The command <code>ssh hermes-vps</code> then replaces
+  <code>ssh hermes@SERVER</code>. Task 5 uses the same short name for
+  rsync.</p>
 </div>
 
 <h2>Four profiles become four independent units</h2>
@@ -427,10 +435,12 @@ curl -s -o /dev/null -w '%{http_code} %{time_total}s\n' https://api.anthropic.co
   24.04, and you recorded the IPv4 address</label>
   <label><input type="checkbox"> <code>lsb_release -d</code> names
   <code>Ubuntu 24.04</code></label>
-  <label><input type="checkbox"> <code>ssh hermes@SERVER 'whoami'</code>
-  prints <code>hermes</code> and asks for no password</label>
   <label><input type="checkbox"> <code>loginctl show-user hermes</code>
   prints <code>Linger=yes</code></label>
+  <label><input type="checkbox"> <code>ls -ld /home/hermes/.ssh</code>
+  shows <code>hermes hermes</code> as the owner</label>
+  <label><input type="checkbox"> <code>ssh hermes@SERVER 'whoami'</code>
+  prints <code>hermes</code> and asks for no password</label>
   <label><input type="checkbox"> <code>free -h</code> shows
   <code>2.0Gi</code> in the total column of the swap row</label>
   <label><input type="checkbox"> <code>/etc/fstab</code> holds the new
