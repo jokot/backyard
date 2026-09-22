@@ -216,20 +216,38 @@ cat ~/.ssh/id_ed25519_vps.pub</code></pre>
   <p>Use the path of the key that you printed for the rest of this
   lesson. The next paragraph writes one of these two public keys into the
   file on the server.</p>
-  <p>On the server, as <code>root</code>, write that one line into the
-  file that SSH reads:</p>
-<pre><code>mkdir -p /home/hermes/.ssh
-echo 'PASTE-THE-KEY-LINE-HERE' &gt; /home/hermes/.ssh/authorized_keys
-chown -R hermes:hermes /home/hermes/.ssh
-chmod 700 /home/hermes/.ssh
-chmod 600 /home/hermes/.ssh/authorized_keys
-ls -ld /home/hermes/.ssh</code></pre>
-  <p>The last command shows <code>hermes hermes</code> as the owner, and
-  it shows <code>drwx------</code> as the mode. A different owner makes
-  the login fail with no message on the server.</p>
+  <p>On the server, write that one line into the file that SSH
+  reads:</p>
+<pre><code>sudo mkdir -p /home/hermes/.ssh
+echo 'PASTE-THE-KEY-LINE-HERE' | sudo tee /home/hermes/.ssh/authorized_keys &gt; /dev/null
+sudo chown -R hermes:hermes /home/hermes/.ssh
+sudo chmod 700 /home/hermes/.ssh
+sudo chmod 600 /home/hermes/.ssh/authorized_keys
+sudo ls -ld /home/hermes/.ssh
+sudo cat /home/hermes/.ssh/authorized_keys</code></pre>
+  <p>The command <code>ls -ld</code> shows <code>hermes hermes</code> as
+  the owner, and it shows <code>drwx------</code> as the mode. The command
+  <code>cat</code> shows one line that ends with your comment. A different
+  owner makes the login fail with no message on the server.</p>
   <p>SSH refuses a key file that other users can write. The two
   <code>chmod</code> commands are a condition of the login, not a
   precaution.</p>
+</div>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; why tee, and not a redirect</span>
+  <p>The second command uses <code>tee</code> for one reason. A redirect
+  such as <code>sudo echo 'text' &gt; /home/hermes/.ssh/authorized_keys</code>
+  fails with the message <code>Permission denied</code>.</p>
+  <p>The shell reads the whole command line first. The shell opens the
+  file for the redirect, and only then starts <code>sudo</code>. So the
+  <code>ubuntu</code> account opens the file, and the
+  <code>ubuntu</code> account cannot write into a directory that root
+  owns.</p>
+  <p><code>tee</code> moves the write into the command itself.
+  <code>sudo</code> elevates <code>tee</code>, and <code>tee</code> opens
+  the file as root. The same rule covers every file under
+  <code>/etc</code> and every other root-owned path.</p>
   <p>Open a second terminal on the Mac. Keep the first session open. Then
   test the key:</p>
 <pre><code>ssh hermes@SERVER 'whoami'</code></pre>
