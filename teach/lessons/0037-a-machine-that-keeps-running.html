@@ -69,6 +69,16 @@ bots at the same time.</p>
   instead. The home number decides nothing.</p>
 </div>
 
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; one line is one command</span>
+  <p>Each line of a block in this lesson is one command. Run the lines one
+  at a time, and press Return after each line.</p>
+  <p>A paste that joins two lines makes the second command an argument of
+  the first. Some pairs then print an error, such as
+  <code>tee: invalid option -- 'h'</code>. Other pairs print nothing and
+  do nothing, which costs more time.</p>
+</div>
+
 <h2>Reach the server, step by step</h2>
 
 <div class="box skill">
@@ -222,8 +232,9 @@ cat ~/.ssh/id_ed25519_vps.pub</code></pre>
 echo 'PASTE-THE-KEY-LINE-HERE' | sudo tee /home/hermes/.ssh/authorized_keys &gt; /dev/null
 sudo chown -R hermes:hermes /home/hermes/.ssh
 sudo chmod 700 /home/hermes/.ssh
-sudo chmod 600 /home/hermes/.ssh/authorized_keys
-sudo ls -ld /home/hermes/.ssh
+sudo chmod 600 /home/hermes/.ssh/authorized_keys</code></pre>
+  <p>Then check the owner, the mode, and the content:</p>
+<pre><code>sudo ls -ld /home/hermes/.ssh
 sudo cat /home/hermes/.ssh/authorized_keys</code></pre>
   <p>The command <code>ls -ld</code> shows <code>hermes hermes</code> as
   the owner, and it shows <code>drwx------</code> as the mode. The command
@@ -303,26 +314,37 @@ Profile ``~/.hermes/profiles/coder`` returns ``hermes-gateway-coder``.</code></p
 
 <div class="box skill">
   <span class="box-label">Skill &mdash; hands on</span>
+  <p>Make the swap file, then start it:</p>
 <pre><code>sudo fallocate -l 2G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
-sudo swapon /swapfile
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-free -h</code></pre>
+sudo swapon /swapfile</code></pre>
+  <p>Add one line to <code>/etc/fstab</code>, so that the swap file
+  returns after a reboot:</p>
+<pre><code>echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab</code></pre>
+  <p>Then check the result with two commands:</p>
+<pre><code>free -h
+swapon --show</code></pre>
   <p>The <code>Swap:</code> row of <code>free -h</code> reads
-  <code>2.0Gi</code> in the total column. The new line in
-  <code>/etc/fstab</code> restores the swap file after a reboot.</p>
+  <code>2.0Gi</code> in the total column. The command
+  <code>swapon --show</code> names <code>/swapfile</code> with the size
+  <code>2G</code>.</p>
   <p>The <code>chmod 600</code> is not decoration. <code>swapon</code>
   refuses a swap file that other users can read.</p>
+  <p><strong>CAUTION:</strong> Run the <code>tee</code> command one time
+  only. A second run adds the same line again, and a repeated line in
+  <code>/etc/fstab</code> makes the next boot fail. The command
+  <code>grep -n swapfile /etc/fstab</code> counts the lines.</p>
 </div>
 
 <h2>Install the one package that the installer asks for by name</h2>
 
 <div class="box skill">
   <span class="box-label">Skill &mdash; hands on</span>
-<pre><code>sudo apt-get update &amp;&amp; sudo apt-get install -y git curl ripgrep
-rg --version</code></pre>
-  <p>The second command prints a version line. Line 291 of
+<pre><code>sudo apt-get update &amp;&amp; sudo apt-get install -y git curl ripgrep</code></pre>
+  <p>Then check the install:</p>
+<pre><code>rg --version</code></pre>
+  <p>The command prints a version line. Line 291 of
   <code>setup-hermes.sh</code> reads
   <code>sudo apt install -y ripgrep &amp;&amp; INSTALLED=true</code>, so the
   installer asks for this package by name. An early install gives the
