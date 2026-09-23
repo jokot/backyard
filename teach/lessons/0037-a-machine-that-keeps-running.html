@@ -259,23 +259,36 @@ sudo cat /home/hermes/.ssh/authorized_keys</code></pre>
   <code>sudo</code> elevates <code>tee</code>, and <code>tee</code> opens
   the file as root. The same rule covers every file under
   <code>/etc</code> and every other root-owned path.</p>
-  <p>Open a second terminal on the Mac. Keep the first session open. Then
-  test the key:</p>
-<pre><code>ssh hermes@SERVER 'whoami'</code></pre>
-  <p>The command prints <code>hermes</code> and asks for no password. A
-  password prompt means that one of the five commands failed. Correct the
-  error from the first session.</p>
-  <p>A Mac with several keys needs one more step. A file at
-  <code>~/.ssh/config</code> can force a different key for a host, so name
-  the key and the server in one block:</p>
+  <p>Name the key before the first test. The file
+  <code>~/.ssh/id_ed25519_vps</code> carries a name that <code>ssh</code>
+  does not read by default. The manual page <code>ssh_config</code> lists
+  the five default files:</p>
+<pre><code>~/.ssh/id_rsa, ~/.ssh/id_ecdsa, ~/.ssh/id_ecdsa_sk,
+~/.ssh/id_ed25519 and ~/.ssh/id_ed25519_sk</code></pre>
+  <p>Add one block to the file <code>~/.ssh/config</code> on the Mac:</p>
 <pre><code>Host hermes-vps
   HostName SERVER
   User hermes
   IdentityFile ~/.ssh/id_ed25519_vps
   IdentitiesOnly yes</code></pre>
-  <p>The command <code>ssh hermes-vps</code> then replaces
-  <code>ssh hermes@SERVER</code>. Task 5 uses the same short name for
-  rsync.</p>
+  <p>Open a second terminal on the Mac. Keep the first session open. Then
+  test the key:</p>
+<pre><code>ssh hermes-vps 'whoami'</code></pre>
+  <p>The command prints <code>hermes</code> and asks for no password. Task
+  5 uses the same short name <code>hermes-vps</code> for rsync.</p>
+  <p>A password prompt has two causes. The first cause is a missing block
+  in <code>~/.ssh/config</code>, and then <code>ssh</code> never offers the
+  key. The second cause is a failed command from the five commands, and
+  then the server rejects the key. This command separates the two
+  causes:</p>
+<pre><code>ssh -v hermes-vps 'whoami' 2&gt;&amp;1 | grep Offering</code></pre>
+  <p>A line that names <code>id_ed25519_vps</code> proves that
+  <code>ssh</code> offered the key, so the fault is on the server. No line
+  proves that <code>ssh</code> never offered the key, so the fault is in
+  the file <code>~/.ssh/config</code>.</p>
+  <p>Do not type a password at the prompt. The command
+  <code>adduser --disabled-password</code> gave the <code>hermes</code>
+  account no password, so no password can succeed.</p>
 </div>
 
 <h2>Four profiles become four independent units</h2>
@@ -479,7 +492,7 @@ curl -s -o /dev/null -w '%{http_code} %{time_total}s\n' https://api.anthropic.co
   prints <code>Linger=yes</code></label>
   <label><input type="checkbox"> <code>ls -ld /home/hermes/.ssh</code>
   shows <code>hermes hermes</code> as the owner</label>
-  <label><input type="checkbox"> <code>ssh hermes@SERVER 'whoami'</code>
+  <label><input type="checkbox"> <code>ssh hermes-vps 'whoami'</code>
   prints <code>hermes</code> and asks for no password</label>
   <label><input type="checkbox"> <code>free -h</code> shows
   <code>2.0Gi</code> in the total column of the swap row</label>
