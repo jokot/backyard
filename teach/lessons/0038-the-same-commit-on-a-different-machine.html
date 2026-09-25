@@ -201,10 +201,32 @@ if [ "$INSTALLED" = false ] &amp;&amp; command -v brew &amp;&gt; /dev/null; then
   <p>The installer downloads uv when uv is absent. The installer then
   makes a virtual environment with Python 3.11, and syncs from the
   lockfile with <code>--locked</code>. The step takes several minutes.</p>
+  <p>The installer ends with one question:</p>
+<pre><code>Would you like to run the setup wizard now? [Y/n]</code></pre>
+  <p>Answer <code>n</code>. The wizard takes one key and needs no Enter
+  key. An empty answer starts the wizard, so a tap on the Enter key is the
+  wrong answer here.</p>
   <p>Read the disk after the installer ends:</p>
 <pre><code>du -sh ~/.hermes</code></pre>
   <p>The size reads about 1.1 GB. The server holds 34 GB of free space, so
   the install fits with room to spare.</p>
+</div>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; why the wizard is the wrong path</span>
+  <p>The wizard asks for a model provider. The wizard then finds no
+  <code>auth.json</code> on the server, and starts a login at the Nous
+  Portal. The message reads <code>Not logged into Nous Portal. Starting
+  login...</code> and comes from line 355 of
+  <code>hermes_cli/model_setup_flows.py</code>.</p>
+  <p>Do not log in. All four bots use OpenRouter, and not the Nous Portal.
+  The file <code>config.yaml</code> of each profile holds the line
+  <code>provider: openrouter</code>.</p>
+  <p>Task 5 copies the four profiles with the configuration of each one.
+  The server needs no answer from the wizard. A login at the Nous Portal
+  makes an account that the four bots never read.</p>
+  <p>Press Ctrl-C when the login starts. The installer already ended, so
+  the key sequence cancels the wizard and nothing else.</p>
 </div>
 
 <h2>One string decides the gate</h2>
