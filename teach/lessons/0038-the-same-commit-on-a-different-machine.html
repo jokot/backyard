@@ -160,6 +160,19 @@ if [ "$INSTALLED" = false ] &amp;&amp; command -v brew &amp;&gt; /dev/null; then
   <p>The pinned commit is also the known-good code. All four bots run that
   commit on the Mac today. An upgrade to <code>main</code> stays possible
   after the move, as a separate step with its own test.</p>
+  <p>The profile state is a SQLite database with a version number. Line
+  143 of <code>hermes_state.py</code> reads <code>SCHEMA_VERSION = 22</code>
+  at the pinned commit. The same constant on <code>main</code> reads
+  <code>30</code>.</p>
+  <p>Hermes migrates a database forward when it opens the file. An install
+  from <code>main</code> moves the four copied databases from version 22 to
+  version 30 at the first start. The Mac keeps its own databases at version
+  22, because <code>rsync</code> copies and never moves.</p>
+  <p>Line 1858 of <code>hermes_state.py</code> reads
+  <code>if current_version &lt; SCHEMA_VERSION</code>, and no branch tests
+  the opposite direction. The code of the Mac opens a version 30 database
+  with no error. Two machines at version 22 keep the state copyable in both
+  directions, and that property is the rollback plan.</p>
 </div>
 
 <div class="box skill">
