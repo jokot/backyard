@@ -614,6 +614,7 @@ No bot stops in this task. All four keep answering Telegram.
 - [ ] **Step 1: Copy the static bulk**
 
 ```bash
+ssh hermes-vps 'sudo apt install -y sqlite3 && sqlite3 --version'
 ssh hermes-vps 'mkdir -p ~/.hermes/profiles/sunflower'
 rsync -av -e ssh ~/.hermes/skills hermes-vps:~/.hermes/
 rsync -av -e ssh ~/.hermes/profiles/sunflower/skills \
@@ -626,6 +627,13 @@ window.
 
 Write no slash at the end of `skills`. A slash at the end copies the
 contents of the directory and does not copy the directory itself.
+
+The `sqlite3` command is required, and Task 5 fails without it. Measured
+on 2026-09-25: the server answers `sqlite3: command not found`. The script
+`roster-manifest.sh` calls `sqlite3` for every one of its 18 rows, and
+Gate A of Task 5 runs that script on the server. Without `sqlite3` every
+count reads `ERR`, and Gate A then fails in the same way as a corrupt
+copy. That failure starts a rollback for the wrong reason.
 
 The `mkdir` command is required. Measured on 2026-09-25: the server holds
 no directory `~/.hermes/profiles`. rsync creates the last directory of a
@@ -762,8 +770,12 @@ The Mac runs openrsync. Measured on 2026-09-25: openrsync accepts
 Hold the excludes in an array and expand the array with `"${EX[@]}"`. The
 shell of the Mac is zsh, and zsh does not split an unquoted variable into
 words. A plain string sends all eleven excludes to rsync as one argument,
-rsync ignores every one, and the copy then carries the 2.0 GB of arm64
-files that cannot run on Linux.
+rsync ignores every one, and the copy then carries 261 MB of files that
+the server cannot use. Measured on 2026-09-25: `bin` holds 125 MB, `lsp`
+holds 107 MB, `models_dev_cache.json` holds 18 MB, `logs` holds 10 MB and
+`cache` holds 1.3 MB. The command `file` reads `Mach-O 64-bit executable
+arm64` for a binary in `bin`, so 232 MB of that total cannot run on
+Linux.
 
 Write no slash at the end of a directory in the first command. Write a
 slash at the end of both sides in the second command.
@@ -919,8 +931,10 @@ Cover these points:
   drops recent writes without a message. `PRAGMA wal_checkpoint(TRUNCATE)`
   runs after the stop and before the copy.
 - **An accidental overlap repairs itself.** Two gateways on one bot token
-  give a Telegram 409. Line 1312 of `adapter.py` finds it and line 2295
-  logs that the gateway stays alive while the retry runs. So a mistake in
+  give a Telegram 409. Line 1312 of
+  `plugins/platforms/telegram/adapter.py` defines
+  `_looks_like_polling_conflict`, line 2295 calls it, and line 2296 logs
+  `gateway stays alive while conflict retry runs`. So a mistake in
   the order costs a delay and not a crash.
 - **The shell decides whether an exclude works.** zsh does not split an
   unquoted variable into words. The same command copies 109 MB in bash and
