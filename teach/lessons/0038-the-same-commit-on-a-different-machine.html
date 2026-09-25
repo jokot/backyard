@@ -150,12 +150,16 @@ if [ "$INSTALLED" = false ] &amp;&amp; command -v brew &amp;&gt; /dev/null; then
 <div class="box knowledge">
   <span class="box-label">Knowledge</span>
   <p>The Mac runs commit <code>3e7c563d</code>, dated 2026-07-17. The
-  branch <code>main</code> has moved far ahead since that date. This
-  command reads the newest commit at any time:</p>
+  branch <code>main</code> has moved 27642 commits ahead of that commit,
+  and 15403 files differ. This command reads the newest commit at any
+  time:</p>
 <pre><code>git ls-remote https://github.com/NousResearch/hermes-agent.git HEAD</code></pre>
   <p>A fresh clone of <code>main</code> puts the server on newer code than
   the Mac. A cutover that then fails has two possible causes, the move and
-  the new code. This plan keeps one cause.</p>
+  the 27642 commits. This plan keeps one cause.</p>
+  <p>The pinned commit is also the known-good code. All four bots run that
+  commit on the Mac today. An upgrade to <code>main</code> stays possible
+  after the move, as a separate step with its own test.</p>
 </div>
 
 <div class="box skill">
@@ -166,6 +170,9 @@ if [ "$INSTALLED" = false ] &amp;&amp; command -v brew &amp;&gt; /dev/null; then
 <pre><code>cd ~/.hermes/hermes-agent</code></pre>
   <p>Select the commit:</p>
 <pre><code>git checkout 3e7c563d</code></pre>
+  <p>The command prints a paragraph about a detached HEAD. That paragraph
+  is normal. A detached HEAD means that the clone points at one commit and
+  not at a branch, which is correct for a pinned install.</p>
   <p>Read the commit that the clone now holds:</p>
 <pre><code>git log -1 --format='%h %ad' --date=short</code></pre>
   <p>The line reads <code>3e7c563d 2026-07-17</code>. A different line
