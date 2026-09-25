@@ -15,9 +15,9 @@ version</h1>
 
 <p class="lede">This lesson installs Hermes on the server. No profile
 moves, and no secret moves. All four bots continue to answer Telegram
-from the Mac while you work. The whole task turns on one string. When
-<code>hermes --version</code> on the server matches the Mac character for
-character, Task 4 can start.
+from the Mac while you work. The whole task turns on one commit. When
+<code>git log</code> in the clone of the server names
+<code>3e7c563d</code>, Task 4 can start.
 <a href="0037-a-machine-that-keeps-running.html">Lesson 37</a>
 prepared the machine. This lesson puts code on it.</p>
 
@@ -99,8 +99,8 @@ if [ "$INSTALLED" = false ] &amp;&amp; command -v brew &amp;&gt; /dev/null; then
 
 <div class="box knowledge">
   <span class="box-label">Knowledge &mdash; protect a long command</span>
-  <p>The installer downloads about 1.1 GB, and the download takes several
-  minutes. A closed SSH session sends <code>SIGHUP</code> to the
+  <p>The installer writes about 1.5 GB to the disk, and the step takes
+  several minutes. A closed SSH session sends <code>SIGHUP</code> to the
   installer, and a half-finished install is harder to read than a failed
   one.</p>
   <p>The program <code>tmux</code> holds a session on the server. The
@@ -208,7 +208,7 @@ if [ "$INSTALLED" = false ] &amp;&amp; command -v brew &amp;&gt; /dev/null; then
   wrong answer here.</p>
   <p>Read the disk after the installer ends:</p>
 <pre><code>du -sh ~/.hermes</code></pre>
-  <p>The size reads about 1.1 GB. The server holds 34 GB of free space, so
+  <p>The size reads about 1.5 GB. The server holds 34 GB of free space, so
   the install fits with room to spare.</p>
 </div>
 
@@ -229,18 +229,43 @@ if [ "$INSTALLED" = false ] &amp;&amp; command -v brew &amp;&gt; /dev/null; then
   the key sequence cancels the wizard and nothing else.</p>
 </div>
 
-<h2>One string decides the gate</h2>
+<h2>Git decides the gate, not the banner</h2>
 
 <div class="box skill">
   <span class="box-label">Skill &mdash; hands on</span>
-  <p>Print the version:</p>
+  <p>Read the commit that the clone holds:</p>
+<pre><code>cd ~/.hermes/hermes-agent &amp;&amp; git log -1 --format='%h %ad' --date=short</code></pre>
+  <p>The line must read <code>3e7c563d 2026-07-17</code>. This line is the
+  gate.</p>
+  <p><strong>CAUTION:</strong> Do not continue to Task 4 with a different
+  commit. A different commit means that the checkout did not hold. The
+  move would then carry two changes at the same time, and a failure would
+  have two possible causes.</p>
+  <p>Now print the version:</p>
 <pre><code>~/.local/bin/hermes --version</code></pre>
-  <p>The first line must read this string, character for character:</p>
-<pre><code>Hermes Agent v0.18.2 (2026.7.7.2) &middot; upstream 3e7c563d</code></pre>
-  <p><strong>CAUTION:</strong> Do not continue to Task 4 with a version
-  that differs. A different string means that the checkout did not hold.
-  The move would then carry two changes at the same time, and a failure
-  would have two possible causes.</p>
+  <p>The line <code>Update available: 27642 commits behind</code> gives
+  the second proof. The count reads 0 for a clone that sits on
+  <code>main</code>.</p>
+</div>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; the banner names the wrong commit</span>
+  <p>The version line ends with <code>upstream 7b761da2</code>, and that
+  string is not the commit of the install. Line 429 of
+  <code>hermes_cli/banner.py</code> reads:</p>
+<pre><code>upstream = _git_short_hash(repo_dir, "origin/main")</code></pre>
+  <p>The field named <code>upstream</code> holds
+  <code>origin/main</code>. Line 430 holds <code>HEAD</code> in a second
+  field named <code>local</code>. Line 517 prints the
+  <code>local</code> field only when <code>HEAD</code> sits ahead of
+  <code>origin/main</code>.</p>
+  <p>A checkout of an older commit sits behind <code>origin/main</code>,
+  so the banner never prints the commit that you selected. Use
+  <code>git log</code> for that number.</p>
+  <p>The Mac prints <code>upstream 3e7c563d</code> for a different reason.
+  The Mac holds a stale <code>origin/main</code> ref from the day of its
+  own clone, so both fields hold one value. A fresh clone holds the true
+  <code>origin/main</code>, and the two values differ.</p>
 </div>
 
 <h2>The command must resolve by its short name</h2>
@@ -324,21 +349,22 @@ fi</code></pre>
   <div class="choices">
     <div>
       <input type="radio" name="q2" id="q2a">
-      <label for="q2a">The version string on both machines reads the same</label>
-      <div class="reveal"><p class="feedback correct">Correct. The string
-      ends with <code>upstream 3e7c563d</code>, so the string carries the
-      commit and the release together.</p></div>
+      <label for="q2a">The git log output inside the clone names that commit</label>
+      <div class="reveal"><p class="feedback correct">Correct. Only
+      <code>git log</code> reads <code>HEAD</code>. The banner of
+      <code>hermes --version</code> names
+      <code>origin/main</code> instead.</p></div>
     </div>
     <div>
       <input type="radio" name="q2" id="q2b">
-      <label for="q2b">The installer ends with no error message on screen</label>
+      <label for="q2b">The installer ends with no error message on the screen</label>
       <div class="reveal"><p class="feedback incorrect">Wrong. An
       installer can end cleanly on the wrong commit. A clean end proves
       the install, not the version.</p></div>
     </div>
     <div>
       <input type="radio" name="q2" id="q2c">
-      <label for="q2c">The clone reports the same total number of files</label>
+      <label for="q2c">The clone holds the same total number of source files</label>
       <div class="reveal"><p class="feedback incorrect">Wrong. Two
       different commits can hold the same count of files. Read the version
       string, and read every character.</p></div>
@@ -384,9 +410,9 @@ fi</code></pre>
   prints <code>3e7c563d 2026-07-17</code></label>
   <label><input type="checkbox"> The installer ends with no error</label>
   <label><input type="checkbox"> <code>du -sh ~/.hermes</code> reads about
-  1.1 GB</label>
-  <label><input type="checkbox"> <code>hermes --version</code> matches the
-  Mac character for character</label>
+  1.5 GB</label>
+  <label><input type="checkbox"> <code>hermes --version</code> reports
+  <code>27642 commits behind</code></label>
   <label><input type="checkbox"> <code>which hermes</code> prints
   <code>/home/hermes/.local/bin/hermes</code></label>
   <label><input type="checkbox"> The two checks print
@@ -409,9 +435,9 @@ repository public.</p>
 <a href="../reference/glossary.html">&rarr; Glossary</a></p>
 
 <p class="ask-agent">Send me the line from <code>git log -1</code> and the
-full output of <code>hermes --version</code>. The version string decides
-the start of Task 4. Ask me about any unclear part of this lesson before
-you run the installer.</p>
+full output of <code>hermes --version</code>. The line from
+<code>git log</code> decides the start of Task 4. Ask me about any unclear
+part of this lesson before you run the installer.</p>
 
 <div class="nav">
   <span><a href="0037-a-machine-that-keeps-running.html">&larr; Lesson 37</a></span>
