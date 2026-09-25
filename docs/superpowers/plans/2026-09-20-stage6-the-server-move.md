@@ -614,9 +614,10 @@ No bot stops in this task. All four keep answering Telegram.
 - [ ] **Step 1: Copy the static bulk**
 
 ```bash
-rsync -av -e ssh ~/.hermes/skills hermes@SERVER:~/.hermes/
+ssh hermes-vps 'mkdir -p ~/.hermes/profiles/sunflower'
+rsync -av -e ssh ~/.hermes/skills hermes-vps:~/.hermes/
 rsync -av -e ssh ~/.hermes/profiles/sunflower/skills \
-  hermes@SERVER:~/.hermes/profiles/sunflower/
+  hermes-vps:~/.hermes/profiles/sunflower/
 ```
 
 Skills do not change while a bot answers, so this bulk crosses safely
@@ -625,6 +626,20 @@ window.
 
 Write no slash at the end of `skills`. A slash at the end copies the
 contents of the directory and does not copy the directory itself.
+
+The `mkdir` command is required. Measured on 2026-09-25: the server holds
+no directory `~/.hermes/profiles`. rsync creates the last directory of a
+destination and never creates a missing parent directory.
+
+The Mac runs openrsync, not GNU rsync. Measured: `/usr/bin/rsync` answers
+`openrsync: protocol version 29`, and the server answers `rsync version
+3.2.7 protocol version 31`. openrsync rejects `--mkpath` and
+`--info=progress2`. openrsync accepts `-a`, `-v`, `-e`, `--partial`,
+`--delete` and `--dry-run`.
+
+The name `hermes-vps` comes from the block that Lesson 37 adds to
+`~/.ssh/config`. The name carries the key `id_ed25519_vps`, which `ssh`
+does not offer by default.
 
 - [ ] **Step 2: Prove the sizes on the server**
 
@@ -668,7 +683,7 @@ gates below are the checks, and each one names what stops the work.
 - [ ] **Step 1: Copy the manifest script to the server**
 
 ```bash
-scp ~/.hermes/profiles/crazydave/scripts/roster-manifest.sh hermes@SERVER:~/
+scp ~/.hermes/profiles/crazydave/scripts/roster-manifest.sh hermes-vps:~/
 ```
 
 The script runs on both machines with no edit, which Task 1 Step 4 proved.
@@ -730,13 +745,19 @@ EX=(--exclude='bin/' --exclude='lsp/' --exclude='logs/' --exclude='cache/'
 rsync -av -e ssh ~/.hermes/kanban.db ~/.hermes/kanban ~/.hermes/state.db \
   ~/.hermes/scripts ~/.hermes/memories ~/.hermes/config.yaml \
   ~/.hermes/SOUL.md ~/.hermes/.env ~/.hermes/auth.json \
-  hermes@SERVER:~/.hermes/
+  hermes-vps:~/.hermes/
 
 for p in crazydave peashooter sunflower torchwood; do
   rsync -av -e ssh "${EX[@]}" ~/.hermes/profiles/$p/ \
-    hermes@SERVER:~/.hermes/profiles/$p/
+    hermes-vps:~/.hermes/profiles/$p/
 done
 ```
+
+Task 4 must run before this step. The `mkdir` command of Task 4 makes
+`~/.hermes/profiles`, and rsync never creates a missing parent directory.
+
+The Mac runs openrsync. Measured on 2026-09-25: openrsync accepts
+`--exclude` and honors it, and `-a` keeps mode `0600` on a private file.
 
 Hold the excludes in an array and expand the array with `"${EX[@]}"`. The
 shell of the Mac is zsh, and zsh does not split an unquoted variable into
@@ -758,7 +779,7 @@ server holds the warm pass from Task 4.
 bash ~/roster-manifest.sh > ~/manifest-server.txt
 
 # Mac
-scp hermes@SERVER:~/manifest-server.txt ~/
+scp hermes-vps:~/manifest-server.txt ~/
 diff ~/manifest-mac.txt ~/manifest-server.txt && echo "GATE A PASS"
 ```
 
