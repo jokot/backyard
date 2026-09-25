@@ -481,6 +481,89 @@ curl -s -o /dev/null -w '%{http_code} %{time_total}s\n' https://api.anthropic.co
   </div>
 </div>
 
+<h2>Nine proofs, and the reason for each one</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; why each step exists</span>
+  <p>Task 2 has one purpose. Task 2 makes an empty Ubuntu server ready
+  for Hermes, and proves that the server is ready before Task 3 installs
+  anything.</p>
+  <table>
+    <thead><tr><th>#</th><th>Proof</th><th>Goal</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>The order page of OVHcloud names an IPv4 address</td>
+        <td>Rent a machine that runs day and night. The four bots then
+        keep running when the Mac sleeps.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><code>lsb_release -d</code> names <code>Ubuntu 24.04</code></td>
+        <td>Confirm the operating system that the installer of Hermes
+        expects.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><code>loginctl show-user hermes</code> prints
+        <code>Linger=yes</code></td>
+        <td>Keep the four gateways alive after each logout. Without
+        linger, Linux stops every user service when the session
+        closes.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><code>ls -ld /home/hermes/.ssh</code> names
+        <code>hermes</code> as the owner</td>
+        <td>Let <code>sshd</code> trust the key file. The
+        <code>sshd</code> daemon refuses a key file that another account
+        owns.</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><code>ssh hermes-vps 'whoami'</code> prints
+        <code>hermes</code> and asks for no password</td>
+        <td>Prove a login with no password. The <code>hermes</code>
+        account has no password, so a key is the only route in. Task 5
+        needs that route for rsync.</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><code>free -h</code> shows <code>2.0Gi</code> in the swap
+        row</td>
+        <td>Give the RAM of 3.7Gi a margin. Linux with no swap stops a
+        process, and a stopped gateway drops messages.</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td><code>grep -c swapfile /etc/fstab</code> prints
+        <code>1</code></td>
+        <td>Keep the swap file after a reboot. A count of 1 also proves
+        that no duplicate line exists, and a duplicate line makes the
+        next boot fail.</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td><code>rg --version</code> prints a version line</td>
+        <td>Install the one package that the installer of Hermes asks for
+        by name at line 291 of <code>setup-hermes.sh</code>.</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td>Both <code>curl</code> commands answer in less than 1
+        second</td>
+        <td>Measure the route from Singapore to the two hosts that every
+        bot calls. More than 1 second stops the move.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>The nine proofs divide into two groups. Proofs 3, 4, 5, 6 and 7
+  build a condition that Hermes needs. Proofs 1, 2, 8 and 9 state a fact
+  about the machine.</p>
+  <p>Proof 9 carries the stop condition of Task 2. Task 3 starts only
+  when both routes answer in less than 1 second.</p>
+</div>
+
 <h2>Checkpoint</h2>
 
 <div class="checklist">
