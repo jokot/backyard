@@ -187,6 +187,50 @@ loginctl show-user hermes | grep Linger</code></pre>
   <p>The <code>hermes</code> account takes no password. You reach the
   account with <code>sudo -u hermes -i</code> from your own account. Rsync
   reaches the account over SSH.</p>
+  <p>Now prove that the account owns its own home directory:</p>
+<pre><code>ls -la /home/hermes</code></pre>
+  <p>The listing must name <code>hermes</code> as the owner of the
+  directory. The listing must also hold <code>.bashrc</code>,
+  <code>.profile</code> and <code>.bash_logout</code>. When the owner
+  reads <code>root</code>, or when the three files are absent, repair the
+  home directory with the next three commands.</p>
+</div>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; why a home directory can stay empty</span>
+  <p>The command <code>adduser</code> copies <code>/etc/skel</code> into a
+  new home directory. The command copies nothing when the directory
+  already exists, and the command leaves the owner as
+  <code>root</code>.</p>
+  <p>A reader who runs <code>sudo mkdir -p /home/hermes/.ssh</code> before
+  <code>adduser</code> makes that directory as root. The later
+  <code>adduser</code> then finds the directory, and skips both the copy
+  and the change of owner.</p>
+  <p>Two failures follow. The <code>hermes</code> account cannot write in
+  its own home, so Task 3 fails at the clone with
+  <code>Permission denied</code>. The account also has no
+  <code>~/.profile</code>, so <code>$HOME/.local/bin</code> never joins
+  <code>PATH</code>, and the command <code>hermes</code> never
+  resolves.</p>
+  <p>Lines 24 to 27 of <code>/etc/skel/.profile</code> hold the rule for
+  the path:</p>
+<pre><code>if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi</code></pre>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; repair a home directory</span>
+  <p>Run these commands only when the listing shows the fault:</p>
+<pre><code>sudo chown hermes:hermes /home/hermes
+sudo cp /etc/skel/.bashrc /etc/skel/.profile /etc/skel/.bash_logout /home/hermes/
+sudo chown hermes:hermes /home/hermes/.bashrc /home/hermes/.profile /home/hermes/.bash_logout</code></pre>
+  <p>Then read the listing again:</p>
+<pre><code>ls -la /home/hermes</code></pre>
+  <p>The owner now reads <code>hermes</code>, and the three files are
+  present. The directory <code>.ssh</code> keeps mode <code>700</code>,
+  because <code>chown</code> changes an owner and never changes a
+  mode.</p>
 </div>
 
 <h2>Give the hermes account your Mac key</h2>
@@ -573,6 +617,8 @@ curl -s -o /dev/null -w '%{http_code} %{time_total}s\n' https://api.anthropic.co
   <code>Ubuntu 24.04</code></label>
   <label><input type="checkbox"> <code>loginctl show-user hermes</code>
   prints <code>Linger=yes</code></label>
+  <label><input type="checkbox"> <code>ls -la /home/hermes</code> names
+  <code>hermes</code> as the owner, and lists <code>.profile</code></label>
   <label><input type="checkbox"> <code>ls -ld /home/hermes/.ssh</code>
   shows <code>hermes hermes</code> as the owner</label>
   <label><input type="checkbox"> <code>ssh hermes-vps 'whoami'</code>
