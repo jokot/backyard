@@ -235,8 +235,11 @@ if [ "$INSTALLED" = false ] &amp;&amp; command -v brew &amp;&gt; /dev/null; then
   <span class="box-label">Skill &mdash; hands on</span>
   <p>Read the commit that the clone holds:</p>
 <pre><code>cd ~/.hermes/hermes-agent &amp;&amp; git log -1 --format='%h %ad' --date=short</code></pre>
-  <p>The line must read <code>3e7c563d 2026-07-17</code>. This line is the
-  gate.</p>
+  <p>The line must start with <code>3e7c563d</code> and end with
+  <code>2026-07-17</code>. This line is the gate.</p>
+  <p>Git selects the length of a short hash by itself, so the line can
+  read <code>3e7c563ddd</code> with ten characters. A longer hash with the
+  same first eight characters names the same commit.</p>
   <p><strong>CAUTION:</strong> Do not continue to Task 4 with a different
   commit. A different commit means that the checkout did not hold. The
   move would then carry two changes at the same time, and a failure would
@@ -407,7 +410,8 @@ fi</code></pre>
   <code>hermes</code>, and <code>pwd</code> prints
   <code>/home/hermes</code></label>
   <label><input type="checkbox"> <code>git log -1</code> in the clone
-  prints <code>3e7c563d 2026-07-17</code></label>
+  starts with <code>3e7c563d</code> and ends with
+  <code>2026-07-17</code></label>
   <label><input type="checkbox"> The installer ends with no error</label>
   <label><input type="checkbox"> <code>du -sh ~/.hermes</code> reads about
   1.5 GB</label>
