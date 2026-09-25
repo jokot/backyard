@@ -109,13 +109,29 @@ if [ "$INSTALLED" = false ] &amp;&amp; command -v brew &amp;&gt; /dev/null; then
 </div>
 
 <div class="box skill">
-  <span class="box-label">Skill &mdash; hands on</span>
+  <span class="box-label">Skill &mdash; start the session</span>
   <p>Start a named session before the clone:</p>
 <pre><code>tmux new -s install</code></pre>
-  <p>Every later command in this lesson runs inside that session. The key
-  sequence <code>Ctrl-b</code> then <code>d</code> leaves the session
-  running. This command returns to it:</p>
+  <p>A green status bar appears at the bottom of the terminal, and the bar
+  reads <code>install</code> at the left. You are now inside the session.
+  Every later command in this lesson runs here.</p>
+  <p>The key sequence <code>Ctrl-b</code> then <code>d</code> leaves the
+  session running and returns you to the plain prompt.</p>
+</div>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; recovery only</span>
+  <p>Use the next command only after a dropped connection, and only when a
+  session from <code>tmux new</code> already exists:</p>
 <pre><code>tmux attach -t install</code></pre>
+  <p>The answer <code>no sessions</code> means that no session exists. The
+  command <code>tmux new -s install</code> makes one. The command
+  <code>tmux attach</code> never makes a session.</p>
+  <p>This command lists every session of the current account:</p>
+<pre><code>tmux ls</code></pre>
+  <p>A session belongs to one account. A session that you start as
+  <code>ubuntu</code> stays invisible to the <code>hermes</code>
+  account.</p>
 </div>
 
 <h2>Clone the commit that the Mac runs, not the newest one</h2>
