@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 38 &mdash; The Same Commit On A Different Machine</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 38 &middot; Stage 6 build</p>
+
+<h1>Install Hermes from the commit that the Mac runs, and prove the
+version</h1>
+
+<p class="lede">This lesson installs Hermes on the server. No profile
+moves, and no secret moves. All four bots continue to answer Telegram
+from the Mac while you work. The whole task turns on one string. When
+<code>hermes --version</code> on the server matches the Mac character for
+character, Task 4 can start.
+<a href="0037-a-machine-that-keeps-running.html">Lesson 37</a>
+prepared the machine. This lesson puts code on it.</p>
+
+<h2>Read the installer, and four questions answer themselves</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>An install invites guesses. Each guess in the next table has an answer
+  in the repository, and each answer took one command to find:</p>
+  <table>
+    <thead><tr><th>Question</th><th>Command</th><th>Answer</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Does the server need a key for the clone?</td>
+        <td><code>git ls-remote &lt;url&gt; HEAD</code></td>
+        <td>No. The command answers with no credentials, so the
+        repository is public over HTTPS.</td>
+      </tr>
+      <tr>
+        <td>Does Ubuntu need a newer Python?</td>
+        <td><code>sed -n '36p' setup-hermes.sh</code></td>
+        <td>No. Line 36 reads <code>PYTHON_VERSION="3.11"</code>, and uv
+        downloads that version.</td>
+      </tr>
+      <tr>
+        <td>Does the server need node, and 545 MB of it?</td>
+        <td><code>grep -cE 'npm|node|web/' setup-hermes.sh</code></td>
+        <td>No. The count is <code>0</code>. A tool downloads node later,
+        and only when a tool asks for node.</td>
+      </tr>
+      <tr>
+        <td>Does the roster of four share one service?</td>
+        <td><code>get_service_name()</code> at line 1797</td>
+        <td>No. The function builds the unit name from
+        <code>HERMES_HOME</code>, so four profiles give four units.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>The skill in this lesson is the method, not the four answers. A
+  question about an install has an answer in the installer. Read the
+  file.</p>
+</div>
+
+<h2>The installer has one branch for the operating system</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Lines 290 to 299 of <code>setup-hermes.sh</code> hold the only
+  difference between macOS and Linux:</p>
+<pre><code>if command -v apt &amp;&gt; /dev/null; then
+    sudo apt install -y ripgrep &amp;&amp; INSTALLED=true
+...
+if [ "$INSTALLED" = false ] &amp;&amp; command -v brew &amp;&gt; /dev/null; then
+    brew install ripgrep &amp;&amp; INSTALLED=true</code></pre>
+  <p>Task 2 installed ripgrep 14.1.0 already, so the installer finds the
+  program and skips the branch. Nothing else in the file tests the
+  operating system.</p>
+</div>
+
+<h2>Reach the server as the hermes account</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>You run every command in this lesson on the server, as the
+  <code>hermes</code> account. Open the session from the Mac:</p>
+<pre><code>ssh hermes-vps</code></pre>
+  <p>The prompt changes to <code>hermes@vps-...</code>. Lesson 37 wrote
+  the block for <code>hermes-vps</code> into <code>~/.ssh/config</code>.
+  From an open <code>ubuntu</code> session, the command
+  <code>sudo -u hermes -i</code> reaches the same account.</p>
+  <p>Confirm the account and the home directory:</p>
+<pre><code>whoami</code></pre>
+<pre><code>pwd</code></pre>
+  <p>The two lines read <code>hermes</code> and
+  <code>/home/hermes</code>. A different answer stops the lesson.</p>
+</div>
+
+<h2>A dropped connection kills a running installer</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; protect a long command</span>
+  <p>The installer downloads about 1.1 GB, and the download takes several
+  minutes. A closed SSH session sends <code>SIGHUP</code> to the
+  installer, and a half-finished install is harder to read than a failed
+  one.</p>
+  <p>The program <code>tmux</code> holds a session on the server. The
+  server carries <code>tmux</code> at <code>/usr/bin/tmux</code>
+  already.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>Start a named session before the clone:</p>
+<pre><code>tmux new -s install</code></pre>
+  <p>Every later command in this lesson runs inside that session. The key
+  sequence <code>Ctrl-b</code> then <code>d</code> leaves the session
+  running. This command returns to it:</p>
+<pre><code>tmux attach -t install</code></pre>
+</div>
+
+<h2>Clone the commit that the Mac runs, not the newest one</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>The Mac runs commit <code>3e7c563d</code>, dated 2026-07-17. The
+  branch <code>main</code> has moved far ahead since that date. This
+  command reads the newest commit at any time:</p>
+<pre><code>git ls-remote https://github.com/NousResearch/hermes-agent.git HEAD</code></pre>
+  <p>A fresh clone of <code>main</code> puts the server on newer code than
+  the Mac. A cutover that then fails has two possible causes, the move and
+  the new code. This plan keeps one cause.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>Clone the repository:</p>
+<pre><code>git clone https://github.com/NousResearch/hermes-agent.git ~/.hermes/hermes-agent</code></pre>
+  <p>Move to the clone:</p>
+<pre><code>cd ~/.hermes/hermes-agent</code></pre>
+  <p>Select the commit:</p>
+<pre><code>git checkout 3e7c563d</code></pre>
+  <p>Read the commit that the clone now holds:</p>
+<pre><code>git log -1 --format='%h %ad' --date=short</code></pre>
+  <p>The line reads <code>3e7c563d 2026-07-17</code>. A different line
+  stops the lesson. Report the line.</p>
+</div>
+
+<h2>Run the installer</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>Start the installer from inside the clone:</p>
+<pre><code>cd ~/.hermes/hermes-agent &amp;&amp; ./setup-hermes.sh</code></pre>
+  <p>The installer downloads uv when uv is absent. The installer then
+  makes a virtual environment with Python 3.11, and syncs from the
+  lockfile with <code>--locked</code>. The step takes several minutes.</p>
+  <p>Read the disk after the installer ends:</p>
+<pre><code>du -sh ~/.hermes</code></pre>
+  <p>The size reads about 1.1 GB. The server holds 34 GB of free space, so
+  the install fits with room to spare.</p>
+</div>
+
+<h2>One string decides the gate</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>Print the version:</p>
+<pre><code>~/.local/bin/hermes --version</code></pre>
+  <p>The first line must read this string, character for character:</p>
+<pre><code>Hermes Agent v0.18.2 (2026.7.7.2) &middot; upstream 3e7c563d</code></pre>
+  <p><strong>CAUTION:</strong> Do not continue to Task 4 with a version
+  that differs. A different string means that the checkout did not hold.
+  The move would then carry two changes at the same time, and a failure
+  would have two possible causes.</p>
+</div>
+
+<h2>The command must resolve by its short name</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge</span>
+  <p>Lines 24 to 27 of <code>/home/hermes/.profile</code> add the private
+  directory to the path:</p>
+<pre><code>if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi</code></pre>
+  <p>The rule tests the directory. Before the install, the directory
+  <code>~/.local/bin</code> does not exist, so a login shell skips the
+  rule. The installer makes the directory, and the next login shell then
+  reads the rule and adds the path.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>Read the path that the shell holds now:</p>
+<pre><code>which hermes || echo 'NOT ON PATH'</code></pre>
+  <p>When the answer reads <code>NOT ON PATH</code>, start a new login
+  shell:</p>
+<pre><code>exec bash -l</code></pre>
+  <p>Then read the path again:</p>
+<pre><code>which hermes || echo 'NOT ON PATH'</code></pre>
+  <p>The answer reads <code>/home/hermes/.local/bin/hermes</code>. When
+  the answer still reads <code>NOT ON PATH</code>, write
+  <code>~/.local/bin/hermes</code> in every later command of this
+  plan.</p>
+</div>
+
+<h2>Prove that the machine holds no profile and no secret</h2>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>Read the two paths that a profile would use:</p>
+<pre><code>ls ~/.hermes/profiles/ 2&gt;/dev/null || echo 'NO PROFILES'</code></pre>
+<pre><code>ls ~/.hermes/.env 2&gt;/dev/null || echo 'NO ROOT ENV'</code></pre>
+  <p>The two answers read <code>NO PROFILES</code> and
+  <code>NO ROOT ENV</code>. The server now runs the same code as the Mac,
+  and the server holds no bot, no token and no history.</p>
+  <p>Nothing can break in Telegram at this point, because no profile
+  exists to answer Telegram. Task 4 carries the first copy.</p>
+</div>
+
+<h2>Check your understanding</h2>
+
+<div class="quiz">
+  <p class="q">Why does this install select commit <code>3e7c563d</code>
+  instead of the branch <code>main</code>?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">A cutover that fails then has one cause, not two</label>
+      <div class="reveal"><p class="feedback correct">Correct. The branch
+      <code>main</code> has moved far ahead of the Mac. Newer code plus a
+      new machine gives two suspects for one failure.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">The branch main holds a bug in the gateway code</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. No such bug
+      is known. The reason is the count of variables in the move, not the
+      quality of the newer code.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">A clone of main needs one key the server lacks</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. The
+      repository is public. The command <code>git ls-remote</code> answers
+      with no credentials, for <code>main</code> and for every other
+      ref.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">What proves that the server runs the same code as the
+  Mac?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">The version string on both machines reads the same</label>
+      <div class="reveal"><p class="feedback correct">Correct. The string
+      ends with <code>upstream 3e7c563d</code>, so the string carries the
+      commit and the release together.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">The installer ends with no error message on screen</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. An
+      installer can end cleanly on the wrong commit. A clean end proves
+      the install, not the version.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">The clone reports the same total number of files</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. Two
+      different commits can hold the same count of files. Read the version
+      string, and read every character.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">Why does the Python version of Ubuntu not matter for this
+  install?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q3" id="q3a">
+      <label for="q3a">Line 36 pins 3.11, and uv downloads that version</label>
+      <div class="reveal"><p class="feedback correct">Correct. Line 36
+      reads <code>PYTHON_VERSION="3.11"</code>. The server ships Python
+      3.12.3, and that number has no effect.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q3" id="q3b">
+      <label for="q3b">The server runs no Python at all, only binaries</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. Hermes runs
+      on Python. The installer makes a virtual environment, and uv puts
+      the right version inside it.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q3" id="q3c">
+      <label for="q3c">The Ubuntu image ships that same version by default</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. The server
+      ships Python 3.12.3, not 3.11. The install works because uv ignores
+      the version of the distribution.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+
+<div class="checklist">
+  <label><input type="checkbox"> <code>whoami</code> prints
+  <code>hermes</code>, and <code>pwd</code> prints
+  <code>/home/hermes</code></label>
+  <label><input type="checkbox"> <code>git log -1</code> in the clone
+  prints <code>3e7c563d 2026-07-17</code></label>
+  <label><input type="checkbox"> The installer ends with no error</label>
+  <label><input type="checkbox"> <code>du -sh ~/.hermes</code> reads about
+  1.1 GB</label>
+  <label><input type="checkbox"> <code>hermes --version</code> matches the
+  Mac character for character</label>
+  <label><input type="checkbox"> <code>which hermes</code> prints
+  <code>/home/hermes/.local/bin/hermes</code></label>
+  <label><input type="checkbox"> The two checks print
+  <code>NO PROFILES</code> and <code>NO ROOT ENV</code></label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="https://docs.astral.sh/uv/concepts/python-versions/">The uv guide
+to Python versions</a> states how uv finds and downloads an interpreter.
+That page explains why line 36 of the installer decides the Python
+version, and why the version of Ubuntu does not. Read it with
+<a href="https://git-scm.com/docs/git-ls-remote">the manual page for
+<code>git ls-remote</code></a>, which is the command that proves a
+repository public.</p>
+
+<p><a href="0037-a-machine-that-keeps-running.html">Lesson 37</a>
+&middot;
+<a href="0036-a-copy-that-proves-itself.html">Lesson 36</a>
+&middot;
+<a href="../reference/glossary.html">&rarr; Glossary</a></p>
+
+<p class="ask-agent">Send me the line from <code>git log -1</code> and the
+full output of <code>hermes --version</code>. The version string decides
+the start of Task 4. Ask me about any unclear part of this lesson before
+you run the installer.</p>
+
+<div class="nav">
+  <span><a href="0037-a-machine-that-keeps-running.html">&larr; Lesson 37</a></span>
+  <span>Lesson 38 &middot; Stage 6</span>
+  <span></span>
+</div>
+
+</body>
+</html>
