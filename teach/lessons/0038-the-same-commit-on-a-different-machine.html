@@ -115,8 +115,19 @@ if [ "$INSTALLED" = false ] &amp;&amp; command -v brew &amp;&gt; /dev/null; then
   <p>A green status bar appears at the bottom of the terminal, and the bar
   reads <code>install</code> at the left. You are now inside the session.
   Every later command in this lesson runs here.</p>
-  <p>The key sequence <code>Ctrl-b</code> then <code>d</code> leaves the
-  session running and returns you to the plain prompt.</p>
+  <p>You do not have to leave the session. Keep the window open, and
+  watch the installer end. The program <code>tmux</code> protects the
+  download from a dropped connection, and nothing more.</p>
+  <p>To leave the session and keep it running, use the key sequence
+  <code>Ctrl-b</code> then <code>d</code>. On a Mac, <code>Ctrl</code>
+  means the <strong>control</strong> key at the bottom left, and not the
+  command key. The sequence has two parts. Hold control, tap
+  <code>b</code>, then release both keys. Then tap <code>d</code> on its
+  own.</p>
+  <p>This command does the same, and needs no key sequence:</p>
+<pre><code>tmux detach</code></pre>
+  <p>The manual of tmux 3.4 lists <code>detach-client (detach)</code>, so
+  the short name is part of the program.</p>
 </div>
 
 <div class="box knowledge">
