@@ -10,7 +10,7 @@ Singapore, and prove that each one answers from there with its history
 intact.
 
 **Architecture:** Install Hermes on Linux from source at the same commit
-that the Mac runs. Carry 109 MB of state and leave 2.0 GB of arm64 files
+that the Mac runs. Carry 109 MB of state and leave 261 MB of arm64 files
 behind. Move the static bulk before anything stops. Then stop all four
 bots in one window, checkpoint every database, copy, rewrite four paths,
 and start the bots one at a time behind four gates.
@@ -117,7 +117,7 @@ logs that the gateway stays alive while the retry runs.
 **Four gateways idle at 181 MB of total memory.** The measured values are
 50.2, 45.1, 43.7 and 42.1 MB.
 
-**The payload is 109 MB, and 2.0 GB stays.** crazydave carries 10 MB,
+**The payload is 109 MB, and 261 MB stays.** crazydave carries 10 MB,
 peashooter 23 MB, sunflower 52 MB, torchwood 7 MB, and the shared root
 files 17 MB.
 
@@ -938,7 +938,8 @@ Cover these points:
   the order costs a delay and not a crash.
 - **The shell decides whether an exclude works.** zsh does not split an
   unquoted variable into words. The same command copies 109 MB in bash and
-  2.1 GB in zsh.
+  370 MB in zsh. Measured on 2026-09-25: the four profiles hold 357 MB, the
+  excluded paths hold 261 MB, and the root payload holds 17 MB.
 
 Link to `0038-the-same-commit-on-a-different-machine.html`.
 

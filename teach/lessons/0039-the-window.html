@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 39 &mdash; The Window</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<p class="kicker">Lesson 39 &middot; Stage 6 build</p>
+
+<h1>Stop four bots, copy the state, and start them in an order that three
+facts decide</h1>
+
+<p class="lede">This lesson runs the cutover. All four bots stop, the
+state moves, and the four bots start again on the server. The order of
+the steps is not a preference. Three measured facts fix the order, and a
+step out of order costs either the board, the last few messages, or a
+wrong alarm.
+<a href="0038-the-same-commit-on-a-different-machine.html">Lesson 38</a>
+put the code on the server. This lesson puts the memory on it.</p>
+
+<h2>One file decides the shape of the window</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; why the bots cannot move one
+  at a time</span>
+  <p>The board is one SQLite file at <code>~/.hermes/kanban.db</code>.
+  The file holds 90 rows in the table <code>tasks</code>. Hermes reads
+  the file from the disk, and offers no remote path to it.</p>
+  <p>Three bots own rows. peashooter owns 40 rows, sunflower owns 23 and
+  crazydave owns 21. Six rows have no owner.</p>
+  <p>Two machines cannot share one such file. A bot on the Mac writes
+  to the copy of the Mac. A bot on the server writes to the copy of the
+  server. Each copy then holds work that the other copy never sees, and
+  no command merges two divergent boards.</p>
+  <p><strong>CAUTION:</strong> Do not run one board bot on the server
+  while another board bot runs on the Mac. The split starts with the
+  first write, and one minute is enough. The same rule holds during a
+  rollback, so the three board bots roll back together or not at all.</p>
+</div>
+
+<h2>torchwood goes first, because torchwood owns nothing</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; the pilot and the gate</span>
+  <p>torchwood owns 0 of the 90 rows. A failure of torchwood on the
+  server costs no board work, so torchwood is the safe bot to start
+  first.</p>
+  <p>torchwood is also the gate. The bot must reply in Telegram, and the
+  reply must show history. torchwood carries 290 messages, so a question
+  about its own recent work has a right answer.</p>
+  <p>A reply alone proves nothing. A bot with an empty
+  <code>state.db</code> still replies, and <code>gateway status</code>
+  still reads <code>running</code>. The memory is the test.</p>
+  <p>When torchwood fails the gate, stop torchwood on the server and
+  start torchwood on the Mac. The other three bots have not moved, so the
+  board is still whole.</p>
+</div>
+
+<h2>Stop before you copy</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; the write-ahead log holds the
+  newest rows</span>
+  <p>Every database in the roster runs in write-ahead log mode.
+  <code>PRAGMA journal_mode</code> reads <code>wal</code> for
+  <code>kanban.db</code>, for <code>state.db</code>, and for the
+  <code>state.db</code> of each profile.</p>
+  <p>In that mode a new row lands in the sidecar file
+  <code>&lt;name&gt;-wal</code> first. The main <code>.db</code> file
+  gets the row later, at a checkpoint. A copy of the <code>.db</code>
+  file alone therefore drops the newest writes, and drops them with no
+  error message.</p>
+  <p>Measured on 2026-09-25 with a test database. One row was written and
+  committed. The sidecar file then held 4152 bytes, a copy of the
+  <code>.db</code> file read 0 rows, and the original read 1 row.</p>
+  <p>A gateway writes a message the moment a person sends one. So the
+  four gateways stop first, and the checkpoint runs after the stop.</p>
+</div>
+
+<div class="box skill">
+  <span class="box-label">Skill &mdash; hands on</span>
+  <p>Stop all four gateways together:</p>
+<pre><code>for p in crazydave peashooter sunflower torchwood; do
+  hermes -p "$p" gateway stop
+done</code></pre>
+  <p>Confirm that all four read <code>stopped</code>:</p>
+<pre><code>hermes gateway list</code></pre>
+  <p>The window starts at that line. Now move every pending write into
+  the main files:</p>
+<pre><code>for db in ~/.hermes/state.db ~/.hermes/kanban.db \
+          ~/.hermes/profiles/*/state.db ~/.hermes/profiles/*/projects.db; do
+  [ -f "$db" ] && sqlite3 "$db" 'PRAGMA wal_checkpoint(TRUNCATE);'
+done</code></pre>
+  <p>The test <code>[ -f "$db" ]</code> is required. sunflower has no
+  <code>projects.db</code>, and <code>sqlite3</code> makes an empty
+  database at a path that it cannot find.</p>
+</div>
+
+<h2>Copy, then rewrite, then start</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; why the rewrite comes before
+  the start</span>
+  <p>Three soul files name the Mac in a full path. crazydave holds two
+  references at lines 24 and 97, peashooter holds one at line 23, and
+  sunflower holds one at line 25. torchwood needs no rewrite.</p>
+  <p>The order of the three actions matters. An edit to a soul file makes
+  every running session of that bot report <code>prompt-drift</code>, and
+  the reports continue until the gateway restarts.</p>
+  <p>Record 0053 holds the evidence. An edit to four soul file lines
+  produced seven audit findings, and three of the seven read
+  <code>prompt-drift</code>. The sessions carried dates from six days
+  before the edit, so the findings looked older than their cause. A
+  revert cleared all seven.</p>
+  <p>A rewrite after the start would therefore raise a real alarm about
+  an edit that you made on purpose. Copy first, rewrite second, and start
+  third.</p>
+</div>
+
+<h2>The shell decides whether an exclude works</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; zsh keeps a variable in one
+  piece</span>
+  <p>The copy carries eleven <code>--exclude</code> options. A reader of
+  bash puts those options in a plain string, because bash splits an
+  unquoted variable into words at each space.</p>
+  <p>zsh does not split an unquoted variable. The Mac runs zsh, so a
+  plain string reaches rsync as one long argument. rsync then matches no
+  path against it and honors none of the eleven rules.</p>
+  <p>Measured on 2026-09-25: the payload is 109 MB with the excludes and
+  370 MB without them. The four profiles hold 357 MB, the excluded paths
+  hold 261 MB, and the root payload holds 17 MB.</p>
+  <p>The 261 MB is useless on the server. The command <code>file</code>
+  reads <code>Mach-O 64-bit executable arm64</code> for a binary in
+  <code>bin</code>, and 232 MB of the total carries that same
+  format.</p>
+  <p>Hold the options in an array:</p>
+<pre><code>EX=(--exclude='bin/' --exclude='lsp/' --exclude='logs/')</code></pre>
+  <p>Then expand the array in quotes at each use:</p>
+<pre><code>rsync -av -e ssh "${EX[@]}" SOURCE DEST</code></pre>
+  <p>The form <code>"${EX[@]}"</code> gives rsync one argument for each
+  element. The full list of eleven options is in Step 5 of Task 5.</p>
+</div>
+
+<h2>An accidental overlap repairs itself</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; what two gateways on one
+  token cost</span>
+  <p>Two gateways on one bot token make Telegram answer 409 to the second
+  one. Hermes expects the answer. Line 1312 of
+  <code>plugins/platforms/telegram/adapter.py</code> defines
+  <code>_looks_like_polling_conflict</code>, and line 2295 calls it.</p>
+  <p>Line 2296 logs <code>gateway polling bootstrap conflict; gateway
+  stays alive while conflict retry runs</code>. The gateway keeps
+  running and retries.</p>
+  <p>So a bot started in the wrong order costs a delay in its replies,
+  and not a crash. The board is the thing that a wrong order damages, and
+  the board has no such repair.</p>
+</div>
+
+<h2>The order, in one list</h2>
+
+<div class="box knowledge">
+  <span class="box-label">Knowledge &mdash; each step and the fact behind
+  it</span>
+  <ol>
+    <li>Stop all four gateways. One board file has no remote path.</li>
+    <li>Checkpoint every database. A hot write-ahead log holds the newest
+    rows.</li>
+    <li>Take the manifest on the Mac. The manifest is the number that
+    Gate A compares.</li>
+    <li>Copy with the excludes in an array. zsh keeps an unquoted
+    variable in one piece.</li>
+    <li>Run Gate A. A failed copy is free to roll back, because no bot
+    has started.</li>
+    <li>Rewrite the four paths. An edit under a running bot reports
+    drift.</li>
+    <li>Start torchwood, and gate on it. torchwood owns 0 rows.</li>
+    <li>Start the other three, one at a time. The three roll back
+    together.</li>
+  </ol>
+  <p>The window closes when sunflower answers.</p>
+</div>
+
+<h2>Check your understanding</h2>
+
+<div class="quiz">
+  <p class="q">Why do the three board bots move in one window?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q1" id="q1a">
+      <label for="q1a">One file holds the board, and no remote path exists</label>
+      <div class="reveal"><p class="feedback correct">Correct.
+      <code>kanban.db</code> holds 90 rows and sits on one disk. A bot on
+      each machine writes to a different copy, and no command merges
+      two.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1b">
+      <label for="q1b">The three bots read one Telegram token from one file</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. Each bot
+      holds its own token in its own profile. A shared token would give
+      409, and Hermes retries after a 409.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q1" id="q1c">
+      <label for="q1c">A single cron job fires each hour for three bots</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. crazydave
+      owns both cron jobs. A stopped gateway runs no cron scheduler, so
+      the jobs wait and cost nothing.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">Which bot starts first on the server, and for what
+  reason?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q2" id="q2a">
+      <label for="q2a">torchwood, because it owns zero rows of the board</label>
+      <div class="reveal"><p class="feedback correct">Correct. A failure
+      of torchwood costs no board work. The other three bots stay on the
+      Mac until torchwood passes Gate B.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2b">
+      <label for="q2b">crazydave, because it owns both of the cron jobs</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. crazydave
+      owns 21 rows of the board, so a failure of crazydave is expensive.
+      crazydave starts after the gate passes.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q2" id="q2c">
+      <label for="q2c">sunflower, because it owns the fewest rows of three</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. sunflower
+      owns 23 rows, which is more than the 21 rows of crazydave.
+      sunflower starts last.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="quiz">
+  <p class="q">What does <code>PRAGMA wal_checkpoint(TRUNCATE)</code> do
+  before the copy?</p>
+  <div class="choices">
+    <div>
+      <input type="radio" name="q3" id="q3a">
+      <label for="q3a">It moves the recent writes into the main database file</label>
+      <div class="reveal"><p class="feedback correct">Correct. A test on
+      2026-09-25 held 4152 bytes in a sidecar file. A copy of the main
+      file alone read 0 rows, and the original read 1 row.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q3" id="q3b">
+      <label for="q3b">It locks the database file against each of the writers</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. The
+      gateways already stopped, so no writer is left. A lock would also
+      end with the command.</p></div>
+    </div>
+    <div>
+      <input type="radio" name="q3" id="q3c">
+      <label for="q3c">It removes the rows that no running session still needs</label>
+      <div class="reveal"><p class="feedback incorrect">Wrong. The
+      command deletes no row. The word <code>TRUNCATE</code> names the
+      sidecar file, which drops to zero length.</p></div>
+    </div>
+  </div>
+</div>
+
+<h2>Checkpoint</h2>
+
+<div class="checklist">
+  <label><input type="checkbox"> <code>hermes gateway list</code> reads
+  <code>stopped</code> for all four bots</label>
+  <label><input type="checkbox"> Each checkpoint prints three numbers, and
+  every <code>-wal</code> file reads zero length</label>
+  <label><input type="checkbox"> The manifest of the Mac holds 18 rows,
+  every result <code>ok</code> except the <code>absent</code> row</label>
+  <label><input type="checkbox"> The copy used
+  <code>"${EX[@]}"</code> and not a plain string</label>
+  <label><input type="checkbox"> Gate A prints
+  <code>GATE A PASS</code></label>
+  <label><input type="checkbox"> The eight secret files read mode
+  <code>600</code> and a size more than 0</label>
+  <label><input type="checkbox"> The path counts read <code>2</code>,
+  <code>1</code>, <code>1</code>, then <code>AUDIT SILENT</code></label>
+  <label><input type="checkbox"> torchwood replies in Telegram and names
+  its own recent work</label>
+  <label><input type="checkbox"> The other three bots start one at a
+  time, each one gated in Telegram</label>
+</div>
+
+<p><strong>Primary source:</strong>
+<a href="https://www.sqlite.org/wal.html">The SQLite page on write-ahead
+logging</a> states why a database in that mode is more than one file, and
+what a checkpoint moves. Read it with
+<a href="https://www.sqlite.org/pragma.html#pragma_wal_checkpoint">the
+reference for <code>PRAGMA wal_checkpoint</code></a>, which defines the
+<code>TRUNCATE</code> form that Step 3 uses.</p>
+
+<p><a href="0038-the-same-commit-on-a-different-machine.html">Lesson
+38</a>
+&middot;
+<a href="0036-a-copy-that-proves-itself.html">Lesson 36</a>
+&middot;
+<a href="../reference/glossary.html">&rarr; Glossary</a></p>
+
+<p class="ask-agent">Send me the output of Steps 3, 4, 6, 7 and 10. Gate A
+decides whether any bot starts at all, so send that result first. Ask me
+about any unclear part of this lesson before you stop the first
+gateway.</p>
+
+<div class="nav">
+  <span><a href="0038-the-same-commit-on-a-different-machine.html">&larr; Lesson 38</a></span>
+  <span>Lesson 39 &middot; Stage 6</span>
+  <span></span>
+</div>
+
+</body>
+</html>
